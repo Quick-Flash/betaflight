@@ -234,7 +234,9 @@ static bool accNeedsCalibration(void)
             isModeActivationConditionPresent(BOXGPSRESCUE) ||
             isModeActivationConditionPresent(BOXCAMSTAB) ||
             isModeActivationConditionPresent(BOXCALIB) ||
-            isModeActivationConditionPresent(BOXACROTRAINER)) {
+            isModeActivationConditionPresent(BOXACROTRAINER) ||
+            isModeActivationConditionPresent(BOXSETLYNCH) ||
+            isModeActivationConditionPresent(BOXLYNCHTRANSLATE)) {
 
             return true;
         }
@@ -1004,10 +1006,10 @@ void processRxModes(timeUs_t currentTimeUs)
     if (FLIGHT_MODE(ANGLE_MODE) || FLIGHT_MODE(HORIZON_MODE)) {
         LED1_ON;
         // increase frequency of attitude task to reduce drift when in angle or horizon mode
-        rescheduleTask(TASK_ATTITUDE, TASK_PERIOD_HZ(500));
+        rescheduleTask(TASK_ATTITUDE, TASK_PERIOD_HZ(1000));
     } else {
         LED1_OFF;
-        rescheduleTask(TASK_ATTITUDE, TASK_PERIOD_HZ(100));
+        rescheduleTask(TASK_ATTITUDE, TASK_PERIOD_HZ(1000));
     }
 
     if (!IS_RC_MODE_ACTIVE(BOXPREARM) && ARMING_FLAG(WAS_ARMED_WITH_PREARM)) {
@@ -1026,6 +1028,23 @@ void processRxModes(timeUs_t currentTimeUs)
             DISABLE_FLIGHT_MODE(MAG_MODE);
         }
 #endif
+
+if (IS_RC_MODE_ACTIVE(BOXSETLYNCH)) {
+    if (!FLIGHT_MODE(SET_LYNCH_MODE)) {
+        ENABLE_FLIGHT_MODE(SET_LYNCH_MODE);
+    }
+} else {
+    DISABLE_FLIGHT_MODE(SET_LYNCH_MODE);
+}
+
+if (IS_RC_MODE_ACTIVE(BOXLYNCHTRANSLATE)) {
+    if (!FLIGHT_MODE(LYNCH_TRANSLATE)) {
+        ENABLE_FLIGHT_MODE(LYNCH_TRANSLATE);
+    }
+} else {
+    DISABLE_FLIGHT_MODE(LYNCH_TRANSLATE);
+}
+
         if (IS_RC_MODE_ACTIVE(BOXHEADFREE) && !FLIGHT_MODE(GPS_RESCUE_MODE)) {
             if (!FLIGHT_MODE(HEADFREE_MODE)) {
                 ENABLE_FLIGHT_MODE(HEADFREE_MODE);

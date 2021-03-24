@@ -966,6 +966,27 @@ const clivalue_t valueTable[] = {
     { "imu_dcm_kp",                 VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 32000 }, PG_IMU_CONFIG, offsetof(imuConfig_t, dcm_kp) },
     { "imu_dcm_ki",                 VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 32000 }, PG_IMU_CONFIG, offsetof(imuConfig_t, dcm_ki) },
     { "small_angle",                VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 0, 180 }, PG_IMU_CONFIG, offsetof(imuConfig_t, small_angle) },
+    
+    { "lynch_roll_m1",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, roll[0]) },
+    { "lynch_pitch_m1",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, pitch[0]) },
+    { "lynch_yaw_m1",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, yaw[0]) },
+    { "lynch_roll_m2",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, roll[1]) },
+    { "lynch_pitch_m2",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, pitch[1]) },
+    { "lynch_yaw_m2",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, yaw[1]) },
+    { "lynch_roll_m3",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, roll[2]) },
+    { "lynch_pitch_m3",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, pitch[2]) },
+    { "lynch_yaw_m3",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, yaw[2]) },
+    { "lynch_roll_m4",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, roll[3]) },
+    { "lynch_pitch_m4",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, pitch[3]) },
+    { "lynch_yaw_m4",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, yaw[3]) },
+    { "lynch_roll_m5",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, roll[4]) },
+    { "lynch_pitch_m5",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, pitch[4]) },
+    { "lynch_yaw_m5",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, yaw[4]) },
+    { "lynch_roll_m6",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, roll[5]) },
+    { "lynch_pitch_m6",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, pitch[5]) },
+    { "lynch_yaw_m6",   VAR_INT8 | MASTER_VALUE, .config.minmax = { -90, 90 }, PG_IMU_CONFIG, offsetof(imuConfig_t, yaw[5]) },
+    { "lynch_motor_debug",   VAR_INT8 | MASTER_VALUE, .config.minmax = { 1, 6 }, PG_IMU_CONFIG, offsetof(imuConfig_t, debugMotor) },
+
 
 // PG_ARMING_CONFIG
     { "auto_disarm_delay",          VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 0, 60 }, PG_ARMING_CONFIG, offsetof(armingConfig_t, auto_disarm_delay) },

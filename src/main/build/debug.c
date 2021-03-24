@@ -99,4 +99,6 @@ const char * const debugModeNames[DEBUG_COUNT] = {
     "D_LPF",
     "VTX_TRAMP",
     "GHST",
+    "LYNCH",
+    "LYNCH_ANGLE",
 };

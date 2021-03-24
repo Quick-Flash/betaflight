@@ -100,6 +100,8 @@ static const box_t boxes[CHECKBOX_ITEM_COUNT] = {
     { BOXMSPOVERRIDE, "MSP OVERRIDE", 50},
     { BOXSTICKCOMMANDDISABLE, "STICK COMMANDS DISABLE", 51},
     { BOXBEEPERMUTE, "BEEPER MUTE", 52},
+    { BOXSETLYNCH, "SET LYNCH MODE", 53},
+    { BOXLYNCHTRANSLATE, "LYNCH TRANSLATE MODE", 54},
 };
 
 // mask of enabled IDs, calculated on startup based on enabled features. boxId_e is used as bit index
@@ -340,6 +342,9 @@ void initActiveBoxIds(void)
 #endif
 
     BME(BOXSTICKCOMMANDDISABLE);
+    BME(BOXSETLYNCH);
+    BME(BOXLYNCHTRANSLATE);
+
 
 #undef BME
     // check that all enabled IDs are in boxes array (check may be skipped when using findBoxById() functions)
