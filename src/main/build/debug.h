@@ -117,6 +117,8 @@ typedef enum {
     DEBUG_GHST,
     DEBUG_LYNCH,
     DEBUG_LYNCH_ANGLE,
+    DEBUG_QUAT,
+    DEBUG_SETPOINT,
     DEBUG_COUNT
 } debugType_e;
 

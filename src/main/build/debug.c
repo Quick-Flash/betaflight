@@ -101,4 +101,6 @@ const char * const debugModeNames[DEBUG_COUNT] = {
     "GHST",
     "LYNCH",
     "LYNCH_ANGLE",
+    "QUAT",
+    "SETPOINT",
 };

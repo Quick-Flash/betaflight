@@ -454,34 +454,34 @@ static void applyMixerAdjustmentLinear(float *motorMix, const bool airmodeEnable
     }
 }
 
-static void applyMixerAdjustment(float *motorMix, const float motorMixMin, const float motorMixMax, const bool airmodeEnabled) {
-#ifdef USE_AIRMODE_LPF
-    const float unadjustedThrottle = throttle;
-    throttle += pidGetAirmodeThrottleOffset();
-    float airmodeThrottleChange = 0;
-#endif
-
-    if (motorMixRange > 1.0f) {
-        for (int i = 0; i < mixerRuntime.motorCount; i++) {
-            motorMix[i] /= motorMixRange;
-        }
-        // Get the maximum correction by setting offset to center when airmode enabled
-        if (airmodeEnabled) {
-            throttle = 0.5f;
-        }
-    } else {
-        if (airmodeEnabled || throttle > 0.5f) {
-            throttle = constrainf(throttle, -motorMixMin, 1.0f - motorMixMax);
-#ifdef USE_AIRMODE_LPF
-            airmodeThrottleChange = constrainf(unadjustedThrottle, -motorMixMin, 1.0f - motorMixMax) - unadjustedThrottle;
-#endif
-        }
-    }
-
-#ifdef USE_AIRMODE_LPF
-    pidUpdateAirmodeLpf(airmodeThrottleChange);
-#endif
-}
+// static void applyMixerAdjustment(float *motorMix, const float motorMixMin, const float motorMixMax, const bool airmodeEnabled) {
+// #ifdef USE_AIRMODE_LPF
+//     const float unadjustedThrottle = throttle;
+//     throttle += pidGetAirmodeThrottleOffset();
+//     float airmodeThrottleChange = 0;
+// #endif
+//
+//     if (motorMixRange > 1.0f) {
+//         for (int i = 0; i < mixerRuntime.motorCount; i++) {
+//             motorMix[i] /= motorMixRange;
+//         }
+//         // Get the maximum correction by setting offset to center when airmode enabled
+//         if (airmodeEnabled) {
+//             throttle = 0.5f;
+//         }
+//     } else {
+//         if (airmodeEnabled || throttle > 0.5f) {
+//             throttle = constrainf(throttle, -motorMixMin, 1.0f - motorMixMax);
+// #ifdef USE_AIRMODE_LPF
+//             airmodeThrottleChange = constrainf(unadjustedThrottle, -motorMixMin, 1.0f - motorMixMax) - unadjustedThrottle;
+// #endif
+//         }
+//     }
+//
+// #ifdef USE_AIRMODE_LPF
+//     pidUpdateAirmodeLpf(airmodeThrottleChange);
+// #endif
+// }
 
 FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs)
 {
@@ -546,7 +546,7 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs)
     }
 #endif
 
-    // send throttle value to blackbox, including scaling and throttle boost, but not TL compensation, dyn idle or airmode 
+    // send throttle value to blackbox, including scaling and throttle boost, but not TL compensation, dyn idle or airmode
     mixerThrottle = throttle;
 
 #ifdef USE_DYN_IDLE
@@ -609,7 +609,7 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs)
 
     motorMixRange = motorMixMax - motorMixMin;
     if (mixerConfig()->mixer_type > MIXER_LEGACY) {
-        applyMixerAdjustmentLinear(motorMix, airmodeEnabled);
+        //applyMixerAdjustmentLinear(motorMix, airmodeEnabled);
     } else {
         applyMixerAdjustment(motorMix, motorMixMin, motorMixMax, airmodeEnabled);
     }
