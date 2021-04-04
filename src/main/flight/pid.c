@@ -220,6 +220,7 @@ void resetPidProfile(pidProfile_t *pidProfile)
         .simplified_feedforward_gain = SIMPLIFIED_TUNING_DEFAULT,
         .simplified_dterm_filter = false,
         .simplified_dterm_filter_multiplier = SIMPLIFIED_TUNING_DEFAULT,
+        .rollOrPitchDebug = 0,
     );
 #ifndef USE_D_MIN
     pidProfile->pid[PID_ROLL].D = 30;
@@ -950,20 +951,50 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
         }
 #endif
 }
+static int shouldUpdateAngles = 1;
+static float rollAngle = 0;
+static float pitchAngle = 0;
+
+if ((FLIGHT_MODE(ANGLE_MODE) || FLIGHT_MODE(SET_LYNCH_MODE)) && shouldUpdateAngles == 1) {
+    shouldUpdateAngles = 0;
+    rollAngle = attitude.values.roll;
+    pitchAngle = attitude.values.pitch;
+}
+
+if (!((FLIGHT_MODE(ANGLE_MODE) || FLIGHT_MODE(SET_LYNCH_MODE))) || updateAngles()) { // ADD THE UPADTE ANGLES FUNCTION LATER SO I CAN BE IN ANGLE MODE AND LYNCHPIN AND HAVE AUTO ROTATING
+    shouldUpdateAngles = 1;
+}
 
 //if (FLIGHT_MODE(ANGLE_MODE)) {
-  // float roll = currentPidSetpoint[FD_YAW] * sin_approx(DECIDEGREES_TO_RADIANS(attitude.values.pitch)) + currentPidSetpoint[FD_ROLL] * cos_approx(DECIDEGREES_TO_RADIANS(attitude.values.pitch));
-  // float pitch = currentPidSetpoint[FD_YAW] * sin_approx(DECIDEGREES_TO_RADIANS(attitude.values.roll)) + currentPidSetpoint[FD_PITCH] * cos_approx(DECIDEGREES_TO_RADIANS(attitude.values.roll));
-  // float yaw = currentPidSetpoint[FD_ROLL] * sin_approx(DECIDEGREES_TO_RADIANS(attitude.values.pitch)) + currentPidSetpoint[FD_PITCH] * sin_approx(DECIDEGREES_TO_RADIANS(attitude.values.roll)) + currentPidSetpoint[FD_YAW] * cos_approx(DECIDEGREES_TO_RADIANS(attitude.values.roll + attitude.values.pitch));
-  // currentPidSetpoint[FD_ROLL] = roll;
-  // currentPidSetpoint[FD_PITCH] = pitch;
-  // currentPidSetpoint[FD_YAW] = yaw;
-  // DEBUG_SET(DEBUG_SETPOINT, 0, lrintf(roll));
-  // DEBUG_SET(DEBUG_SETPOINT, 1, lrintf(pitch));
-  // DEBUG_SET(DEBUG_SETPOINT, 2, lrintf(getAngleAngle(FD_ROLL)));
-  // DEBUG_SET(DEBUG_SETPOINT, 3, lrintf(getAngleAngle(FD_PITCH)));
+//   float roll, pitch, yaw;
+//   if(!FLIGHT_MODE(LYNCH_TRANSLATE)) {
+//   // if (getCosTiltAngle() > 0.0f) { // right side up treat yaw inputs in the normal direction
+//       roll = -currentPidSetpoint[FD_YAW] * sin_approx(DECIDEGREES_TO_RADIANS(pitchAngle)) + currentPidSetpoint[FD_ROLL] * cos_approx(DECIDEGREES_TO_RADIANS(pitchAngle));
+//       pitch = -currentPidSetpoint[FD_YAW] * sin_approx(DECIDEGREES_TO_RADIANS(rollAngle)) + currentPidSetpoint[FD_PITCH] * cos_approx(DECIDEGREES_TO_RADIANS(rollAngle));
+//       if (getCosTiltAngle() > 0.0f) { // right side up treat yaw inputs in the normal direction
+//       yaw = currentPidSetpoint[FD_ROLL] * sin_approx(DECIDEGREES_TO_RADIANS(pitchAngle)) - currentPidSetpoint[FD_PITCH] * sin_approx(DECIDEGREES_TO_RADIANS(rollAngle)) + currentPidSetpoint[FD_YAW] * cos_approx(DECIDEGREES_TO_RADIANS(ABS(rollAngle) + ABS(pitchAngle)));
+//    } else { // when upside down treat yaw inputs as reverse
+//   //     roll = currentPidSetpoint[FD_YAW] * sin_approx(DECIDEGREES_TO_RADIANS(pitchAngle)) + currentPidSetpoint[FD_ROLL] * cos_approx(DECIDEGREES_TO_RADIANS(pitchAngle));
+//       pitch = -currentPidSetpoint[FD_YAW] * sin_approx(DECIDEGREES_TO_RADIANS(rollAngle)) - currentPidSetpoint[FD_PITCH] * cos_approx(DECIDEGREES_TO_RADIANS(rollAngle));
+//       yaw = currentPidSetpoint[FD_ROLL] * sin_approx(DECIDEGREES_TO_RADIANS(pitchAngle)) - currentPidSetpoint[FD_PITCH] * sin_approx(DECIDEGREES_TO_RADIANS(rollAngle)) - currentPidSetpoint[FD_YAW] * cos_approx(DECIDEGREES_TO_RADIANS(ABS(rollAngle) + ABS(pitchAngle)));
+//    }
+// } else {
+//   roll = -currentPidSetpoint[FD_YAW] * sin_approx(DECIDEGREES_TO_RADIANS(pitchAngle));
+//   pitch = -currentPidSetpoint[FD_YAW] * sin_approx(DECIDEGREES_TO_RADIANS(rollAngle));
+//   if (getCosTiltAngle() > 0.0f) { // right side up treat yaw inputs in the normal direction
+//   yaw = currentPidSetpoint[FD_YAW] * cos_approx(DECIDEGREES_TO_RADIANS(ABS(rollAngle) + ABS(pitchAngle)));
+//   } else {
+//   yaw = -currentPidSetpoint[FD_YAW] * cos_approx(DECIDEGREES_TO_RADIANS(ABS(rollAngle) + ABS(pitchAngle)));
+//   }
+// }
+//   currentPidSetpoint[FD_ROLL] = roll;
+//   currentPidSetpoint[FD_PITCH] = pitch;
+//   currentPidSetpoint[FD_YAW] = yaw;
+//   DEBUG_SET(DEBUG_SETPOINT, 0, lrintf(roll));
+//   DEBUG_SET(DEBUG_SETPOINT, 1, lrintf(pitch));
+//   DEBUG_SET(DEBUG_SETPOINT, 2, lrintf(yaw));
+//   DEBUG_SET(DEBUG_SETPOINT, 3, lrintf(getAngleAngle(pidProfile->rollOrPitchDebug)));
 //}
-
 
 #ifdef USE_ACRO_TRAINER
         if ((axis != FD_YAW) && pidRuntime.acroTrainerActive && !pidRuntime.inCrashRecoveryMode && !launchControlActive) {

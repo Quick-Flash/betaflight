@@ -225,6 +225,8 @@ typedef struct pidProfile_s {
 
     uint8_t simplified_dterm_filter;
     uint8_t simplified_dterm_filter_multiplier;
+
+    uint8_t rollOrPitchDebug;
 } pidProfile_t;
 
 PG_DECLARE_ARRAY(pidProfile_t, PID_PROFILE_COUNT, pidProfiles);
