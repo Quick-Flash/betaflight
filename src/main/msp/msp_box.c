@@ -102,6 +102,7 @@ static const box_t boxes[CHECKBOX_ITEM_COUNT] = {
     { BOXBEEPERMUTE, "BEEPER MUTE", 52},
     { BOXSETLYNCH, "SET LYNCH MODE", 53},
     { BOXLYNCHTRANSLATE, "LYNCH TRANSLATE MODE", 54},
+    { BOXLYNCHHEADFREE, "LYNCH HEADFREE MODE", 55},
 };
 
 // mask of enabled IDs, calculated on startup based on enabled features. boxId_e is used as bit index
@@ -344,6 +345,7 @@ void initActiveBoxIds(void)
     BME(BOXSTICKCOMMANDDISABLE);
     BME(BOXSETLYNCH);
     BME(BOXLYNCHTRANSLATE);
+    BME(BOXLYNCHHEADFREE);
 
 
 #undef BME

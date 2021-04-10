@@ -44,6 +44,8 @@
 #include "fc/rc_controls.h"
 #include "fc/runtime_config.h"
 
+#include "rx/rx.h"
+
 #include "flight/gps_rescue.h"
 #include "flight/imu.h"
 #include "flight/mixer.h"
@@ -800,7 +802,35 @@ static FAST_CODE_NOINLINE float applyLaunchControl(int axis, const rollAndPitchT
 }
 #endif
 
-// Betaflight pid controller, which will be maintained in the future with additional features specialised for current (mini) multirotor usage.
+
+FAST_DATA_ZERO_INIT float auxSetpoint[2];
+
+static FAST_CODE void getSetpointFromAux(axis) {
+      if (axis == FD_ROLL) {
+          currentPidSetpoint = rcData[4];
+      } else if (axis == FD_PITCH) {
+          currentPidSetpoint = rcData[5];
+      } else {
+          currentPidSetpoint = currentPidSetpoint;
+      }
+      if (axis == FD_ROLL || axis == FD_PITCH) {
+          currentPidSetpoint = constrainf(currentPidSetpoint, 1000.0f, 2000.0f);
+          currentPidSetpoint = ABS(currentPidSetpoint - 1500.0f);
+          if (currentPidSetpoint > 75) {
+              currentPidSetpoint -= 75;
+          } else {
+              currentPidSetpoint = 0;
+          }
+          if (rcData[axis+4] < 1500) {
+              currentPidSetpoint = -currentPidSetpoint;
+          }
+          currentPidSetpoint = currentPidSetpoint / 2;
+      }
+}
+
+FAST_DATA_ZERO_INIT float angleSetpointRaw[3];
+
+// EmuFlight pid controller, which will be maintained in the future with additional features specialised for current (mini) multirotor usage.
 // Based on 2DOF reference design (matlab)
 void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTimeUs)
 {
@@ -965,6 +995,10 @@ if (!((FLIGHT_MODE(ANGLE_MODE) || FLIGHT_MODE(SET_LYNCH_MODE))) || updateAngles(
     shouldUpdateAngles = 1;
 }
 
+if (FLIGHT_MODE(LYNCH_TRANSLATE)) {
+    getSetpointFromAux(axis);
+}
+
 //if (FLIGHT_MODE(ANGLE_MODE)) {
 //   float roll, pitch, yaw;
 //   if(!FLIGHT_MODE(LYNCH_TRANSLATE)) {
@@ -987,13 +1021,29 @@ if (!((FLIGHT_MODE(ANGLE_MODE) || FLIGHT_MODE(SET_LYNCH_MODE))) || updateAngles(
 //   yaw = -currentPidSetpoint[FD_YAW] * cos_approx(DECIDEGREES_TO_RADIANS(ABS(rollAngle) + ABS(pitchAngle)));
 //   }
 // }
-//   currentPidSetpoint[FD_ROLL] = roll;
-//   currentPidSetpoint[FD_PITCH] = pitch;
-//   currentPidSetpoint[FD_YAW] = yaw;
-//   DEBUG_SET(DEBUG_SETPOINT, 0, lrintf(roll));
-//   DEBUG_SET(DEBUG_SETPOINT, 1, lrintf(pitch));
-//   DEBUG_SET(DEBUG_SETPOINT, 2, lrintf(yaw));
-//   DEBUG_SET(DEBUG_SETPOINT, 3, lrintf(getAngleAngle(pidProfile->rollOrPitchDebug)));
+
+// going to try multiple different set RPY mixes as the drone rotates (bad solution, but it will work)
+
+  // if ((rollAngle < 25 && rollAngle > -25) && (pitchAngle < 25 && pitchAngle > -25) {
+  //     roll = currentPidSetpoint[roll];
+  //     pitch = currentPidSetpoint[pitch];
+  //     yaw = currentPidSetpoint[yaw];
+  // } else if ((rollAngle < 75 && rollAngle > 25) && (pitchAngle < 25 && pitchAngle > -25 {
+  //     roll = currentPidSetpoint[roll];
+  //     pitch = currentPidSetpoint[pitch];
+  //     yaw = currentPidSetpoint[yaw];
+  // }
+
+
+
+
+  // currentPidSetpoint[FD_ROLL] = roll;
+  // currentPidSetpoint[FD_PITCH] = pitch;
+  // currentPidSetpoint[FD_YAW] = yaw;
+  DEBUG_SET(DEBUG_SETPOINT, 0, lrintf(currentPidSetpoint));
+  DEBUG_SET(DEBUG_SETPOINT, 1, lrintf(currentPidSetpoint));
+  DEBUG_SET(DEBUG_SETPOINT, 2, lrintf(getAngleAngle(FD_ROLL)));
+  DEBUG_SET(DEBUG_SETPOINT, 3, lrintf(getAngleAngle(FD_PITCH)));
 //}
 
 #ifdef USE_ACRO_TRAINER

@@ -91,7 +91,8 @@ typedef enum {
     FAILSAFE_MODE   = (1 << 10),
     GPS_RESCUE_MODE = (1 << 11),
     SET_LYNCH_MODE = (1 << 12),
-    LYNCH_TRANSLATE = (1 << 13)
+    LYNCH_TRANSLATE = (1 << 13),
+    LYNCH_HEADFREE = (1 << 14)
 } flightModeFlags_e;
 
 extern uint16_t flightModeFlags;
@@ -112,6 +113,7 @@ extern uint16_t flightModeFlags;
    [BOXGPSRESCUE]   = LOG2(GPS_RESCUE_MODE),             \
    [BOXSETLYNCH]    = LOG2(SET_LYNCH_MODE),               \
    [BOXLYNCHTRANSLATE]         = LOG2(LYNCH_TRANSLATE),               \
+   [BOXLYNCHHEADFREE]         = LOG2(LYNCH_HEADFREE),               \
 }                                                        \
 /**/
 
