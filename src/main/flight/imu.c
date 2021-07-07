@@ -134,7 +134,6 @@ PG_RESET_TEMPLATE(imuConfig_t, imuConfig,
     .dcm_kp = 2500,                // 1.0 * 10000
     .dcm_ki = 0,                   // 0.003 * 10000
     .small_angle = 180,
-    .level_recovery_threshold = 1900,
     .roll = {0, 0, 0, 0, 0, 0},
     .pitch = {0, 0, 0, 0, 0, 0},
     .yaw = {0, 0, 0, 0, 0, 0},
@@ -388,7 +387,7 @@ void imuInit(void)
 #if defined(USE_ACC)
 
 static void imuMahonyAHRSupdate(float dt, float gx, float gy, float gz,
-                                float useAcc, float ax, float ay, float az,
+                                bool useAcc, float ax, float ay, float az,
                                 bool useMag,
                                 bool useCOG, float courseOverGround, const float dcmKpGain
                               )
@@ -460,9 +459,9 @@ static void imuMahonyAHRSupdate(float dt, float gx, float gy, float gz,
         az *= recipAccNorm;
 
         // Error is sum of cross product between estimated direction and measured direction of gravity
-        ex += (ay * rMat[2][2] - az * rMat[2][1]) * useAcc;
-        ey += (az * rMat[2][0] - ax * rMat[2][2]) * useAcc;
-        ez += (ax * rMat[2][1] - ay * rMat[2][0]) * useAcc;
+        ex += (ay * rMat[2][2] - az * rMat[2][1]);
+        ey += (az * rMat[2][0] - ax * rMat[2][2]);
+        ez += (ax * rMat[2][1] - ay * rMat[2][0]);
     }
 
     // Compute and apply integral feedback if enabled
@@ -470,9 +469,9 @@ static void imuMahonyAHRSupdate(float dt, float gx, float gy, float gz,
         // Stop integrating if spinning beyond the certain limit
         if (spin_rate < DEGREES_TO_RADIANS(SPIN_RATE_LIMIT)) {
             const float dcmKiGain = imuRuntimeConfig.dcm_ki;
-            integralFBx += dcmKiGain * ex * dt * useAcc;    // integral error scaled by Ki
-            integralFBy += dcmKiGain * ey * dt * useAcc;
-            integralFBz += dcmKiGain * ez * dt * useAcc;
+            integralFBx += dcmKiGain * ex * dt;    // integral error scaled by Ki
+            integralFBy += dcmKiGain * ey * dt;
+            integralFBz += dcmKiGain * ez * dt;
         }
     } else {
         integralFBx = 0.0f;    // prevent integral windup
@@ -481,9 +480,9 @@ static void imuMahonyAHRSupdate(float dt, float gx, float gy, float gz,
     }
 
     // Apply proportional and integral feedback
-    gx += dcmKpGain * ex * useAcc + integralFBx;
-    gy += dcmKpGain * ey * useAcc + integralFBy;
-    gz += dcmKpGain * ez * useAcc + integralFBz;
+    gx += dcmKpGain * ex + integralFBx;
+    gy += dcmKpGain * ey + integralFBy;
+    gz += dcmKpGain * ez + integralFBz;
 
     // Integrate rate of change of quaternion
     gx *= (0.5f * dt);
@@ -649,14 +648,8 @@ static float imuIsAccelerometerHealthy(float *accAverage)
 
     accMagnitudeSq = accMagnitudeSq * sq(acc.dev.acc_1G_rec);
 
-    float accStrength = 0.0f;
     // Accept accel readings only in range 0.9g - 1.1g
-    if ((0.81f < accMagnitudeSq) && (accMagnitudeSq < 1.21f)) {
-      accStrength = 1;
-    } else {
-      accStrength = 0;
-    }
-    return accStrength;
+	    return (0.81f < accMagnitudeSq) && (accMagnitudeSq < 1.21f);
 }
 
 // Calculate the dcmKpGain to use. When armed, the gain is imuRuntimeConfig.dcm_kp * 1.0 scaling.
@@ -665,7 +658,7 @@ static float imuIsAccelerometerHealthy(float *accAverage)
 //   - wait for a 250ms period of low gyro activity to ensure the craft is not moving
 //   - use a large dcmKpGain value for 500ms to allow the attitude estimate to quickly converge
 //   - reset the gain back to the standard setting
-static float imuCalcKpGain(timeUs_t currentTimeUs, float useAcc, float *gyroAverage)
+static float imuCalcKpGain(timeUs_t currentTimeUs, bool useAcc, float *gyroAverage)
 {
     static bool lastArmState = false;
     static timeUs_t gyroQuietPeriodTimeEnd = 0;
@@ -791,7 +784,7 @@ void imuQuaternionMultiplication(quaternion *q1, quaternion *q2, quaternion *res
 static void imuCalculateEstimatedAttitude(timeUs_t currentTimeUs)
 {
     static timeUs_t previousIMUUpdateTime;
-    float useAcc = 0;
+    bool useAcc = false;
     bool useMag = false;
     bool useCOG = false; // Whether or not correct yaw via imuMahonyAHRSupdate from our ground course
     float courseOverGround = 0; // To be used when useCOG is true.  Stored in Radians

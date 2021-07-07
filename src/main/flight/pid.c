@@ -805,11 +805,10 @@ static FAST_CODE_NOINLINE float applyLaunchControl(int axis, const rollAndPitchT
 
 FAST_DATA_ZERO_INIT float auxSetpoint[2];
 
-static FAST_CODE void getSetpointFromAux(axis) {
-      if (axis == FD_ROLL) {
-          currentPidSetpoint = rcData[4];
-      } else if (axis == FD_PITCH) {
-          currentPidSetpoint = rcData[5];
+static FAST_CODE float getSetpointFromAux(int axis) {
+      float currentPidSetpoint;
+      if (axis == FD_ROLL || axis == FD_PITCH) {
+          currentPidSetpoint = rcData[axis+4];
       } else {
           currentPidSetpoint = currentPidSetpoint;
       }
@@ -826,6 +825,7 @@ static FAST_CODE void getSetpointFromAux(axis) {
           }
           currentPidSetpoint = currentPidSetpoint / 2;
       }
+      return currentPidSetpoint;
 }
 
 FAST_DATA_ZERO_INIT float angleSetpointRaw[3];
@@ -977,10 +977,10 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
             if (axis == FD_YAW) {
                 break;
             }
-            currentPidSetpoint = pidLevel(axis, pidProfile, angleTrim);
+            currentPidSetpoint = pidLevel(axis, pidProfile, angleTrim, currentPidSetpoint);
         }
 #endif
-}
+
 static int shouldUpdateAngles = 1;
 static float rollAngle = 0;
 static float pitchAngle = 0;
@@ -995,8 +995,24 @@ if (!((FLIGHT_MODE(ANGLE_MODE) || FLIGHT_MODE(SET_LYNCH_MODE))) || updateAngles(
     shouldUpdateAngles = 1;
 }
 
+  float inputTemp;
+  float inputYaw = getSetpointRate(FD_YAW);
+  float inputRoll = getSetpointRate(FD_ROLL);
+  float inputPitch = getSetpointRate(FD_PITCH);
+
+  float pitchAngleRev = -pitchAngle * M_PIf / 1800.f;
+  float rollAngleRev = -rollAngle * M_PIf / 1800.f;
+
+  inputTemp = inputRoll * cos_approx(pitchAngleRev) + inputYaw * sin_approx(pitchAngleRev); // inputRoll
+  inputYaw = -inputRoll * sin_approx(pitchAngleRev) + inputYaw * cos_approx(pitchAngleRev);
+  inputRoll = inputTemp;
+
+  inputTemp = inputPitch * cos_approx(rollAngleRev) - inputYaw * sin_approx(rollAngleRev); // inputPitch
+  inputYaw = inputPitch * sin_approx(rollAngleRev) + inputYaw * cos_approx(rollAngleRev);
+  inputPitch = inputTemp;
+
 if (FLIGHT_MODE(LYNCH_TRANSLATE)) {
-    getSetpointFromAux(axis);
+    currentPidSetpoint = getSetpointFromAux(axis);
 }
 
 //if (FLIGHT_MODE(ANGLE_MODE)) {

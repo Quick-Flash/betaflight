@@ -609,9 +609,9 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs)
 
     motorMixRange = motorMixMax - motorMixMin;
     if (mixerConfig()->mixer_type > MIXER_LEGACY) {
-        //applyMixerAdjustmentLinear(motorMix, airmodeEnabled);
+        applyMixerAdjustmentLinear(motorMix, airmodeEnabled);
     } else {
-        applyMixerAdjustment(motorMix, motorMixMin, motorMixMax, airmodeEnabled);
+        //applyMixerAdjustment(motorMix, motorMixMin, motorMixMax, airmodeEnabled);
     }
 
     if (featureIsEnabled(FEATURE_MOTOR_STOP)
