@@ -805,12 +805,12 @@ static FAST_CODE_NOINLINE float applyLaunchControl(int axis, const rollAndPitchT
 
 FAST_DATA_ZERO_INIT float auxSetpoint[2];
 
-static FAST_CODE float getSetpointFromAux(int axis) {
+static FAST_CODE float getSetpointFromAux(int axis, float currentPidSetpointPre) {
       float currentPidSetpoint;
       if (axis == FD_ROLL || axis == FD_PITCH) {
           currentPidSetpoint = rcData[axis+4];
       } else {
-          currentPidSetpoint = currentPidSetpoint;
+          currentPidSetpoint = currentPidSetpointPre;
       }
       if (axis == FD_ROLL || axis == FD_PITCH) {
           currentPidSetpoint = constrainf(currentPidSetpoint, 1000.0f, 2000.0f);
@@ -957,9 +957,6 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
     for (int axis = FD_ROLL; axis <= FD_YAW; ++axis) {
 
         float currentPidSetpoint = getSetpointRate(axis);
-        if (pidRuntime.maxVelocity[axis]) {
-            currentPidSetpoint = accelerationLimit(axis, currentPidSetpoint);
-        }
         // Yaw control is GYRO based, direct sticks control is applied to rate PID
         // When Race Mode is active PITCH control is also GYRO based in level or horizon mode
 #if defined(USE_ACC)
@@ -1011,8 +1008,20 @@ if (!((FLIGHT_MODE(ANGLE_MODE) || FLIGHT_MODE(SET_LYNCH_MODE))) || updateAngles(
   inputYaw = inputPitch * sin_approx(rollAngleRev) + inputYaw * cos_approx(rollAngleRev);
   inputPitch = inputTemp;
 
+  if (axis == FD_ROLL) {
+      currentPidSetpoint = inputRoll;
+  } else if (axis == FD_PITCH) {
+      currentPidSetpoint = inputPitch;
+  } else if (axis == FD_YAW) {
+      currentPidSetpoint = inputYaw;
+  }
+
 if (FLIGHT_MODE(LYNCH_TRANSLATE)) {
-    currentPidSetpoint = getSetpointFromAux(axis);
+    currentPidSetpoint = getSetpointFromAux(axis, currentPidSetpoint);
+}
+
+if (pidRuntime.maxVelocity[axis]) {
+    currentPidSetpoint = accelerationLimit(axis, currentPidSetpoint);
 }
 
 //if (FLIGHT_MODE(ANGLE_MODE)) {
