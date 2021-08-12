@@ -168,16 +168,16 @@ void biquadFilterInitLPF(biquadFilter_t *filter, float filterFreq, uint32_t refr
     biquadFilterInit(filter, filterFreq, refreshRate, BIQUAD_Q, FILTER_LPF, 1.0f);
 }
 
-void biquadFilterInit(biquadFilter_t *filter, float filterFreq, uint32_t refreshRate, float Q, biquadFilterType_e filterType, float weight)
+void biquadFilterInit(biquadFilter_t *filter, float filterFreq, uint32_t refreshRate, float Q, biquadFilterType_e filterType, float gain)
 {
-    biquadFilterUpdate(filter, filterFreq, refreshRate, Q, filterType, weight);
+    biquadFilterUpdate(filter, filterFreq, refreshRate, Q, filterType, gain);
 
     // zero initial samples
     filter->x1 = filter->x2 = 0;
     filter->y1 = filter->y2 = 0;
 }
 
-FAST_CODE void biquadFilterUpdate(biquadFilter_t *filter, float filterFreq, uint32_t refreshRate, float Q, biquadFilterType_e filterType, float weight)
+FAST_CODE void biquadFilterUpdate(biquadFilter_t *filter, float filterFreq, uint32_t refreshRate, float Q, biquadFilterType_e filterType, float gain)
 {
     // setup variables
     const float omega = 2.0f * M_PIf * filterFreq * refreshRate * 0.000001f;
@@ -209,9 +209,21 @@ FAST_CODE void biquadFilterUpdate(biquadFilter_t *filter, float filterFreq, uint
         filter->a1 = -2 * cs;
         filter->a2 = 1 - alpha;
         break;
+    case FILTER_PEAK:
+        filter->b0 = 1 + alpha * gain;
+        filter->b1 = -2 * cs;
+        filter->b2 = 1 - alpha * gain;
+        filter->a1 = filter->b1;
+        filter->a2 = 1 - alpha / gain;
     }
 
-    const float a0 = 1 + alpha;
+    float a0;
+
+    if (filterType != FILTER_PEAK) {
+        a0 = 1 + alpha;
+    } else {
+        a0 = 1 + alpha / gain;
+    }
 
     // precompute the coefficients
     filter->b0 /= a0;
@@ -220,8 +232,6 @@ FAST_CODE void biquadFilterUpdate(biquadFilter_t *filter, float filterFreq, uint
     filter->a1 /= a0;
     filter->a2 /= a0;
 
-    // update weight
-    filter->weight = weight;
 }
 
 FAST_CODE void biquadFilterUpdateLPF(biquadFilter_t *filter, float filterFreq, uint32_t refreshRate)
@@ -244,16 +254,6 @@ FAST_CODE float biquadFilterApplyDF1(biquadFilter_t *filter, float input)
     filter->y1 = result;
 
     return result;
-}
-
-/* Computes a biquadFilter_t filter in df1 and crossfades input with output */
-FAST_CODE float biquadFilterApplyDF1Weighted(biquadFilter_t* filter, float input)
-{
-    // compute result
-    const float result = biquadFilterApplyDF1(filter, input);
-
-    // crossfading of input and output to turn filter on/off gradually
-    return filter->weight * result + (1 - filter->weight) * input;
 }
 
 /* Computes a biquadFilter_t filter in direct form 2 on a sample (higher precision but can't handle changes in coefficients */

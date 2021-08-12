@@ -108,7 +108,7 @@ static void rpmNotchFilterInit(rpmNotchFilter_t *filter, const rpmFilterConfig_t
         for (int motor = 0; motor < getMotorCount(); motor++) {
             for (int i = 0; i < filter->harmonics; i++) {
                 biquadFilterInit(
-                    &filter->notch[axis][motor][i], filter->minHz * i, filter->looptime, filter->q, FILTER_NOTCH, 0.0f);
+                    &filter->notch[axis][motor][i], filter->minHz * i, filter->looptime, filter->q, FILTER_PEAK, 50);
             }
         }
     }
@@ -152,7 +152,7 @@ static float applyFilter(rpmNotchFilter_t *filter, const int axis, float value)
     }
     for (int motor = 0; motor < getMotorCount(); motor++) {
         for (int i = 0; i < filter->harmonics; i++) {
-            value = biquadFilterApplyDF1Weighted(&filter->notch[axis][motor][i], value);
+            value = biquadFilterApplyDF1(&filter->notch[axis][motor][i], value);
         }
     }
     return value;
@@ -187,15 +187,15 @@ FAST_CODE_NOINLINE void rpmFilterUpdate()
         /* DEBUG_SET(DEBUG_RPM_FILTER, 1, motor); */
         /* DEBUG_SET(DEBUG_RPM_FILTER, 2, currentFilter == &gyroFilter); */
         /* DEBUG_SET(DEBUG_RPM_FILTER, 3, frequency) */
-        
+
         // fade out notch when approaching minHz (turn it off)
-        float weight = 1.0f;
+        float gain = 50.0f;
         if (frequency < currentFilter->minHz + currentFilter->fadeRangeHz) {
-            weight = (frequency - currentFilter->minHz) / currentFilter->fadeRangeHz;
+            gain = 50.0f * (frequency - currentFilter->minHz) / currentFilter->fadeRangeHz;
         }
 
         biquadFilterUpdate(
-            template, frequency, currentFilter->looptime, currentFilter->q, FILTER_NOTCH, weight);
+            template, frequency, currentFilter->looptime, currentFilter->q, FILTER_PEAK, gain);
 
         for (int axis = 1; axis < XYZ_AXIS_COUNT; axis++) {
             biquadFilter_t *clone = &currentFilter->notch[axis][currentMotor][currentHarmonic];
@@ -204,7 +204,6 @@ FAST_CODE_NOINLINE void rpmFilterUpdate()
             clone->b2 = template->b2;
             clone->a1 = template->a1;
             clone->a2 = template->a2;
-            clone->weight = template->weight;
         }
 
         if (++currentHarmonic == currentFilter->harmonics) {

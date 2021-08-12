@@ -19,11 +19,11 @@
  */
 
 /* original work by Rav
- * 
+ *
  * 2018_07 updated by ctzsnooze to post filter, wider Q, different peak detection
  * coding assistance and advice from DieHertz, Rav, eTracer
  * test pilots icr4sh, UAV Tech, Flint723
- * 
+ *
  * 2021_02 updated by KarateBrot: switched FFT with SDFT, multiple notches per axis
  * test pilots: Sugar K, bizmar
  */
@@ -214,11 +214,11 @@ static FAST_CODE_NOINLINE void gyroDataAnalyseUpdate(gyroAnalyseState_t *state)
     DEBUG_SET(DEBUG_FFT_TIME, 0, state->updateStep);
 
     switch (state->updateStep) {
-    
+
         case STEP_WINDOW: // 6us @ F722
         {
             sdftWinSq(&sdft[state->updateAxis], sdftData);
-            
+
             // Calculate mean square over frequency range (= average power of vibrations)
             sdftMeanSq = 0.0f;
             for (int bin = (sdftStartBin + 1); bin < sdftEndBin; bin++) {   // don't use startBin or endBin because they are not windowed properly
@@ -298,7 +298,7 @@ static FAST_CODE_NOINLINE void gyroDataAnalyseUpdate(gyroAnalyseState_t *state)
                     // Convert bin to frequency: freq = bin * binResoultion (bin 0 is 0Hz)
                     const float centerFreq = constrainf(meanBin * sdftResolutionHz, dynNotchMinHz, dynNotchMaxHz);
 
-                    // PT1 style smoothing moves notch center freqs rapidly towards big peaks and slowly away, up to 8x faster 
+                    // PT1 style smoothing moves notch center freqs rapidly towards big peaks and slowly away, up to 8x faster
                     // DYN_NOTCH_SMOOTH_HZ = 4 & gainMultiplier = 1 .. 8  =>  PT1 -3dB cutoff frequency = 4Hz .. 41Hz
                     const float gainMultiplier = constrainf(peaks[p].value / sdftMeanSq, 1.0f, 8.0f);
 
@@ -329,7 +329,7 @@ static FAST_CODE_NOINLINE void gyroDataAnalyseUpdate(gyroAnalyseState_t *state)
             for (int p = 0; p < gyro.notchFilterDynCount; p++) {
                 // Only update notch filter coefficients if the corresponding peak got its center frequency updated in the previous step
                 if (peaks[p].bin != 0 && peaks[p].value > sdftMeanSq) {
-                    biquadFilterUpdate(&gyro.notchFilterDyn[state->updateAxis][p], state->centerFreq[state->updateAxis][p], gyro.targetLooptime, dynNotchQ, FILTER_NOTCH, 1.0f);
+                    biquadFilterUpdate(&gyro.notchFilterDyn[state->updateAxis][p], state->centerFreq[state->updateAxis][p], gyro.targetLooptime, dynNotchQ, FILTER_PEAK, 50.0f);
                 }
             }
 
