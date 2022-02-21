@@ -102,4 +102,6 @@ const char * const debugModeNames[DEBUG_COUNT] = {
     "RX_STATE_TIME",
     "SPRACING_PIXEL_OSD",
     "FUSION",
+    "KALMAN",
+    "SMITH_PREDICTOR",
 };

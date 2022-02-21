@@ -49,7 +49,14 @@ static FAST_CODE void GYRO_FILTER_FUNCTION_NAME(void)
         // DEBUG_GYRO_SAMPLE(1) Record the post-downsample value for the selected debug axis
         GYRO_FILTER_AXIS_DEBUG_SET(axis, DEBUG_GYRO_SAMPLE, 1, lrintf(gyroADCf));
 
+        if (axis != FD_YAW) {
+            DEBUG_SET(DEBUG_KALMAN, axis, lrintf(gyroADCf));
+        }
         gyroADCf = kalman_update(gyroADCf, axis);
+        if (axis != FD_YAW) {
+            DEBUG_SET(DEBUG_KALMAN, axis + 2, lrintf(gyroADCf));
+        }
+
 #ifdef USE_RPM_FILTER
         gyroADCf = rpmFilterGyro(axis, gyroADCf);
 #endif
