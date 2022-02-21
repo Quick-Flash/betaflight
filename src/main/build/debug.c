@@ -100,5 +100,7 @@ const char * const debugModeNames[DEBUG_COUNT] = {
     "RX_EXPRESSLRS_SPI",
     "RX_EXPRESSLRS_PHASELOCK",
     "FUSION",
-    "RX_STATE_TIME"
+    "RX_STATE_TIME",
+    "KALMAN",
+    "SMITH_PREDICTOR",
 };
