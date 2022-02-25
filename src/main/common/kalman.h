@@ -48,6 +48,6 @@ typedef struct kalman_s
     pt1Filter_t kFilter;
 } kalman_t;
 
-extern void kalman_init(void);
-extern float kalman_update(float input, int axis);
+void kalman_init(void);
+float kalman_update(float input, int axis);
 void update_kalman_covariance(kalman_t *kalmanState, float rate);

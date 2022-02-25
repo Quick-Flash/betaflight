@@ -46,7 +46,7 @@ void kalman_init(void)
     init_kalman(&gyro.kalmanFilterStateRate[Z],  gyroConfig()->imuf_q);
 }
 
-void update_kalman_covariance(kalman_t *kalmanState, float rate) {
+FAST_CODE void update_kalman_covariance(kalman_t *kalmanState, float rate) {
   if (gyroConfig()->imuf_w >= 3) {
     kalmanState->axisWindow[kalmanState->windex] = rate;
     kalmanState->axisSumMean += kalmanState->axisWindow[kalmanState->windex];
