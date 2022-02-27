@@ -234,6 +234,19 @@ static void dynLpfFilterInit()
 }
 #endif
 
+#ifdef USE_SMITH_PREDICTOR
+void smithPredictorInit() {
+    if (gyroConfig()->smithPredictorDelay > 1) {
+        for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
+            gyro.smithPredictor[axis].samples = gyroConfig()->smithPredictorDelay / (gyro.targetLooptime / 100.0f);
+            gyro.smithPredictor[axis].idx = 0;
+            gyro.smithPredictor[axis].smithPredictorStrength = gyroConfig()->smithPredictorStrength / 100.0f;
+            pt1FilterInit(&gyro.smithPredictor[axis].smithPredictorFilter, pt1FilterGain(gyroConfig()->smithPredictorFilterHz, gyro.targetLooptime * 1e-6f));
+        }
+    }
+}
+#endif // USE_SMITH_PREDICTOR
+
 void gyroInitFilters(void)
 {
     uint16_t gyro_lpf1_init_hz = gyroConfig()->gyro_lpf1_static_hz;
@@ -267,6 +280,9 @@ void gyroInitFilters(void)
     dynNotchInit(dynNotchConfig(), gyro.targetLooptime);
 #endif
     kalman_init();
+#ifdef USE_SMITH_PREDICTOR
+    smithPredictorInit();
+#endif // USE_SMITH_PREDICTOR
 }
 
 #if defined(USE_GYRO_SLEW_LIMITER)
