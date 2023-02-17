@@ -986,6 +986,8 @@ void processRxModes(timeUs_t currentTimeUs)
         DISABLE_FLIGHT_MODE(HORIZON_MODE);
     }
 
+    pidSetShakeTuneState(IS_RC_MODE_ACTIVE(BOXTUNESHAKE) && FLIGHT_MODE(ANGLE_MODE));
+
 #ifdef USE_GPS_RESCUE
     if (ARMING_FLAG(ARMED) && (IS_RC_MODE_ACTIVE(BOXGPSRESCUE) || (failsafeIsActive() && failsafeConfig()->failsafe_procedure == FAILSAFE_PROCEDURE_GPS_RESCUE))) {
         if (!FLIGHT_MODE(GPS_RESCUE_MODE)) {

@@ -337,6 +337,10 @@ void pidInitConfig(const pidProfile_t *pidProfile)
     pidRuntime.acroTrainerGain = (float)pidProfile->acro_trainer_gain / 10.0f;
 #endif // USE_ACRO_TRAINER
 
+    pidRuntime.shakeTuneTimeElapsed = 0.0f;
+    pidRuntime.shakeTuneSpeed = (2.0f * M_PIf) / ((float)pidProfile->shake_tune_speed_tenth_seconds / 10.0f);
+    pidRuntime.shakeTuneState = 0;
+
 #if defined(USE_ABSOLUTE_CONTROL)
     pidRuntime.acGain = (float)pidProfile->abs_control_gain;
     pidRuntime.acLimit = (float)pidProfile->abs_control_limit;

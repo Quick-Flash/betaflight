@@ -233,6 +233,10 @@ typedef struct pidProfile_s {
     uint8_t tpa_mode;                       // Controls which PID terms TPA effects
     uint8_t tpa_rate;                       // Percent reduction in P or D at full throttle
     uint16_t tpa_breakpoint;                // Breakpoint where TPA is activated
+
+    uint8_t shake_tune_max_angle;
+    uint8_t shake_tune_speed_tenth_seconds;
+    uint8_t shake_tune_time;
 } pidProfile_t;
 
 PG_DECLARE_ARRAY(pidProfile_t, PID_PROFILE_COUNT, pidProfiles);
@@ -400,6 +404,10 @@ typedef struct pidRuntime_s {
 #ifdef USE_ACC
     pt3Filter_t attitudeFilter[2];  // Only for ROLL and PITCH
 #endif
+
+    float shakeTuneTimeElapsed;
+    float shakeTuneSpeed; // name is very bad
+    uint8_t shakeTuneState;
 } pidRuntime_t;
 
 extern pidRuntime_t pidRuntime;
@@ -421,6 +429,7 @@ void pidSetItermAccelerator(float newItermAccelerator);
 bool crashRecoveryModeActive(void);
 void pidAcroTrainerInit(void);
 void pidSetAcroTrainerState(bool newState);
+void pidSetShakeTuneState(bool newState);
 void pidUpdateTpaFactor(float throttle);
 void pidUpdateAntiGravityThrottleFilter(float throttle);
 bool pidOsdAntiGravityActive(void);

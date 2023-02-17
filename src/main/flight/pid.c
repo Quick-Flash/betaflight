@@ -223,6 +223,9 @@ void resetPidProfile(pidProfile_t *pidProfile)
         .tpa_mode = TPA_MODE_D,
         .tpa_rate = 65,
         .tpa_breakpoint = 1350,
+        .shake_tune_max_angle = 35,
+        .shake_tune_speed_tenth_seconds = 7,
+        .shake_tune_time = 10,
     );
 
 #ifndef USE_D_MIN
@@ -363,6 +366,42 @@ float pidApplyThrustLinearization(float motorOutput)
 #endif
 
 #if defined(USE_ACC)
+float shake(const pidProfile_t *pidProfile)
+{
+    float angle = 0.0;
+    pidRuntime.shakeTuneTimeElapsed += pidRuntime.dT;
+    if (pidRuntime.shakeTuneTimeElapsed >= pidProfile->shake_tune_time) {
+        pidRuntime.shakeTuneTimeElapsed = 0.0;
+        pidRuntime.shakeTuneState += 1;
+    } else {
+        float sin_input = pidRuntime.shakeTuneSpeed * pidRuntime.shakeTuneTimeElapsed;
+        int sin_divisor = (int)(sin_input / (2.0f * M_PIf));
+        angle = sin_approx(sin_input - (sin_divisor * 2.0 * M_PIf)) * pidProfile->shake_tune_max_angle;
+    }
+
+    return angle;
+}
+
+static float applyShakeTune(const pidProfile_t *pidProfile, int axis)
+{
+    float angle = 0.0;
+    switch (pidRuntime.shakeTuneState) {
+    // roll
+    case 1:
+        if (axis == FD_ROLL) {
+            angle = shake(pidProfile);
+        }
+        break;
+    // pitch
+    case 2:
+        if (axis == FD_PITCH) {
+            angle = shake(pidProfile);
+        }
+        break;
+    }
+    return angle;
+}
+
 // calculate the stick deflection while applying level mode expo
 static float getLevelModeRcDeflection(uint8_t axis)
 {
@@ -441,7 +480,10 @@ STATIC_UNIT_TESTED FAST_CODE_NOINLINE float pidLevel(int axis, const pidProfile_
     const float levelAngleLimit = pidProfile->levelAngleLimit;
     // calculate error angle and limit the angle to the max inclination
     // rcDeflection is in range [-1.0, 1.0]
-    float angle = levelAngleLimit * getLevelModeRcDeflection(axis);
+    float angle = levelAngleLimit * getLevelModeRcDeflection(axis);;
+    if (pidRuntime.shakeTuneState == 1 || pidRuntime.shakeTuneState == 2) {
+        angle += applyShakeTune(pidProfile, axis);
+    }
 #ifdef USE_GPS_RESCUE
     angle += gpsRescueAngle[axis] / 100; // ANGLE IS IN CENTIDEGREES
 #endif
@@ -1221,6 +1263,16 @@ void pidSetAntiGravityState(bool newState)
 bool pidAntiGravityEnabled(void)
 {
     return pidRuntime.antiGravityEnabled;
+}
+
+void pidSetShakeTuneState(bool newState)
+{
+    if (newState == false) {
+        pidRuntime.shakeTuneState = 0;
+    } else if (pidRuntime.shakeTuneState == 0 && newState == true) {
+        pidRuntime.shakeTuneState = 1;
+        pidRuntime.shakeTuneTimeElapsed = 0.0;
+    }
 }
 
 #ifdef USE_DYN_LPF
