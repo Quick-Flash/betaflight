@@ -131,6 +131,12 @@ typedef enum feedforwardAveraging_e {
     FEEDFORWARD_AVERAGING_4_POINT,
 } feedforwardAveraging_t;
 
+typedef enum {
+    LEVEL_MODE_OFF = 0,
+    LEVEL_MODE_R,
+    LEVEL_MODE_RP,
+} levelMode_e;
+
 #define MAX_PROFILE_NAME_LENGTH 8u
 
 typedef struct pidProfile_s {
@@ -146,7 +152,7 @@ typedef struct pidProfile_s {
     uint16_t pidSumLimit;
     uint16_t pidSumLimitYaw;
     uint8_t pidAtMinThrottle;               // Disable/Enable pids on zero throttle. Normally even without airmode P and D would be active.
-    uint8_t levelAngleLimit;                // Max angle in degrees in level mode
+    uint8_t angle_limit;                     // Max angle in degrees in Angle mode, suggest limit of 63.6 degrees to avoid control saturation.
 
     uint8_t horizon_tilt_effect;            // inclination factor for Horizon mode
     uint8_t horizon_tilt_expert_mode;       // OFF or ON
@@ -237,6 +243,8 @@ typedef struct pidProfile_s {
     uint8_t shake_tune_max_angle;
     uint8_t shake_tune_speed_tenth_seconds;
     uint8_t shake_tune_time;
+
+    uint8_t angle_feedforward_smoothing;
 } pidProfile_t;
 
 PG_DECLARE_ARRAY(pidProfile_t, PID_PROFILE_COUNT, pidProfiles);
@@ -297,7 +305,8 @@ typedef struct pidRuntime_s {
     uint8_t antiGravityGain;
     float antiGravityPGain;
     pidCoefficient_t pidCoefficient[XYZ_AXIS_COUNT];
-    float levelGain;
+    float angleGain;
+    float angleFeedforwardGain;
     float horizonGain;
     float horizonTransition;
     float horizonCutoffDegrees;
@@ -399,10 +408,16 @@ typedef struct pidRuntime_s {
     float feedforwardSmoothFactor;
     float feedforwardJitterFactor;
     float feedforwardBoostFactor;
+    float angleFeedforward[XYZ_AXIS_COUNT];
+    float angleTargetPrevious[XYZ_AXIS_COUNT];
+    float angleTargetDelta[XYZ_AXIS_COUNT];
+    uint8_t angleDuplicateCount[XYZ_AXIS_COUNT];
+    float angleSetpoint[XYZ_AXIS_COUNT];
 #endif
 
 #ifdef USE_ACC
     pt3Filter_t attitudeFilter[2];  // Only for ROLL and PITCH
+    pt3Filter_t angleFeedforwardPt3[XYZ_AXIS_COUNT];
 #endif
 
     float shakeTuneTimeElapsed;
@@ -454,7 +469,7 @@ void applyItermRelax(const int axis, const float iterm,
 void applyAbsoluteControl(const int axis, const float gyroRate, float *currentPidSetpoint, float *itermErrorRate);
 void rotateItermAndAxisError();
 float pidLevel(int axis, const pidProfile_t *pidProfile,
-    const rollAndPitchTrims_t *angleTrim, float currentPidSetpoint, float horizonLevelStrength);
+    const rollAndPitchTrims_t *angleTrim, float rawSetpoint, float horizonLevelStrength, bool newRcFrame, levelMode_e levelMode);
 float calcHorizonLevelStrength(void);
 #endif
 void dynLpfDTermUpdate(float throttle);
