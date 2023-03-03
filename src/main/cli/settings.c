@@ -1116,9 +1116,13 @@ const clivalue_t valueTable[] = {
     { "acro_trainer_gain",          VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 25, 255 }, PG_PID_PROFILE, offsetof(pidProfile_t, acro_trainer_gain) },
 #endif // USE_ACRO_TRAINER
 
-    { "shake_tune_max_angle",           VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 10, 80 }, PG_PID_PROFILE, offsetof(pidProfile_t, shake_tune_max_angle) },
-    { "shake_tune_speed_tenth_seconds", VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 5, 20 }, PG_PID_PROFILE, offsetof(pidProfile_t, shake_tune_speed_tenth_seconds) },
-    { "shake_tune_time",                VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 5, 50 }, PG_PID_PROFILE, offsetof(pidProfile_t, shake_tune_time) },
+    { "shake_tune_max_angle",           VAR_UINT8  | MASTER_VALUE | MODE_ARRAY, .config.array.length = 5, PG_PID_PROFILE, offsetof(pidProfile_t, shake_tune_max_angle) },
+//    { "shake_tune_max_angle",           VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 10, 80 }, PG_PID_PROFILE, offsetof(pidProfile_t, shake_tune_max_angle) },
+    { "shake_tune_speed_tenth_seconds", VAR_UINT8  | MASTER_VALUE | MODE_ARRAY, .config.array.length = 5, PG_PID_PROFILE, offsetof(pidProfile_t, shake_tune_speed_tenth_seconds) },
+//    { "shake_tune_speed_tenth_seconds", VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 2, 15 }, PG_PID_PROFILE, offsetof(pidProfile_t, shake_tune_speed_tenth_seconds) },
+    { "shake_tune_time",                VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 5, 255 }, PG_PID_PROFILE, offsetof(pidProfile_t, shake_tune_time) },
+    { "shake_tune_axis",                VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 1 }, PG_PID_PROFILE, offsetof(pidProfile_t, shake_tune_axis) },
+
 
 
     { "p_pitch",                    VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 0, PID_GAIN_MAX }, PG_PID_PROFILE, offsetof(pidProfile_t, pid[PID_PITCH].P) },

@@ -240,9 +240,10 @@ typedef struct pidProfile_s {
     uint8_t tpa_rate;                       // Percent reduction in P or D at full throttle
     uint16_t tpa_breakpoint;                // Breakpoint where TPA is activated
 
-    uint8_t shake_tune_max_angle;
-    uint8_t shake_tune_speed_tenth_seconds;
+    uint8_t shake_tune_max_angle[5];
+    uint8_t shake_tune_speed_tenth_seconds[5];
     uint8_t shake_tune_time;
+    uint8_t shake_tune_axis;
 
     uint8_t angle_feedforward_smoothing;
 } pidProfile_t;
@@ -421,7 +422,7 @@ typedef struct pidRuntime_s {
 #endif
 
     float shakeTuneTimeElapsed;
-    float shakeTuneSpeed; // name is very bad
+    float shakeTuneSpeed[5]; // name is very bad
     uint8_t shakeTuneState;
 } pidRuntime_t;
 

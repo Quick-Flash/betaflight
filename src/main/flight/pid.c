@@ -218,9 +218,10 @@ void resetPidProfile(pidProfile_t *pidProfile)
         .tpa_mode = TPA_MODE_D,
         .tpa_rate = 65,
         .tpa_breakpoint = 1350,
-        .shake_tune_max_angle = 35,
-        .shake_tune_speed_tenth_seconds = 7,
-        .shake_tune_time = 10,
+        .shake_tune_max_angle = { 30, 10, 5, 5, 5 },
+        .shake_tune_speed_tenth_seconds = { 7, 9, 4, 6, 15 },
+        .shake_tune_time = 30,
+        .shake_tune_axis = FD_ROLL,
         .angle_feedforward_smoothing = 50,
     );
 
@@ -362,17 +363,28 @@ float pidApplyThrustLinearization(float motorOutput)
 #endif
 
 #if defined(USE_ACC)
-float shake(const pidProfile_t *pidProfile)
+float generate_sine_wave(const pidProfile_t *pidProfile, int wave_number) {
+   float sin_input = pidRuntime.shakeTuneSpeed[wave_number] * pidRuntime.shakeTuneTimeElapsed;
+   int sin_divisor = (int)(sin_input / (2.0f * M_PIf));
+   return sin_approx(sin_input - (sin_divisor * 2.0 * M_PIf)) * pidProfile->shake_tune_max_angle[wave_number];
+}
+
+float shake(const pidProfile_t *pidProfile, int axis)
 {
     float angle = 0.0;
-    pidRuntime.shakeTuneTimeElapsed += pidRuntime.dT;
+    if (axis == pidProfile->shake_tune_axis) {
+        pidRuntime.shakeTuneTimeElapsed += pidRuntime.dT;
+    }
+
     if (pidRuntime.shakeTuneTimeElapsed >= pidProfile->shake_tune_time) {
         pidRuntime.shakeTuneTimeElapsed = 0.0;
         pidRuntime.shakeTuneState += 1;
     } else {
-        float sin_input = pidRuntime.shakeTuneSpeed * pidRuntime.shakeTuneTimeElapsed;
-        int sin_divisor = (int)(sin_input / (2.0f * M_PIf));
-        angle = sin_approx(sin_input - (sin_divisor * 2.0 * M_PIf)) * pidProfile->shake_tune_max_angle;
+        for (int wave = 0; wave < 5; wave++) {
+            if (pidProfile->shake_tune_max_angle[wave] != 0) {
+                angle += generate_sine_wave(pidProfile, wave);
+            }
+        }
     }
 
     return angle;
@@ -381,19 +393,8 @@ float shake(const pidProfile_t *pidProfile)
 static float applyShakeTune(const pidProfile_t *pidProfile, int axis)
 {
     float angle = 0.0;
-    switch (pidRuntime.shakeTuneState) {
-    // roll
-    case 1:
-        if (axis == FD_ROLL) {
-            angle = shake(pidProfile);
-        }
-        break;
-    // pitch
-    case 2:
-        if (axis == FD_PITCH) {
-            angle = shake(pidProfile);
-        }
-        break;
+    if (pidRuntime.shakeTuneState == 1) {
+        angle = shake(pidProfile, axis);
     }
     return angle;
 }
@@ -502,12 +503,8 @@ STATIC_UNIT_TESTED FAST_CODE_NOINLINE float pidLevel(int axis, const pidProfile_
 #ifdef USE_FEEDFORWARD
         const float rxRateHz = 1e6f / getCurrentRxRefreshRate();
         const float rcCommandDelta = fabsf(getRcCommandDelta(axis));
-        bool shake_tune_enabled = pidRuntime.shakeTuneState == 1 || pidRuntime.shakeTuneState == 2;
-        if (newRcFrame || shake_tune_enabled) {
+        if (newRcFrame) {
             float angleTargetRaw = angleLimit * input;
-            if ((pidRuntime.shakeTuneState == 1 || pidRuntime.shakeTuneState == 2) && axis != FD_YAW) {
-                angleTargetRaw += applyShakeTune(pidProfile, axis);
-            }
 #ifdef USE_GPS_RESCUE
                 angleTargetRaw += gpsRescueAngle[axis] / 100.0f; // ANGLE IS IN CENTIDEGREES
 #endif
@@ -560,6 +557,9 @@ STATIC_UNIT_TESTED FAST_CODE_NOINLINE float pidLevel(int axis, const pidProfile_
         // calculate error angle and limit the angle to the max inclination
         // stick input is from rcCommand, is smoothed, includes level expo, and is in range [-1.0, 1.0]
         float angleTarget = angleLimit * getAngleModeStickInput(axis);
+        if (pidRuntime.shakeTuneState == 1 || pidRuntime.shakeTuneState == 2){
+            angleTarget += applyShakeTune(pidProfile, axis);
+        }
     #ifdef USE_GPS_RESCUE
         angleTarget += gpsRescueAngle[axis] / 100.0f; // ANGLE IS IN CENTIDEGREES
     #endif
