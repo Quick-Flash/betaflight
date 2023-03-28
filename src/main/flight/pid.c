@@ -374,15 +374,15 @@ float shake(const pidProfile_t *pidProfile, int axis)
     float angle = 0.0;
     if (axis == pidProfile->shake_tune_axis) {
         pidRuntime.shakeTuneTimeElapsed += pidRuntime.dT;
-    }
 
-    if (pidRuntime.shakeTuneTimeElapsed >= pidProfile->shake_tune_time) {
-        pidRuntime.shakeTuneTimeElapsed = 0.0;
-        pidRuntime.shakeTuneState += 1;
-    } else {
-        for (int wave = 0; wave < 5; wave++) {
-            if (pidProfile->shake_tune_max_angle[wave] != 0) {
-                angle += generate_sine_wave(pidProfile, wave);
+        if (pidRuntime.shakeTuneTimeElapsed >= pidProfile->shake_tune_time) {
+            pidRuntime.shakeTuneTimeElapsed = 0.0;
+            pidRuntime.shakeTuneState += 1;
+        } else {
+            for (int wave = 0; wave < 5; wave++) {
+                if (pidProfile->shake_tune_max_angle[wave] != 0) {
+                    angle += generate_sine_wave(pidProfile, wave);
+                }
             }
         }
     }
@@ -557,9 +557,6 @@ STATIC_UNIT_TESTED FAST_CODE_NOINLINE float pidLevel(int axis, const pidProfile_
         // calculate error angle and limit the angle to the max inclination
         // stick input is from rcCommand, is smoothed, includes level expo, and is in range [-1.0, 1.0]
         float angleTarget = angleLimit * getAngleModeStickInput(axis);
-        if (pidRuntime.shakeTuneState == 1 || pidRuntime.shakeTuneState == 2){
-            angleTarget += applyShakeTune(pidProfile, axis);
-        }
     #ifdef USE_GPS_RESCUE
         angleTarget += gpsRescueAngle[axis] / 100.0f; // ANGLE IS IN CENTIDEGREES
     #endif
@@ -570,6 +567,7 @@ STATIC_UNIT_TESTED FAST_CODE_NOINLINE float pidLevel(int axis, const pidProfile_
         const float errorAngle = angleTarget - currentAngle;
         // smooth the errorAngle to clean up both attitude signal steps (500hz) and RC dropout steps at ATTITUDE_CUTOFF_HZ
         const float errorAngleSmoothed = pt3FilterApply(&pidRuntime.attitudeFilter[axis], errorAngle);
+        errorAngleSmoothed += applyShakeTune(pidProfile, axis); // only runs if are in shake tune mode
 
         if (FLIGHT_MODE(ANGLE_MODE) || FLIGHT_MODE(GPS_RESCUE_MODE)) {
             // ANGLE mode - control is angle based with P term based on angle error and feedforward based on angle setpoint velocity
