@@ -8,8 +8,8 @@ use panic_halt as _;
 #[cfg(all(not(debug_assertions), not(test)))]
 use panic_abort as _;
 
-pub struct filter_t;
+pub struct FilterT;
 
-#[no_mangle] pub extern "C" fn nullFilterApply(filter: *mut filter_t, input: f32) -> f32 {
+#[no_mangle] pub extern "C" fn nullFilterApply(_filter: *mut FilterT, input: f32) -> f32 {
     input
 }

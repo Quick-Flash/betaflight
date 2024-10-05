@@ -1018,9 +1018,9 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
             DEBUG_SET(DEBUG_D_LPF, axis, lrintf(delta)); // debug d_lpf 2 and 3 used for pre-TPA D
         }
 
-        gyroRateDterm[axis] = pidRuntime.dtermNotchApplyFn((filter_t *) &pidRuntime.dtermNotch[axis], gyroRateDterm[axis]);
-        gyroRateDterm[axis] = pidRuntime.dtermLowpassApplyFn((filter_t *) &pidRuntime.dtermLowpass[axis], gyroRateDterm[axis]);
-        gyroRateDterm[axis] = pidRuntime.dtermLowpass2ApplyFn((filter_t *) &pidRuntime.dtermLowpass2[axis], gyroRateDterm[axis]);
+        gyroRateDterm[axis] = pidRuntime.dtermNotchApplyFn((FilterT *) &pidRuntime.dtermNotch[axis], gyroRateDterm[axis]);
+        gyroRateDterm[axis] = pidRuntime.dtermLowpassApplyFn((FilterT *) &pidRuntime.dtermLowpass[axis], gyroRateDterm[axis]);
+        gyroRateDterm[axis] = pidRuntime.dtermLowpass2ApplyFn((FilterT *) &pidRuntime.dtermLowpass2[axis], gyroRateDterm[axis]);
     }
 
     rotateItermAndAxisError();
@@ -1122,7 +1122,7 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
         // -----calculate P component
         pidData[axis].P = pidRuntime.pidCoefficient[axis].Kp * errorRate * tpaFactorKp;
         if (axis == FD_YAW) {
-            pidData[axis].P = pidRuntime.ptermYawLowpassApplyFn((filter_t *) &pidRuntime.ptermYawLowpass, pidData[axis].P);
+            pidData[axis].P = pidRuntime.ptermYawLowpassApplyFn((FilterT *) &pidRuntime.ptermYawLowpass, pidData[axis].P);
         }
 
         // -----calculate I component

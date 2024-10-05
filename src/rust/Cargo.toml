@@ -16,7 +16,6 @@ lto = "fat"         # Use full Link Time Optimization (LTO)
 debug = false       # Disable debug symbols to reduce binary size
 panic = 'abort'     # Abort on panic to reduce binary size and remove unwinding
 incremental = false # Disable incremental compilation (not needed for release builds)
-rustflags = ["-C", "link-arg=-Wa,--noexecstack"]
 
 [lib]
 crate-type = ["staticlib"]
