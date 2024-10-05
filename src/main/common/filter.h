@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include <rust.h>
 
-typedef float (*filterApplyFnPtr)(filter_t *filter, float input);
+typedef float (*filterApplyFnPtr)(FilterT *filter, float input);
 
 typedef enum {
     FILTER_PT1 = 0,

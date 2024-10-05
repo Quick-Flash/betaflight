@@ -325,6 +325,7 @@ LD_FLAGS     = -lm \
               -Wl,--no-wchar-size-warning \
               -Wl,--print-memory-usage \
               -T$(LD_SCRIPT) \
+              -Wl,--no-warn-execstack \
                $(EXTRA_LD_FLAGS)
 endif
 
