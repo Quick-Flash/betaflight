@@ -59,3 +59,5 @@ eeprom.bin
 # config used for building targets
 /src/config
 
+/src/rust/include/*
+/src/rust/target/*

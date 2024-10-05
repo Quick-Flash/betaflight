@@ -1,0 +1,29 @@
+cargo-features = ["profile-rustflags"]
+
+[package]
+name = "rust"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+opt-level = 3       # Maximize optimization (this is default)
+codegen-units = 1   # Single codegen unit for better optimization across modules
+lto = "fat"         # Use full Link Time Optimization (LTO)
+debug = false       # Disable debug symbols to reduce binary size
+panic = 'abort'     # Abort on panic to reduce binary size and remove unwinding
+incremental = false # Disable incremental compilation (not needed for release builds)
+rustflags = ["-C", "link-arg=-Wa,--noexecstack"]
+
+[lib]
+crate-type = ["staticlib"]
+
+[build-dependencies]
+cbindgen = "0.27.0"
+
+[dependencies]
+panic-abort = "0.3.2"
+panic-halt = "0.2.0"

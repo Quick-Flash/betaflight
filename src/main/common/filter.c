@@ -34,15 +34,6 @@
 #define CUTOFF_CORRECTION_PT2 1.553773974f
 #define CUTOFF_CORRECTION_PT3 1.961459177f
 
-// NULL filter
-
-float nullFilterApply(filter_t *filter, float input)
-{
-    UNUSED(filter);
-    return input;
-}
-
-
 // PT1 Low Pass filter
 
 FAST_CODE_NOINLINE float pt1FilterGain(float f_cut, float dT)

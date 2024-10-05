@@ -47,6 +47,8 @@
 
 #include "pid_init.h"
 
+#include <rust.h>
+
 #ifdef USE_D_MAX
 #define D_MAX_RANGE_HZ 85    // PT2 lowpass input cutoff to peak D around propwash frequencies
 #define D_MAX_LOWPASS_HZ 35  // PT2 lowpass cutoff to smooth the boost effect
