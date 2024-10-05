@@ -72,6 +72,8 @@
 #include "sensors/gyro.h"
 #include "sensors/sensors.h"
 
+#include <rust.h>
+
 #if !defined(USE_GYRO_L3G4200D) && !defined(USE_GYRO_L3GD20) \
     && !defined(USE_GYRO_MPU3050) && !defined(USE_GYRO_MPU6050) && !defined(USE_GYRO_MPU6500) \
     && !defined(USE_GYRO_SPI_MPU6000) && !defined(USE_GYRO_SPI_MPU6500) && !defined(USE_GYRO_SPI_MPU9250) \

@@ -22,9 +22,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <rust.h>
 
-struct filter_s;
-typedef struct filter_s filter_t;
 typedef float (*filterApplyFnPtr)(filter_t *filter, float input);
 
 typedef enum {
@@ -95,7 +94,6 @@ typedef struct meanAccumulator_s {
     int32_t count;
 } meanAccumulator_t;
 
-float nullFilterApply(filter_t *filter, float input);
 
 float pt1FilterGain(float f_cut, float dT);
 float pt1FilterGainFromDelay(float delay, float dT);

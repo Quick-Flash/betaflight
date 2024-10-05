@@ -18,6 +18,13 @@ OBJECT_DIR = $(ROOT)/obj/test
 TARGET_DIR = $(USER_DIR)/target
 MAKE_SCRIPT_DIR := $(ROOT)/mk
 
+RUST_DIR         := $(ROOT)/src/rust
+RUST_INCLUDE_DIR := $(RUST_DIR)/include/
+RUST_TARGET_DIR  := $(RUST_DIR)/target/x86_64-unknown-linux-gnu/release
+RUST_HEADER      := $(RUST_INCLUDE_DIR)/rust.h
+RUST_LIBRARY     := $(RUST_TARGET_DIR)/librust.a
+RUST_SOURCES     := $(shell find $(RUST_DIR)/src -name '*.rs')
+
 include $(MAKE_SCRIPT_DIR)/system-id.mk
 
 VPATH := $(VPATH):$(USER_DIR):$(TEST_DIR)
@@ -592,6 +599,7 @@ C_FLAGS   += $(COVERAGE_FLAGS)
 CXX_FLAGS += $(COVERAGE_FLAGS)
 
 C_FLAGS   += -D_GNU_SOURCE
+LD_FLAGS  += -L$(RUST_TARGET_DIR) -lrust
 
 # Set up the parameter group linker flags according to OS
 ifeq ($(OSFAMILY), macosx)
@@ -696,10 +704,15 @@ $(OBJECT_DIR)/gtest_main.a : $(OBJECT_DIR)/gtest-all.o $(OBJECT_DIR)/gtest_main.
 -include $(OBJECT_DIR)/gtest-all.d \
          $(OBJECT_DIR)/gtest_main.d
 
+$(RUST_LIBRARY): $(RUST_SOURCES)
+	cd $(ROOT)/src/rust && cargo +nightly build --release
+
+$(RUST_HEADER): $(RUST_LIBRARY)
+	cd $(ROOT)/src/rust && cbindgen --lang c++ -o $(PWD)/$(RUST_HEADER)
 
 # includes in test dir must override includes in user dir, unless the user
 # specifies a list of endorsed directories in ${target}_INCLUDE_DIRS.
-test_include_dirs  = $1 $(TEST_DIR) $(USER_DIR)
+test_include_dirs  = $1 $(TEST_DIR) $(USER_DIR) $(RUST_INCLUDE_DIR)
 test_cflags	   = $(addprefix -I,$(call test_include_dirs,$1))
 
 
@@ -770,7 +783,7 @@ $(OBJECT_DIR)/$1/%.c.o: $(TARGET_DIR)/$(TARGET)/%.c
                 -c $$< -o $$@
 endif
 
-$(OBJECT_DIR)/$1/$(basename $1).o: $(TEST_DIR)/$(basename $1).cc
+$(OBJECT_DIR)/$1/$(basename $1).o: $(RUST_HEADER) $(TEST_DIR)/$(basename $1).cc
 	@echo "compiling $$<" "$(STDOUT)"
 	$(V1) mkdir -p $$(dir $$@)
 	$(V1) $(CXX) $(CXX_FLAGS) $$(call test_cflags,$$($1_INCLUDE_DIRS)) \

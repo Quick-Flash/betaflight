@@ -226,6 +226,18 @@ INCLUDE_DIRS    := $(INCLUDE_DIRS) \
 INCLUDE_DIRS    := $(INCLUDE_DIRS) \
                    $(TARGET_DIR)
 
+RUST_DIR         := $(ROOT)/src/rust
+RUST_INCLUDE_DIR := $(RUST_DIR)/include/
+RUST_TARGET_DIR  := $(RUST_DIR)/target/thumbv7em-none-eabihf/release
+RUST_HEADER      := $(RUST_INCLUDE_DIR)/rust.h
+RUST_LIBRARY     := $(RUST_TARGET_DIR)/librust.a
+RUST_SOURCES     := $(shell find $(RUST_DIR)/src -name '*.rs')
+
+INCLUDE_DIRS    := $(INCLUDE_DIRS) \
+                   $(RUST_INCLUDE_DIR)
+
+EXTRA_LD_FLAGS   := $(EXTRA_LD_FLAGS) -L$(RUST_TARGET_DIR) -lrust
+
 VPATH           := $(VPATH):$(TARGET_DIR)
 
 include $(MAKE_SCRIPT_DIR)/source.mk
@@ -371,6 +383,12 @@ CLEAN_ARTIFACTS += $(TARGET_DFU)
 # Make sure build date and revision is updated on every incremental build
 $(TARGET_OBJ_DIR)/build/version.o : $(SRC)
 
+$(RUST_LIBRARY): $(RUST_SOURCES)
+	cd $(RUST_DIR) && cargo build --release --target thumbv7em-none-eabihf
+
+$(RUST_HEADER): $(RUST_LIBRARY)
+	cd $(RUST_DIR) && cbindgen --lang c -o $(PWD)/$(RUST_HEADER)
+
 # List of buildable ELF files and their object dependencies.
 # It would be nice to compute these lists, but that seems to be just beyond make.
 
@@ -437,7 +455,7 @@ $(TARGET_HEX): $(TARGET_BIN)
 
 endif
 
-$(TARGET_ELF): $(TARGET_OBJS) $(LD_SCRIPT) $(LD_SCRIPTS)
+$(TARGET_ELF): $(RUST_HEADER) $(RUST_LIBRARY) $(TARGET_OBJS) $(LD_SCRIPT) $(LD_SCRIPTS)
 	@echo "Linking $(TARGET_NAME)" "$(STDOUT)"
 	$(V1) $(CROSS_CC) -o $@ $(filter-out %.ld,$^) $(LD_FLAGS)
 	$(V1) $(SIZE) $(TARGET_ELF)
