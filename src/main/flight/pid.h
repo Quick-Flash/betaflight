@@ -321,7 +321,7 @@ typedef union dtermLowpass_u {
     Pt1Filter pt1Filter;
     biquadFilter_t biquadFilter;
     Pt2Filter pt2Filter;
-    pt3Filter_t pt3Filter;
+    Pt3Filter pt3Filter;
 } dtermLowpass_t;
 
 typedef struct pidCoefficient_s {
@@ -463,11 +463,11 @@ typedef struct pidRuntime_s {
     float feedforwardYawHoldGain;
     float feedforwardYawHoldTime;
     bool feedforwardInterpolate; // Whether to interpolate an FF value for duplicate/identical data values 
-    pt3Filter_t angleFeedforwardPt3[XYZ_AXIS_COUNT];
+    Pt3Filter angleFeedforwardPt3[XYZ_AXIS_COUNT];
 #endif
 
 #ifdef USE_ACC
-    pt3Filter_t attitudeFilter[2];  // Only for ROLL and PITCH
+    Pt3Filter attitudeFilter[2];  // Only for ROLL and PITCH
     Pt1Filter horizonSmoothingPt1;
     uint16_t horizonDelayMs;
     float angleYawSetpoint;

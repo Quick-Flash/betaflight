@@ -232,6 +232,7 @@ impl Pt2Filter {
 }
 
 #[derive(Copy, Clone)]
+#[repr(C)]
 pub struct Pt3Filter {
     state: f32,
     pt2: Pt2Filter,
@@ -312,6 +313,42 @@ impl Pt3Filter {
         self.pt2.last_output()
     }
 }
+
+// C stuff
+#[link_section = ".tcm_code"]
+#[no_mangle] pub extern "C" fn pt3FilterGain(f_cut: f32, dt: f32) -> f32
+{
+    Pt1Filter::pt1_k(f_cut * 1.961_459_2, dt)
+}
+
+#[no_mangle] pub extern "C" fn pt3FilterInit(filter: *mut Pt3Filter, k: f32)
+{
+    unsafe {
+        (*filter).state = 0.0;
+        (*filter).pt2.state = 0.0;
+        (*filter).pt2.pt1.state = 0.0;
+        (*filter).pt2.pt1.k = k;
+    }
+}
+
+#[link_section = ".tcm_code"]
+#[inline]
+#[no_mangle] pub extern "C" fn pt3FilterUpdateCutoff(filter: *mut Pt3Filter, k: f32)
+{
+    unsafe {
+        (*filter).pt2.pt1.k = k;
+    }
+}
+
+#[link_section = ".tcm_code"]
+#[inline]
+#[no_mangle] pub extern "C" fn pt3FilterApply(filter: *mut Pt3Filter, input: f32) -> f32
+{
+    unsafe {
+        (*filter).apply(input)
+    }
+}
+
 #[cfg(test)]
 mod ptn_tests {
     use super::*;

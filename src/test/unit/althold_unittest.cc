@@ -107,13 +107,13 @@ extern "C" {
     float getAltitudeCm(void) { return 0.0f;}
     float getAltitudeDerivative(void) { return 0.0f;}
 
-    void pt2FilterInit(pt2Filter_t *altHoldDeltaLpf, float) {
+    void pt2FilterInit(Pt2Filter *altHoldDeltaLpf, float) {
         UNUSED(altHoldDeltaLpf);
     }
     float pt2FilterGain(float, float) {
         return 0.0f;
     }
-    float pt2FilterApply(pt2Filter_t *altHoldDeltaLpf, float) {
+    float pt2FilterApply(Pt2Filter *altHoldDeltaLpf, float) {
         UNUSED(altHoldDeltaLpf);
         return 0.0f;
     }

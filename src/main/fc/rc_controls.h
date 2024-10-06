@@ -86,9 +86,9 @@ extern float rcCommand[4];
 
 typedef struct rcSmoothingFilter_s {
     bool filterInitialized;
-    pt3Filter_t filterSetpoint[4];
-    pt3Filter_t filterRcDeflection[2];
-    pt3Filter_t filterFeedforward[3];
+    Pt3Filter filterSetpoint[4];
+    Pt3Filter filterRcDeflection[2];
+    Pt3Filter filterFeedforward[3];
 
     uint8_t setpointCutoffSetting;
     uint8_t throttleCutoffSetting;

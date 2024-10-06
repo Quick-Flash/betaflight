@@ -101,8 +101,8 @@ extern "C" {
 
     float getGpsDataIntervalSeconds(void) { return 0.1f; }
     void pt1FilterUpdateCutoff(Pt1Filter *filter, float k) { filter->k = k; }
-    void pt2FilterUpdateCutoff(pt2Filter_t *filter, float k) { filter->k = k; }
-    void pt3FilterUpdateCutoff(pt3Filter_t *filter, float k) { filter->k = k; }
+    void pt2FilterUpdateCutoff(Pt2Filter *filter, float k) { filter->k = k; }
+    void pt3FilterUpdateCutoff(Pt3Filter *filter, float k) { filter->k = k; }
 }
 
 uint32_t simulationFeatureFlags = 0;
@@ -1154,10 +1154,10 @@ extern "C" {
         UNUSED(velocityDLpf);
         return 0.0f;
     }
-    void pt3FilterInit(pt3Filter_t *velocityUpsampleLpf, float) {
+    void pt3FilterInit(Pt3Filter *velocityUpsampleLpf, float) {
         UNUSED(velocityUpsampleLpf);
     }
-    float pt3FilterApply(pt3Filter_t *velocityUpsampleLpf, float) {
+    float pt3FilterApply(Pt3Filter *velocityUpsampleLpf, float) {
         UNUSED(velocityUpsampleLpf);
         return 0.0f;
     }
