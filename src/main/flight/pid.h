@@ -320,7 +320,7 @@ typedef struct pidAxisData_s {
 typedef union dtermLowpass_u {
     Pt1Filter pt1Filter;
     biquadFilter_t biquadFilter;
-    pt2Filter_t pt2Filter;
+    Pt2Filter pt2Filter;
     pt3Filter_t pt3Filter;
 } dtermLowpass_t;
 
@@ -345,7 +345,7 @@ typedef struct pidRuntime_s {
     FilterApplyFnPtr ptermYawLowpassApplyFn;
     Pt1Filter ptermYawLowpass;
     bool antiGravityEnabled;
-    pt2Filter_t antiGravityLpf;
+    Pt2Filter antiGravityLpf;
     float antiGravityOsdCutoff;
     float antiGravityThrottleD;
     float itermAccelerator;
@@ -402,8 +402,8 @@ typedef struct pidRuntime_s {
 #endif
 
 #ifdef USE_D_MAX
-    pt2Filter_t dMaxRange[XYZ_AXIS_COUNT];
-    pt2Filter_t dMaxLowpass[XYZ_AXIS_COUNT];
+    Pt2Filter dMaxRange[XYZ_AXIS_COUNT];
+    Pt2Filter dMaxLowpass[XYZ_AXIS_COUNT];
     float dMaxPercent[XYZ_AXIS_COUNT];
     uint8_t dMax[XYZ_AXIS_COUNT];
     float dMaxGyroGain;
@@ -477,7 +477,7 @@ typedef struct pidRuntime_s {
 #endif
 
 #ifdef USE_WING
-    pt2Filter_t tpaLpf;
+    Pt2Filter tpaLpf;
     float spa[XYZ_AXIS_COUNT]; // setpoint pid attenuation (0.0 to 1.0). 0 - full attenuation, 1 - no attenuation
     float tpaGravityThr0;
     float tpaGravityThr100;
