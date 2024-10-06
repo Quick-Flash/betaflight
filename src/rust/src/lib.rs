@@ -1,4 +1,17 @@
 #![no_std]
+#![no_main]
+#![feature(core_intrinsics)]
+
+pub mod auto_notch;
+pub mod biquad;
+pub mod ptn;
+pub mod predictive;
+pub mod sqrt;
+pub mod trig;
+pub mod abs;
+pub mod circular_buffer;
+pub mod powi;
+pub mod constrain;
 
 // dev profile: easier to debug panics; can put a breakpoint on `rust_begin_unwind`
 #[cfg(all(debug_assertions, not(test)))]

@@ -117,10 +117,10 @@ void voltageMeterReset(voltageMeter_t *meter)
 typedef struct voltageMeterADCState_s {
     uint16_t voltageDisplayFiltered;         // battery voltage in 0.01V steps (filtered)
     uint16_t voltageUnfiltered;       // battery voltage in 0.01V steps (unfiltered)
-    pt1Filter_t displayFilter;
+    Pt1Filter displayFilter;
 #if defined(USE_BATTERY_VOLTAGE_SAG_COMPENSATION)
     uint16_t voltageSagFiltered;      // battery voltage in 0.01V steps (filtered for vbat sag compensation)
-    pt1Filter_t sagFilter;            // filter for vbat sag compensation
+    Pt1Filter sagFilter;            // filter for vbat sag compensation
 #endif
 } voltageMeterADCState_t;
 
@@ -255,7 +255,7 @@ void voltageMeterGenericInit(void)
 typedef struct voltageMeterESCState_s {
     uint16_t voltageDisplayFiltered;         // battery voltage in 0.01V steps (filtered)
     uint16_t voltageUnfiltered;       // battery voltage in 0.01V steps (unfiltered)
-    pt1Filter_t displayFilter;
+    Pt1Filter displayFilter;
 } voltageMeterESCState_t;
 
 static voltageMeterESCState_t voltageMeterESCState;

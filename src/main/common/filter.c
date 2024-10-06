@@ -34,43 +34,6 @@
 #define CUTOFF_CORRECTION_PT2 1.553773974f
 #define CUTOFF_CORRECTION_PT3 1.961459177f
 
-// PT1 Low Pass filter
-
-FAST_CODE_NOINLINE float pt1FilterGain(float f_cut, float dT)
-{
-    float omega = 2.0f * M_PIf * f_cut * dT;
-    return omega / (omega + 1.0f);
-}
-
-// Calculates filter gain based on delay (time constant of filter) - time it takes for filter response to reach 63.2% of a step input.
-float pt1FilterGainFromDelay(float delay, float dT)
-{
-    if (delay <= 0) {
-        return 1.0f; // gain = 1 means no filtering
-    }
-
-    const float cutoffHz = 1.0f / (2.0f * M_PIf * delay);
-    return pt1FilterGain(cutoffHz, dT);
-}
-
-void pt1FilterInit(pt1Filter_t *filter, float k)
-{
-    filter->state = 0.0f;
-    filter->k = k;
-}
-
-void pt1FilterUpdateCutoff(pt1Filter_t *filter, float k)
-{
-    filter->k = k;
-}
-
-FAST_CODE float pt1FilterApply(pt1Filter_t *filter, float input)
-{
-    filter->state = filter->state + filter->k * (input - filter->state);
-    return filter->state;
-}
-
-
 // PT2 Low Pass filter
 
 FAST_CODE float pt2FilterGain(float f_cut, float dT)

@@ -37,6 +37,8 @@
 
 #include "pg/pg.h"
 
+#include <rust.h>
+
 #define LPF_MAX_HZ 1000 // so little filtering above 1000hz that if the user wants less delay, they must disable the filter
 #define DYN_LPF_MAX_HZ 1000
 
@@ -52,7 +54,7 @@
 #define GYRO_IMU_DOWNSAMPLE_CUTOFF_HZ 200
 
 typedef union gyroLowpassFilter_u {
-    pt1Filter_t pt1FilterState;
+    Pt1Filter pt1FilterState;
     biquadFilter_t biquadFilterState;
     pt2Filter_t pt2FilterState;
     pt3Filter_t pt3FilterState;
@@ -98,18 +100,18 @@ typedef struct gyro_s {
     gyroDev_t *rawSensorDev;           // pointer to the sensor providing the raw data for DEBUG_GYRO_RAW
 
     // lowpass gyro soft filter
-    filterApplyFnPtr lowpassFilterApplyFn;
+    FilterApplyFnPtr lowpassFilterApplyFn;
     gyroLowpassFilter_t lowpassFilter[XYZ_AXIS_COUNT];
 
     // lowpass2 gyro soft filter
-    filterApplyFnPtr lowpass2FilterApplyFn;
+    FilterApplyFnPtr lowpass2FilterApplyFn;
     gyroLowpassFilter_t lowpass2Filter[XYZ_AXIS_COUNT];
 
     // notch filters
-    filterApplyFnPtr notchFilter1ApplyFn;
+    FilterApplyFnPtr notchFilter1ApplyFn;
     biquadFilter_t notchFilter1[XYZ_AXIS_COUNT];
 
-    filterApplyFnPtr notchFilter2ApplyFn;
+    FilterApplyFnPtr notchFilter2ApplyFn;
     biquadFilter_t notchFilter2[XYZ_AXIS_COUNT];
 
     uint16_t accSampleRateHz;
@@ -129,7 +131,7 @@ typedef struct gyro_s {
 #ifdef USE_GYRO_OVERFLOW_CHECK
     uint8_t overflowAxisMask;
 #endif
-    pt1Filter_t imuGyroFilter[XYZ_AXIS_COUNT];
+    Pt1Filter imuGyroFilter[XYZ_AXIS_COUNT];
 } gyro_t;
 
 extern gyro_t gyro;

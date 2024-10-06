@@ -143,7 +143,7 @@ FAST_CODE uint16_t prepareDshotPacket(dshotProtocolControl_t *pcb)
 
 FAST_DATA_ZERO_INIT dshotTelemetryState_t dshotTelemetryState;
 
-FAST_DATA_ZERO_INIT static pt1Filter_t motorFreqLpf[MAX_SUPPORTED_MOTORS];
+FAST_DATA_ZERO_INIT static Pt1Filter motorFreqLpf[MAX_SUPPORTED_MOTORS];
 FAST_DATA_ZERO_INIT static float motorFrequencyHz[MAX_SUPPORTED_MOTORS];
 FAST_DATA_ZERO_INIT static float minMotorFrequencyHz;
 FAST_DATA_ZERO_INIT static float erpmToHz;

@@ -1,5 +1,3 @@
-cargo-features = ["profile-rustflags"]
-
 [package]
 name = "rust"
 version = "0.1.0"
@@ -17,12 +15,24 @@ debug = false       # Disable debug symbols to reduce binary size
 panic = 'abort'     # Abort on panic to reduce binary size and remove unwinding
 incremental = false # Disable incremental compilation (not needed for release builds)
 
+[dependencies]
+panic-abort = "0.3.2"
+panic-halt = "0.2.0"
+# used in tests for the approx_eq method
+approx = "0.5.1"
+
+[dependencies.microfft]
+version = "0.6.0"
+default-features = false
+features = ["size-64", "bitrev-tables"]
+
+# makes num complex no_std
+[dependencies.num-complex]
+version = "0.4"
+default-features = false
+
 [lib]
 crate-type = ["staticlib"]
 
 [build-dependencies]
 cbindgen = "0.27.0"
-
-[dependencies]
-panic-abort = "0.3.2"
-panic-halt = "0.2.0"

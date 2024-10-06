@@ -29,6 +29,8 @@
 
 #include "pg/pg.h"
 
+#include <rust.h>
+
 #define MAX_PID_PROCESS_DENOM       16
 #define PID_CONTROLLER_BETAFLIGHT   1
 #define PID_MIXER_SCALING           1000.0f
@@ -316,7 +318,7 @@ typedef struct pidAxisData_s {
 } pidAxisData_t;
 
 typedef union dtermLowpass_u {
-    pt1Filter_t pt1Filter;
+    Pt1Filter pt1Filter;
     biquadFilter_t biquadFilter;
     pt2Filter_t pt2Filter;
     pt3Filter_t pt3Filter;
@@ -334,14 +336,14 @@ typedef struct pidRuntime_s {
     float pidFrequency;
     bool pidStabilisationEnabled;
     float previousPidSetpoint[XYZ_AXIS_COUNT];
-    filterApplyFnPtr dtermNotchApplyFn;
+    FilterApplyFnPtr dtermNotchApplyFn;
     biquadFilter_t dtermNotch[XYZ_AXIS_COUNT];
-    filterApplyFnPtr dtermLowpassApplyFn;
+    FilterApplyFnPtr dtermLowpassApplyFn;
     dtermLowpass_t dtermLowpass[XYZ_AXIS_COUNT];
-    filterApplyFnPtr dtermLowpass2ApplyFn;
+    FilterApplyFnPtr dtermLowpass2ApplyFn;
     dtermLowpass_t dtermLowpass2[XYZ_AXIS_COUNT];
-    filterApplyFnPtr ptermYawLowpassApplyFn;
-    pt1Filter_t ptermYawLowpass;
+    FilterApplyFnPtr ptermYawLowpassApplyFn;
+    Pt1Filter ptermYawLowpass;
     bool antiGravityEnabled;
     pt2Filter_t antiGravityLpf;
     float antiGravityOsdCutoff;
@@ -384,7 +386,7 @@ typedef struct pidRuntime_s {
     float landingDisarmThreshold;
 
 #ifdef USE_ITERM_RELAX
-    pt1Filter_t windupLpf[XYZ_AXIS_COUNT];
+    Pt1Filter windupLpf[XYZ_AXIS_COUNT];
     uint8_t itermRelax;
     uint8_t itermRelaxType;
     uint8_t itermRelaxCutoff;
@@ -395,7 +397,7 @@ typedef struct pidRuntime_s {
     float acGain;
     float acLimit;
     float acErrorLimit;
-    pt1Filter_t acLpf[XYZ_AXIS_COUNT];
+    Pt1Filter acLpf[XYZ_AXIS_COUNT];
     float oldSetpointCorrection[XYZ_AXIS_COUNT];
 #endif
 
@@ -409,8 +411,8 @@ typedef struct pidRuntime_s {
 #endif
 
 #ifdef USE_AIRMODE_LPF
-    pt1Filter_t airmodeThrottleLpf1;
-    pt1Filter_t airmodeThrottleLpf2;
+    Pt1Filter airmodeThrottleLpf1;
+    Pt1Filter airmodeThrottleLpf2;
 #endif
 
 #ifdef USE_ACRO_TRAINER
@@ -466,7 +468,7 @@ typedef struct pidRuntime_s {
 
 #ifdef USE_ACC
     pt3Filter_t attitudeFilter[2];  // Only for ROLL and PITCH
-    pt1Filter_t horizonSmoothingPt1;
+    Pt1Filter horizonSmoothingPt1;
     uint16_t horizonDelayMs;
     float angleYawSetpoint;
     float angleEarthRef;
@@ -497,7 +499,7 @@ extern pidAxisData_t pidData[3];
 extern uint32_t targetPidLooptime;
 
 extern float throttleBoost;
-extern pt1Filter_t throttleLpf;
+extern Pt1Filter throttleLpf;
 
 void resetPidProfile(pidProfile_t *profile);
 

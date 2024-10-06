@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include <rust.h>
 
-typedef float (*filterApplyFnPtr)(FilterT *filter, float input);
+typedef float (*FilterApplyFnPtr)(FilterT *filter, float input);
 
 typedef enum {
     FILTER_PT1 = 0,
@@ -38,11 +38,6 @@ typedef enum {
     FILTER_NOTCH,
     FILTER_BPF,
 } biquadFilterType_e;
-
-typedef struct pt1Filter_s {
-    float state;
-    float k;
-} pt1Filter_t;
 
 typedef struct pt2Filter_s {
     float state;
@@ -94,12 +89,6 @@ typedef struct meanAccumulator_s {
     int32_t count;
 } meanAccumulator_t;
 
-
-float pt1FilterGain(float f_cut, float dT);
-float pt1FilterGainFromDelay(float delay, float dT);
-void pt1FilterInit(pt1Filter_t *filter, float k);
-void pt1FilterUpdateCutoff(pt1Filter_t *filter, float k);
-float pt1FilterApply(pt1Filter_t *filter, float input);
 
 float pt2FilterGain(float f_cut, float dT);
 float pt2FilterGainFromDelay(float delay, float dT);

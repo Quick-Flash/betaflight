@@ -31,7 +31,7 @@ extern "C" {
 
 TEST(FilterUnittest, TestPt1FilterInit)
 {
-    pt1Filter_t filter;
+    Pt1Filter filter;
     pt1FilterInit(&filter, 0.0f);
     EXPECT_EQ(0, filter.k);
 
@@ -48,7 +48,7 @@ TEST(FilterUnittest, TestPt1FilterGain)
 
 TEST(FilterUnittest, TestPt1FilterApply)
 {
-    pt1Filter_t filter;
+    Pt1Filter filter;
     pt1FilterInit(&filter, pt1FilterGain(100.0f, 31.25f));
     EXPECT_EQ(0, filter.state);
 
