@@ -88,7 +88,7 @@ void currentMeterReset(currentMeter_t *meter)
 // ADC/Virtual shared
 //
 
-static pt1Filter_t adciBatFilter;
+static Pt1Filter adciBatFilter;
 
 #ifndef DEFAULT_CURRENT_METER_SCALE
 #define DEFAULT_CURRENT_METER_SCALE 400 // for Allegro ACS758LCB-100U (40mV/A)

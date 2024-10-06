@@ -189,7 +189,7 @@
 #define EFFICIENCY_MINIMUM_SPEED_CM_S 100
 #define EFFICIENCY_CUTOFF_HZ 0.5f
 
-static pt1Filter_t batteryEfficiencyFilt;
+static Pt1Filter batteryEfficiencyFilt;
 
 #define MOTOR_STOPPED_THRESHOLD_RPM 1000
 

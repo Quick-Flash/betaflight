@@ -96,7 +96,7 @@ typedef struct laggedMovingAverageCombined_s {
 } laggedMovingAverageCombined_t;
 laggedMovingAverageCombined_t  feedforwardDeltaAvg[XYZ_AXIS_COUNT];
 
-static pt1Filter_t feedforwardYawHoldLpf;
+static Pt1Filter feedforwardYawHoldLpf;
 
 float getFeedforward(int axis)
 {

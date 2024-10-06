@@ -89,13 +89,13 @@ static int16_t rsnrRaw = CRSF_SNR_MIN;     // range: [-30,20]
 #endif //USE_RX_RSNR
 static timeUs_t lastMspRssiUpdateUs = 0;
 
-static pt1Filter_t frameErrFilter;
-static pt1Filter_t rssiFilter;
+static Pt1Filter frameErrFilter;
+static Pt1Filter rssiFilter;
 #ifdef USE_RX_RSSI_DBM
-static pt1Filter_t rssiDbmFilter;
+static Pt1Filter rssiDbmFilter;
 #endif //USE_RX_RSSI_DBM
 #ifdef USE_RX_RSNR
-static pt1Filter_t rsnrFilter;
+static Pt1Filter rsnrFilter;
 #endif //USE_RX_RSNR
 
 #ifdef USE_RX_LINK_QUALITY_INFO

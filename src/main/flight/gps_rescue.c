@@ -129,7 +129,7 @@ static float rescueYaw;
 float gpsRescueAngle[ANGLE_INDEX_COUNT] = { 0, 0 };
 bool magForceDisable = false;
 static bool newGPSData = false;
-static pt1Filter_t velocityDLpf;
+static Pt1Filter velocityDLpf;
 static pt3Filter_t velocityUpsampleLpf;
 
 rescueState_s rescueState;
@@ -730,7 +730,7 @@ void descend(void)
 
     // descend faster while the quad is at higher altitudes
     const float descentRateMultiplier = constrainf(rescueState.intent.targetAltitudeCm / 5000.0f, 0.0f, 1.0f);
-    altitudeStepCm *= 1.0f + (2.0f * descentRateMultiplier); 
+    altitudeStepCm *= 1.0f + (2.0f * descentRateMultiplier);
     // maximum descent rate increase is 3x default above 50m, 2x above 25m, 1.2x at 5m, default by ground level
 
     // also increase throttle D up to 2x in the descent phase when altitude descent rate is faster, for better control

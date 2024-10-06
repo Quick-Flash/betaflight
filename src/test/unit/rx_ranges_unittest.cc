@@ -247,19 +247,19 @@ float pt1FilterGain(float f_cut, float dT)
     return 0.0;
 }
 
-void pt1FilterInit(pt1Filter_t *filter, float k)
+void pt1FilterInit(Pt1Filter *filter, float k)
 {
     UNUSED(filter);
     UNUSED(k);
 }
 
-void pt1FilterUpdateCutoff(pt1Filter_t *filter, float k)
+void pt1FilterUpdateCutoff(Pt1Filter *filter, float k)
 {
     UNUSED(filter);
     UNUSED(k);
 }
 
-float pt1FilterApply(pt1Filter_t *filter, float input)
+float pt1FilterApply(Pt1Filter *filter, float input)
 {
     UNUSED(filter);
     UNUSED(input);
