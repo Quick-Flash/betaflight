@@ -122,6 +122,7 @@ impl Pt1Filter {
 }
 
 #[derive(Copy, Clone)]
+#[repr(C)]
 pub struct Pt2Filter {
     state: f32,
     pt1: Pt1Filter,
@@ -193,6 +194,40 @@ impl Pt2Filter {
 
     pub fn last_output(& self) -> f32 {
         self.pt1.last_output()
+    }
+}
+
+// C stuff
+#[link_section = ".tcm_code"]
+#[no_mangle] pub extern "C" fn pt2FilterGain(f_cut: f32, dt: f32) -> f32
+{
+    Pt1Filter::pt1_k(f_cut * 1.553_774, dt)
+}
+
+#[no_mangle] pub extern "C" fn pt2FilterInit(filter: *mut Pt2Filter, k: f32)
+{
+    unsafe {
+        (*filter).state = 0.0;
+        (*filter).pt1.state = 0.0;
+        (*filter).pt1.k = k;
+    }
+}
+
+#[link_section = ".tcm_code"]
+#[inline]
+#[no_mangle] pub extern "C" fn pt2FilterUpdateCutoff(filter: *mut Pt2Filter, k: f32)
+{
+    unsafe {
+        (*filter).pt1.k = k;
+    }
+}
+
+#[link_section = ".tcm_code"]
+#[inline]
+#[no_mangle] pub extern "C" fn pt2FilterApply(filter: *mut Pt2Filter, input: f32) -> f32
+{
+    unsafe {
+        (*filter).apply(input)
     }
 }
 

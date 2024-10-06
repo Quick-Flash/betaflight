@@ -48,14 +48,16 @@
 #include "pg/pg.h"
 #include "pg/pg_ids.h"
 
+#include <rust.h>
+
 static float displayAltitudeCm = 0.0f;
 static bool altitudeAvailable = false;
 
 static float zeroedAltitudeCm = 0.0f;
 static float zeroedAltitudeDerivative = 0.0f;
 
-static pt2Filter_t altitudeLpf;
-static pt2Filter_t altitudeDerivativeLpf;
+static Pt2Filter altitudeLpf;
+static Pt2Filter altitudeDerivativeLpf;
 
 #ifdef USE_VARIO
 static int16_t estimatedVario = 0; // in cm/s
