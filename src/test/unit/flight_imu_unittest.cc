@@ -439,10 +439,10 @@ extern "C" {
     float getBaroAltitude(void) { return 3000.0f; }
     float gpsRescueGetImuYawCogGain(void) { return 1.0f; }
     float getRcDeflectionAbs(int) { return 0.0f; }
-    void pt2FilterInit(pt2Filter_t *baroDerivativeLpf, float) {
+    void pt2FilterInit(Pt2Filter *baroDerivativeLpf, float) {
         UNUSED(baroDerivativeLpf);
     }
-    float pt2FilterApply(pt2Filter_t *baroDerivativeLpf, float) {
+    float pt2FilterApply(Pt2Filter *baroDerivativeLpf, float) {
         UNUSED(baroDerivativeLpf);
         return 0.0f;
     }

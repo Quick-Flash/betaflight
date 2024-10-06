@@ -130,7 +130,7 @@ float gpsRescueAngle[ANGLE_INDEX_COUNT] = { 0, 0 };
 bool magForceDisable = false;
 static bool newGPSData = false;
 static Pt1Filter velocityDLpf;
-static pt3Filter_t velocityUpsampleLpf;
+static Pt3Filter velocityUpsampleLpf;
 
 rescueState_s rescueState;
 

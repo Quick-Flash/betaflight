@@ -30,51 +30,6 @@
 
 #define BIQUAD_Q 1.0f / sqrtf(2.0f)     /* quality factor - 2nd order butterworth*/
 
-// PTn cutoff correction = 1 / sqrt(2^(1/n) - 1)
-#define CUTOFF_CORRECTION_PT2 1.553773974f
-#define CUTOFF_CORRECTION_PT3 1.961459177f
-
-// PT3 Low Pass filter
-
-FAST_CODE float pt3FilterGain(float f_cut, float dT)
-{
-    // shift f_cut to satisfy -3dB cutoff condition
-    return pt1FilterGain(f_cut * CUTOFF_CORRECTION_PT3, dT);
-}
-
-// Calculates filter gain based on delay (time constant of filter) - time it takes for filter response to reach 63.2% of a step input.
-float pt3FilterGainFromDelay(float delay, float dT)
-{
-    if (delay <= 0) {
-        return 1.0f; // gain = 1 means no filtering
-    }
-
-    const float cutoffHz = 1.0f / (M_PIf * delay * CUTOFF_CORRECTION_PT3);
-    return pt3FilterGain(cutoffHz, dT);
-}
-
-void pt3FilterInit(pt3Filter_t *filter, float k)
-{
-    filter->state = 0.0f;
-    filter->state1 = 0.0f;
-    filter->state2 = 0.0f;
-    filter->k = k;
-}
-
-void pt3FilterUpdateCutoff(pt3Filter_t *filter, float k)
-{
-    filter->k = k;
-}
-
-FAST_CODE float pt3FilterApply(pt3Filter_t *filter, float input)
-{
-    filter->state1 = filter->state1 + filter->k * (input - filter->state1);
-    filter->state2 = filter->state2 + filter->k * (filter->state1 - filter->state2);
-    filter->state = filter->state + filter->k * (filter->state2 - filter->state);
-    return filter->state;
-}
-
-
 // Biquad filter
 
 // get notch filter Q given center frequency (f0) and lower cutoff frequency (f1)

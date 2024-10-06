@@ -39,13 +39,6 @@ typedef enum {
     FILTER_BPF,
 } biquadFilterType_e;
 
-typedef struct pt3Filter_s {
-    float state;
-    float state1;
-    float state2;
-    float k;
-} pt3Filter_t;
-
 /* this holds the data required to update samples thru a filter */
 typedef struct biquadFilter_s {
     float b0, b1, b2, a1, a2;
@@ -82,12 +75,6 @@ typedef struct meanAccumulator_s {
     int32_t accumulator;
     int32_t count;
 } meanAccumulator_t;
-
-float pt3FilterGain(float f_cut, float dT);
-float pt3FilterGainFromDelay(float delay, float dT);
-void pt3FilterInit(pt3Filter_t *filter, float k);
-void pt3FilterUpdateCutoff(pt3Filter_t *filter, float k);
-float pt3FilterApply(pt3Filter_t *filter, float input);
 
 float filterGetNotchQ(float centerFreq, float cutoffFreq);
 
