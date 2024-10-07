@@ -168,9 +168,6 @@ static bool gyroInitLowpassFilterLpf(int slot, int type, uint16_t lpfHz, uint32_
     const uint32_t gyroFrequencyNyquist = 1000000 / 2 / looptime;
     const float gyroDt = looptime * 1e-6f;
 
-    // Gain could be calculated a little later as it is specific to the pt1/bqrcf2/fkf branches
-    const float gain = pt1FilterGain(lpfHz, gyroDt);
-
     // Dereference the pointer to null before checking valid cutoff and filter
     // type. It will be overridden for positive cases.
     *lowpassFilterApplyFn = nullFilterApply;
@@ -180,8 +177,9 @@ static bool gyroInitLowpassFilterLpf(int slot, int type, uint16_t lpfHz, uint32_
         switch (type) {
         case FILTER_PT1:
             *lowpassFilterApplyFn = (FilterApplyFnPtr) pt1FilterApply;
+            const float pt1_gain = pt1FilterGain(lpfHz, gyroDt);
             for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
-                pt1FilterInit(&lowpassFilter[axis].pt1FilterState, gain);
+                pt1FilterInit(&lowpassFilter[axis].pt1FilterState, pt1_gain);
             }
             ret = true;
             break;
@@ -200,15 +198,17 @@ static bool gyroInitLowpassFilterLpf(int slot, int type, uint16_t lpfHz, uint32_
             break;
         case FILTER_PT2:
             *lowpassFilterApplyFn = (FilterApplyFnPtr) pt2FilterApply;
+            const float pt2_gain = pt2FilterGain(lpfHz, gyroDt);
             for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
-                pt2FilterInit(&lowpassFilter[axis].pt2FilterState, gain);
+                pt2FilterInit(&lowpassFilter[axis].pt2FilterState, pt2_gain);
             }
             ret = true;
             break;
         case FILTER_PT3:
             *lowpassFilterApplyFn = (FilterApplyFnPtr) pt3FilterApply;
+            const float pt3_gain = pt3FilterGain(lpfHz, gyroDt);
             for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
-                pt3FilterInit(&lowpassFilter[axis].pt3FilterState, gain);
+                pt3FilterInit(&lowpassFilter[axis].pt3FilterState, pt3_gain);
             }
             ret = true;
             break;
@@ -280,7 +280,7 @@ void gyroInitFilters(void)
     dynNotchInit(dynNotchConfig(), gyro.targetLooptime);
 #endif
 
-    const float k = pt1FilterGain(GYRO_IMU_DOWNSAMPLE_CUTOFF_HZ, gyro.targetLooptime);
+    const float k = 1.0;
     for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
         pt1FilterInit(&gyro.imuGyroFilter[axis], k);
     }
