@@ -88,8 +88,8 @@ mod test {
     use std::println;
     use core::f32::consts::PI;
     use approx::assert_abs_diff_eq;
-    use spavilo_math::trig::Trig;
-    use crate::auto_notch::NUM_BINS;
+    use crate::math::trig::Trig;
+    use crate::filter::auto_notch::NUM_BINS;
 
     #[test]
     fn four_different_peaks() {

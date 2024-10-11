@@ -294,6 +294,7 @@ dependencies = [
  "num-complex",
  "panic-abort",
  "panic-halt",
+ "rust",
 ]
 
 [[package]]

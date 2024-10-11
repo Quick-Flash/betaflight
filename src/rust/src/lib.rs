@@ -1,12 +1,12 @@
-#![no_std]
-#![no_main]
+#![cfg_attr(not(any(test, feature = "testing")), no_std)]
+#![cfg_attr(not(test), no_main)]
 #![feature(core_intrinsics)]
 
 pub mod filter;
 pub mod math;
 
 // dev profile: easier to debug panics; can put a breakpoint on `rust_begin_unwind`
-#[cfg(all(debug_assertions, not(test)))]
+#[cfg(all(debug_assertions, not(any(test, feature = "testing"))))]
 use panic_halt as _;
 
 // release profile: minimize the binary size of the application
