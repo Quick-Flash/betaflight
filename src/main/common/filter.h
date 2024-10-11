@@ -86,9 +86,6 @@ float biquadFilterApplyDF1(biquadFilter_t *filter, float input);
 float biquadFilterApplyDF1Weighted(biquadFilter_t *filter, float input);
 float biquadFilterApply(biquadFilter_t *filter, float input);
 
-void slewFilterInit(slewFilter_t *filter, float slewLimit, float threshold);
-float slewFilterApply(slewFilter_t *filter, float input);
-
 void laggedMovingAverageInit(laggedMovingAverage_t *filter, uint16_t windowSize, float *buf);
 float laggedMovingAverageUpdate(laggedMovingAverage_t *filter, float input);
 

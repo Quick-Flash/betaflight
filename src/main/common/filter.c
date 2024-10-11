@@ -145,32 +145,6 @@ FAST_CODE float biquadFilterApply(biquadFilter_t *filter, float input)
 }
 
 
-// Slew filter with limit
-
-void slewFilterInit(slewFilter_t *filter, float slewLimit, float threshold)
-{
-    filter->state = 0.0f;
-    filter->slewLimit = slewLimit;
-    filter->threshold = threshold;
-}
-
-FAST_CODE float slewFilterApply(slewFilter_t *filter, float input)
-{
-    if (filter->state >= filter->threshold) {
-        if (input >= filter->state - filter->slewLimit) {
-            filter->state = input;
-        }
-    } else if (filter->state <= -filter->threshold) {
-        if (input <= filter->state + filter->slewLimit) {
-            filter->state = input;
-        }
-    } else {
-        filter->state = input;
-    }
-    return filter->state;
-}
-
-
 // Moving average
 
 void laggedMovingAverageInit(laggedMovingAverage_t *filter, uint16_t windowSize, float *buf)
