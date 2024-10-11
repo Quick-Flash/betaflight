@@ -12,7 +12,7 @@ opt-level = 3       # Maximize optimization (this is default)
 codegen-units = 1   # Single codegen unit for better optimization across modules
 lto = "fat"         # Use full Link Time Optimization (LTO)
 debug = false       # Disable debug symbols to reduce binary size
-panic = 'abort'     # Abort on panic to reduce binary size and remove unwinding
+panic = "abort"     # Abort on panic to reduce binary size and remove unwinding
 incremental = false # Disable incremental compilation (not needed for release builds)
 
 [dependencies]
