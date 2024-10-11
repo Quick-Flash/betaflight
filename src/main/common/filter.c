@@ -28,22 +28,11 @@
 #include "common/maths.h"
 #include "common/utils.h"
 
+// TODO remove the rest of the biquad filter once I replace the gyro filtering and pid controller
+
 #define BIQUAD_Q 1.0f / sqrtf(2.0f)     /* quality factor - 2nd order butterworth*/
 
 // Biquad filter
-
-// get notch filter Q given center frequency (f0) and lower cutoff frequency (f1)
-// Q = f0 / (f2 - f1) ; f2 = f0^2 / f1
-float filterGetNotchQ(float centerFreq, float cutoffFreq)
-{
-    return centerFreq * cutoffFreq / (centerFreq * centerFreq - cutoffFreq * cutoffFreq);
-}
-
-/* sets up a biquad filter as a 2nd order butterworth LPF */
-void biquadFilterInitLPF(biquadFilter_t *filter, float filterFreq, uint32_t refreshRate)
-{
-    biquadFilterInit(filter, filterFreq, refreshRate, BIQUAD_Q, FILTER_LPF, 1.0f);
-}
 
 void biquadFilterInit(biquadFilter_t *filter, float filterFreq, uint32_t refreshRate, float Q, biquadFilterType_e filterType, float weight)
 {
@@ -101,11 +90,6 @@ FAST_CODE void biquadFilterUpdate(biquadFilter_t *filter, float filterFreq, uint
     filter->weight = weight;
 }
 
-FAST_CODE void biquadFilterUpdateLPF(biquadFilter_t *filter, float filterFreq, uint32_t refreshRate)
-{
-    biquadFilterUpdate(filter, filterFreq, refreshRate, BIQUAD_Q, FILTER_LPF, 1.0f);
-}
-
 /* Computes a biquadFilter_t filter on a sample (slightly less precise than df2 but works in dynamic mode) */
 FAST_CODE float biquadFilterApplyDF1(biquadFilter_t *filter, float input)
 {
@@ -144,7 +128,7 @@ FAST_CODE float biquadFilterApply(biquadFilter_t *filter, float input)
     return result;
 }
 
-
+// Moving average is only used by feedforward a good candidate to remove
 // Moving average
 
 void laggedMovingAverageInit(laggedMovingAverage_t *filter, uint16_t windowSize, float *buf)
@@ -172,6 +156,7 @@ FAST_CODE float laggedMovingAverageUpdate(laggedMovingAverage_t *filter, float i
     return filter->movingSum / denom;
 }
 
+// The code below is only used by ELRS, so meh probably not worth removing
 
 // Simple fixed-point lowpass filter based on integer math
 

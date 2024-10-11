@@ -120,7 +120,7 @@ static void gyroInitFilterNotch1(uint16_t notchHz, uint16_t notchCutoffHz)
 
     if (notchHz != 0 && notchCutoffHz != 0) {
         gyro.notchFilter1ApplyFn = (FilterApplyFnPtr)biquadFilterApply;
-        const float notchQ = filterGetNotchQ(notchHz, notchCutoffHz);
+        const float notchQ = q_from_center_and_end_freq(notchHz, notchCutoffHz);
         for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
             biquadFilterInit(&gyro.notchFilter1[axis], notchHz, gyro.targetLooptime, notchQ, FILTER_NOTCH, 1.0f);
         }
@@ -135,7 +135,7 @@ static void gyroInitFilterNotch2(uint16_t notchHz, uint16_t notchCutoffHz)
 
     if (notchHz != 0 && notchCutoffHz != 0) {
         gyro.notchFilter2ApplyFn = (FilterApplyFnPtr)biquadFilterApply;
-        const float notchQ = filterGetNotchQ(notchHz, notchCutoffHz);
+        const float notchQ = q_from_center_and_end_freq(notchHz, notchCutoffHz);
         for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
             biquadFilterInit(&gyro.notchFilter2[axis], notchHz, gyro.targetLooptime, notchQ, FILTER_NOTCH, 1.0f);
         }
@@ -191,7 +191,7 @@ static bool gyroInitLowpassFilterLpf(int slot, int type, uint16_t lpfHz, uint32_
                 *lowpassFilterApplyFn = (FilterApplyFnPtr) biquadFilterApply;
 #endif
                 for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
-                    biquadFilterInitLPF(&lowpassFilter[axis].biquadFilterState, lpfHz, looptime);
+                    lowpassFilter[axis].biquadFilterState = biquadFilterInitLPF(0.7071f, lpfHz, gyroDt);
                 }
                 ret = true;
             }

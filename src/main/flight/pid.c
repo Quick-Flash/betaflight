@@ -1372,7 +1372,7 @@ void dynLpfDTermUpdate(float throttle)
             break;
         case DYN_LPF_BIQUAD:
             for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
-                biquadFilterUpdateLPF(&pidRuntime.dtermLowpass[axis].biquadFilter, cutoffFreq, targetPidLooptime);
+                biquadFilterUpdateLPF(&pidRuntime.dtermLowpass[axis].biquadFilter, 0.7071f, cutoffFreq, pidRuntime.dT);
             }
             break;
         case DYN_LPF_PT2:

@@ -3,6 +3,7 @@ use crate::math::abs::Absf;
 use crate::math::trig::Trig;
 
 #[derive(Copy, Clone)]
+#[repr(C)]
 struct Biquad {
     b0: f32,
     b1: f32,
@@ -207,6 +208,7 @@ impl FirstOrderLowpassFilter {
 }
 
 #[derive(Copy, Clone)]
+#[repr(C)]
 pub struct SecondOrderLowpassFilter {
     biquad: Biquad,
 }
@@ -278,6 +280,25 @@ impl SecondOrderHighpassFilter {
 
     pub fn reset(&mut self) {
         self.biquad.reset();
+    }
+}
+
+#[no_mangle] pub extern "C" fn q_from_center_and_end_freq(center_freq: f32, cutoff_freq: f32) -> f32
+{
+    NotchFilter::q_from_center_and_end_freq(center_freq, cutoff_freq)
+}
+
+#[no_mangle] pub extern "C" fn biquadFilterInitLPF(quality_factor: f32, cutoff_freq: f32, dt: f32) -> SecondOrderLowpassFilter
+{
+    SecondOrderLowpassFilter::new(quality_factor, cutoff_freq, dt)
+}
+
+#[link_section = ".tcm_code"]
+#[inline]
+#[no_mangle] pub extern "C" fn biquadFilterUpdateLPF(filter: *mut SecondOrderLowpassFilter, quality_factor: f32, cutoff_freq: f32, dt: f32)
+{
+    unsafe {
+        (*filter).update_cutoff(quality_factor, cutoff_freq, dt);
     }
 }
 

@@ -626,7 +626,7 @@ void dynLpfGyroUpdate(float throttle)
             break;
         case DYN_LPF_BIQUAD:
             for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
-                biquadFilterUpdateLPF(&gyro.lowpassFilter[axis].biquadFilterState, cutoffFreq, gyro.targetLooptime);
+                biquadFilterUpdateLPF(&gyro.lowpassFilter[axis].biquadFilterState, 0.7071f, cutoffFreq, gyroDt);
             }
             break;
         case  DYN_LPF_PT2:

@@ -550,7 +550,7 @@ void servosFilterInit(void)
 {
     if (servoConfig()->servo_lowpass_freq) {
         for (int servoIdx = 0; servoIdx < MAX_SUPPORTED_SERVOS; servoIdx++) {
-            biquadFilterInitLPF(&servoFilter[servoIdx], servoConfig()->servo_lowpass_freq, targetPidLooptime);
+            servoFilter[servoIdx] = biquadFilterInitLPF(0.7071f, servoConfig()->servo_lowpass_freq, pidRuntime.dT);
         }
     }
 

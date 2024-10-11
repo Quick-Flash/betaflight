@@ -96,7 +96,7 @@ void pidInitFilters(const pidProfile_t *pidProfile)
 
     if (dTermNotchHz != 0 && pidProfile->dterm_notch_cutoff != 0) {
         pidRuntime.dtermNotchApplyFn = (FilterApplyFnPtr)biquadFilterApply;
-        const float notchQ = filterGetNotchQ(dTermNotchHz, pidProfile->dterm_notch_cutoff);
+        const float notchQ = q_from_center_and_end_freq(dTermNotchHz, pidProfile->dterm_notch_cutoff);
         for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
             biquadFilterInit(&pidRuntime.dtermNotch[axis], dTermNotchHz, targetPidLooptime, notchQ, FILTER_NOTCH, 1.0f);
         }
@@ -129,7 +129,7 @@ void pidInitFilters(const pidProfile_t *pidProfile)
                 pidRuntime.dtermLowpassApplyFn = (FilterApplyFnPtr)biquadFilterApply;
 #endif
                 for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
-                    biquadFilterInitLPF(&pidRuntime.dtermLowpass[axis].biquadFilter, dterm_lpf1_init_hz, targetPidLooptime);
+                    pidRuntime.dtermLowpass[axis].biquadFilter = biquadFilterInitLPF(0.7071f, dterm_lpf1_init_hz, pidRuntime.dT);
                 }
             } else {
                 pidRuntime.dtermLowpassApplyFn = nullFilterApply;
@@ -168,7 +168,7 @@ void pidInitFilters(const pidProfile_t *pidProfile)
             if (pidProfile->dterm_lpf2_static_hz < pidFrequencyNyquist) {
                 pidRuntime.dtermLowpass2ApplyFn = (FilterApplyFnPtr)biquadFilterApply;
                 for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
-                    biquadFilterInitLPF(&pidRuntime.dtermLowpass2[axis].biquadFilter, pidProfile->dterm_lpf2_static_hz, targetPidLooptime);
+                    pidRuntime.dtermLowpass2[axis].biquadFilter = biquadFilterInitLPF(0.7071f, pidProfile->dterm_lpf2_static_hz, pidRuntime.dT);
                 }
             } else {
                 pidRuntime.dtermLowpassApplyFn = nullFilterApply;
