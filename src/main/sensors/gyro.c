@@ -59,10 +59,6 @@
 #include "sensors/gyro.h"
 #include "sensors/gyro_init.h"
 
-#if ((TARGET_FLASH_SIZE > 128) && (defined(USE_GYRO_SPI_ICM20601) || defined(USE_GYRO_SPI_ICM20689) || defined(USE_GYRO_SPI_MPU6500)))
-#define USE_GYRO_SLEW_LIMITER
-#endif
-
 FAST_DATA_ZERO_INIT gyro_t gyro;
 
 static FAST_DATA_ZERO_INIT bool overflowDetected;
@@ -259,24 +255,6 @@ STATIC_UNIT_TESTED NOINLINE void performGyroCalibration(gyroSensor_t *gyroSensor
     DEBUG_SET(DEBUG_GYRO_CALIBRATION, 3, gyroSensor->calibration.cyclesRemaining);
 }
 
-#if defined(USE_GYRO_SLEW_LIMITER)
-FAST_CODE int32_t gyroSlewLimiter(gyroSensor_t *gyroSensor, int axis)
-{
-    int32_t ret = (int32_t)gyroSensor->gyroDev.gyroADCRaw[axis];
-    if (gyroConfig()->checkOverflow || gyro.gyroHasOverflowProtection) {
-        // don't use the slew limiter if overflow checking is on or gyro is not subject to overflow bug
-        return ret;
-    }
-    if (abs(ret - gyroSensor->gyroDev.gyroADCRawPrevious[axis]) > (1<<14)) {
-        // there has been a large change in value, so assume overflow has occurred and return the previous value
-        ret = gyroSensor->gyroDev.gyroADCRawPrevious[axis];
-    } else {
-        gyroSensor->gyroDev.gyroADCRawPrevious[axis] = ret;
-    }
-    return ret;
-}
-#endif
-
 #ifdef USE_GYRO_OVERFLOW_CHECK
 static FAST_CODE_NOINLINE void handleOverflow(timeUs_t currentTimeUs)
 {
@@ -388,16 +366,9 @@ static FAST_CODE void gyroUpdateSensor(gyroSensor_t *gyroSensor)
 
     if (isGyroSensorCalibrationComplete(gyroSensor)) {
         // move 16-bit gyro data into 32-bit variables to avoid overflows in calculations
-
-#if defined(USE_GYRO_SLEW_LIMITER)
-        gyroSensor->gyroDev.gyroADC.x = gyroSlewLimiter(gyroSensor, X) - gyroSensor->gyroDev.gyroZero[X];
-        gyroSensor->gyroDev.gyroADC.y = gyroSlewLimiter(gyroSensor, Y) - gyroSensor->gyroDev.gyroZero[Y];
-        gyroSensor->gyroDev.gyroADC.z = gyroSlewLimiter(gyroSensor, Z) - gyroSensor->gyroDev.gyroZero[Z];
-#else
         gyroSensor->gyroDev.gyroADC.x = gyroSensor->gyroDev.gyroADCRaw[X] - gyroSensor->gyroDev.gyroZero[X];
         gyroSensor->gyroDev.gyroADC.y = gyroSensor->gyroDev.gyroADCRaw[Y] - gyroSensor->gyroDev.gyroZero[Y];
         gyroSensor->gyroDev.gyroADC.z = gyroSensor->gyroDev.gyroADCRaw[Z] - gyroSensor->gyroDev.gyroZero[Z];
-#endif
 
         if (gyroSensor->gyroDev.gyroAlign == ALIGN_CUSTOM) {
             alignSensorViaMatrix(&gyroSensor->gyroDev.gyroADC, &gyroSensor->gyroDev.rotationMatrix);

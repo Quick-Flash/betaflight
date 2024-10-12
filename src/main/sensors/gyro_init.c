@@ -286,25 +286,6 @@ void gyroInitFilters(void)
     }
 }
 
-#if defined(USE_GYRO_SLEW_LIMITER)
-void gyroInitSlewLimiter(gyroSensor_t *gyroSensor)
-{
-
-    for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
-        gyroSensor->gyroDev.gyroADCRawPrevious[axis] = 0;
-    }
-}
-#endif
-
-static void gyroInitSensorFilters(gyroSensor_t *gyroSensor)
-{
-#if defined(USE_GYRO_SLEW_LIMITER)
-    gyroInitSlewLimiter(gyroSensor);
-#else
-    UNUSED(gyroSensor);
-#endif
-}
-
 void gyroInitSensor(gyroSensor_t *gyroSensor, const gyroDeviceConfig_t *config)
 {
     gyroSensor->gyroDev.gyro_high_fsr = gyroConfig()->gyro_high_fsr;
@@ -351,8 +332,6 @@ void gyroInitSensor(gyroSensor_t *gyroSensor, const gyroDeviceConfig_t *config)
         gyroSensor->gyroDev.gyroHasOverflowProtection = false;  // default catch for newly added gyros until proven to be unaffected
         break;
     }
-
-    gyroInitSensorFilters(gyroSensor);
 }
 
 STATIC_UNIT_TESTED gyroHardware_e gyroDetect(gyroDev_t *dev)
