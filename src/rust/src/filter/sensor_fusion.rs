@@ -7,11 +7,13 @@ use crate::math::abs::Absf;
 // thus when fusing we can do a better job of picking which gyro to use
 
 
+#[repr(C)]
 struct SensorNoiseEstimation {
     previous_sensor: [f32; 3],
     filter: [Pt1Filter; 3],
 }
 
+#[repr(C)]
 pub struct SensorFusion {
     noise_estimate_1: SensorNoiseEstimation,
     noise_estimate_2: SensorNoiseEstimation,
@@ -25,11 +27,11 @@ impl SensorNoiseEstimation {
         }
     }
 
-    fn estimate_noise(&mut self, sensor_input: [f32; 3], looprate: f32) -> [f32; 3] {
+    fn estimate_noise(&mut self, sensor_input: [f32; 3]) -> [f32; 3] {
         let mut noise = [0.0; 3];
 
         for axis in 0..3 {
-            let derivative = (sensor_input[axis] - self.previous_sensor[axis]).absf() * looprate;
+            let derivative = (sensor_input[axis] - self.previous_sensor[axis]).absf();
             noise[axis] = self.filter[axis].apply(derivative);
         }
 
@@ -47,18 +49,43 @@ impl SensorFusion {
         }
     }
 
-    pub fn fuse_sensors(&mut self, sensor1: [f32; 3], sensor2: [f32; 3], looprate: f32) -> [f32; 3] {
-        let noise1 = self.noise_estimate_1.estimate_noise(sensor1, looprate);
-        let noise2 = self.noise_estimate_2.estimate_noise(sensor2, looprate);
+    pub fn fuse_sensors(&mut self, sensor1: [f32; 3], sensor2: [f32; 3]) -> [f32; 3] {
+        let noise1 = self.noise_estimate_1.estimate_noise(sensor1);
+        let noise2 = self.noise_estimate_2.estimate_noise(sensor2);
 
         let mut fused_output = [0.0; 3];
         for axis in 0..3 {
             let noise1_squared = noise1[axis] * noise1[axis];
             let noise2_squared = noise2[axis] * noise2[axis];
-            fused_output[axis] = (noise2_squared * sensor1[axis] + noise1_squared * sensor2[axis]) / (noise1_squared + noise2_squared);
+            let denominator = noise1_squared + noise2_squared;
+
+            // Handle divide by 0 bugs
+            fused_output[axis] = if denominator != 0.0 {
+                (noise2_squared * sensor1[axis] + noise1_squared * sensor2[axis]) / denominator
+            } else {
+                // Fallback: filter each evenly
+                0.5 * (sensor1[axis] + sensor2[axis])
+            };
         }
 
         fused_output
+    }
+}
+
+// C stuff
+#[no_mangle] pub extern "C" fn sensor_fusion_new(fusion: *mut SensorFusion, noise_estimation_cutoff: f32, dt: f32)
+{
+    unsafe {
+        (*fusion) = SensorFusion::new(noise_estimation_cutoff, dt)
+    }
+}
+
+#[link_section = ".tcm_code"]
+#[inline]
+#[no_mangle] pub extern "C" fn fuse_sensors(fusion: *mut SensorFusion, gyro_output: *mut [f32; 3], sensor1: *const [f32; 3], sensor2: *const [f32; 3])
+{
+    unsafe {
+        *gyro_output = (*fusion).fuse_sensors(*sensor1, *sensor2)
     }
 }
 
@@ -84,17 +111,17 @@ mod sensor_fusion_tests {
         // when
         let mut output = [[0.0; 3]; 6];
         for i in 0..6 {
-            output[i] = noise.estimate_noise(input[i], LOOPRATE);
+            output[i] = noise.estimate_noise(input[i]);
         }
 
         // then
         assert_eq!(output, [
-            [468.61804, 468.61804, 93.72361],
-            [931.74603, 1400.364, 92.625595],
-            [1389.4482, 2789.8123, 91.54044],
-            [1841.7883, 4631.6006, 90.468],
-            [2288.829, 6920.4297, 89.40813],
-            [2730.6326, 9651.0625, 88.36067]
+            [0.058577254, 0.058577254, 0.011715451],
+            [0.11646825, 0.1750455, 0.011578199],
+            [0.17368102, 0.3487265, 0.011442556],
+            [0.23022352, 0.57895005, 0.0113085015],
+            [0.2861036, 0.86505365, 0.011176017],
+            [0.34132904, 1.2063828, 0.011045085]
         ]);
     }
 
@@ -114,17 +141,17 @@ mod sensor_fusion_tests {
         // when
         let mut output = [[0.0; 3]; 6];
         for i in 0..6 {
-            output[i] = noise.estimate_noise(input[i], LOOPRATE);
+            output[i] = noise.estimate_noise(input[i]);
         }
 
         // then
         assert_eq!(output, [
-            [468.61804, 468.61804, 93.72361],
-            [931.74603, 1400.364, 92.625595],
-            [1389.4482, 2789.8123, 91.54044],
-            [1841.7883, 4631.6006, 90.468],
-            [2288.829, 6920.4297, 89.40813],
-            [2730.6326, 9651.0625, 88.36067]
+            [0.058577254, 0.058577254, 0.011715451],
+            [0.11646825, 0.1750455, 0.011578199],
+            [0.17368102, 0.3487265, 0.011442556],
+            [0.23022352, 0.57895005, 0.0113085015],
+            [0.2861036, 0.86505365, 0.011176017],
+            [0.34132904, 1.2063828, 0.011045085]
         ]);
     }
 
@@ -144,17 +171,17 @@ mod sensor_fusion_tests {
         // when
         let mut output = [[0.0; 3]; 6];
         for i in 0..6 {
-            output[i] = noise.estimate_noise(input[i], LOOPRATE);
+            output[i] = noise.estimate_noise(input[i]);
         }
 
         // then
         assert_eq!(output, [
-            [468.61804, 468.61804, 93.72361],
-            [931.74603, 1400.364, 92.625595],
-            [1389.4482, 2789.8123, 91.54044],
-            [1841.7883, 4631.6006, 90.468],
-            [2288.829, 6920.4297, 89.40813],
-            [2730.6326, 9651.0625, 88.36067]
+            [0.058577254, 0.058577254, 0.011715451],
+            [0.11646825, 0.1750455, 0.011578199],
+            [0.17368102, 0.3487265, 0.011442556],
+            [0.23022352, 0.57895005, 0.0113085015],
+            [0.2861036, 0.86505365, 0.011176017],
+            [0.34132904, 1.2063828, 0.011045085]
         ]);
     }
 
@@ -183,7 +210,7 @@ mod sensor_fusion_tests {
         // when
         let mut output = [[0.0; 3]; 6];
         for i in 0..6 {
-            output[i] = fusion.fuse_sensors(sensor1[i], sensor2[i], LOOPRATE);
+            output[i] = fusion.fuse_sensors(sensor1[i], sensor2[i]);
         }
 
         // then
@@ -193,7 +220,7 @@ mod sensor_fusion_tests {
             [5.0, -10.0, -1.0],
             [0.0, 10.0, -1.0],
             [5.0, -15.0, -1.0],
-            [0.0, 15.0, -1.0],
+            [0.0, 15.000001, -1.0],
         ]);
     }
 
@@ -222,17 +249,17 @@ mod sensor_fusion_tests {
         // when
         let mut output = [[0.0; 3]; 6];
         for i in 0..6 {
-            output[i] = fusion.fuse_sensors(sensor1[i], sensor2[i], LOOPRATE);
+            output[i] = fusion.fuse_sensors(sensor1[i], sensor2[i]);
         }
 
         // then
         assert_eq!(output, [
-            [-5.0, 0.0, -1.1999999],
-            [0.0, 4.9999995, -1.2],
-            [5.0, 8.013988, -1.2],
-            [0.0, 10.0, -1.2],
-            [5.0, 13.863292, -1.1999999],
-            [0.0, 15.0, -1.1999999],
+            [-5.0, 0.0, -1.2],
+            [0.0, 5.0, -1.2],
+            [5.0, 8.013986, -1.2],
+            [0.0, 10.0, -1.1999999],
+            [5.0, 13.863292, -1.2],
+            [0.0, 15.000001, -1.1999999],
         ]);
     }
 }
