@@ -1,3 +1,12 @@
+# Changelog
+### 10/13/2024
+- Remove gyro overflow protection (sounds scary but few gyros implement this). Removed as I don't plan on implementing this logic into the Rust PID loop logic.
+- For FC with dual gyros of the same type added smarter sensor fusion. Adding one new parameter `gyro_noise_est_cut`. 
+It can be found in the OSD labeled `GYRO NOISE CUT` in the `FILTER GLB`.
+This parameter is a filter on the "noise" of each gyro. The more "noisy" gyro will be weighted less when fusing the gyros together. 
+A lower cutoff will mean that the weighting will switch between gyros slower.
+- TODO modify the existing `DEBUG_DUAL_GYRO_DIFF` to make it useful for viewing the noise of each sensor.
+
 ![Betaflight](images/bf_logo.png)
 
 [![Latest version](https://img.shields.io/github/v/release/betaflight/betaflight)](https://github.com/betaflight/betaflight/releases) [![Build](https://img.shields.io/github/actions/workflow/status/betaflight/betaflight/nightly.yml?branch=master)](https://github.com/betaflight/betaflight/actions/workflows/nightly.yml) [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [![Join us on Discord!](https://img.shields.io/discord/868013470023548938)](https://discord.gg/n4E6ak4u3c)

@@ -754,8 +754,10 @@ static uint16_t gyroConfig_gyro_soft_notch_hz_1;
 static uint16_t gyroConfig_gyro_soft_notch_cutoff_1;
 static uint16_t gyroConfig_gyro_soft_notch_hz_2;
 static uint16_t gyroConfig_gyro_soft_notch_cutoff_2;
-static uint8_t  gyroConfig_gyro_to_use;
-
+#ifdef USE_MULTI_GYRO
+static uint8_t gyroConfig_gyro_to_use;
+static uint8_t gyroConfig_gyro_noise_est_cut;
+#endif
 static const void *cmsx_menuGyro_onEnter(displayPort_t *pDisp)
 {
     UNUSED(pDisp);
@@ -766,8 +768,10 @@ static const void *cmsx_menuGyro_onEnter(displayPort_t *pDisp)
     gyroConfig_gyro_soft_notch_cutoff_1 = gyroConfig()->gyro_soft_notch_cutoff_1;
     gyroConfig_gyro_soft_notch_hz_2 = gyroConfig()->gyro_soft_notch_hz_2;
     gyroConfig_gyro_soft_notch_cutoff_2 = gyroConfig()->gyro_soft_notch_cutoff_2;
+#ifdef USE_MULTI_GYRO
     gyroConfig_gyro_to_use = gyroConfig()->gyro_to_use;
-
+    gyroConfig_gyro_noise_est_cut = gyroConfig()->gyro_noise_est_cut;
+#endif
     return NULL;
 }
 
@@ -782,8 +786,10 @@ static const void *cmsx_menuGyro_onExit(displayPort_t *pDisp, const OSD_Entry *s
     gyroConfigMutable()->gyro_soft_notch_cutoff_1 = gyroConfig_gyro_soft_notch_cutoff_1;
     gyroConfigMutable()->gyro_soft_notch_hz_2 = gyroConfig_gyro_soft_notch_hz_2;
     gyroConfigMutable()->gyro_soft_notch_cutoff_2 = gyroConfig_gyro_soft_notch_cutoff_2;
+#ifdef USE_MULTI_GYRO
     gyroConfigMutable()->gyro_to_use = gyroConfig_gyro_to_use;
-
+    gyroConfigMutable()->gyro_noise_est_cut = gyroConfig_gyro_noise_est_cut;
+#endif
     return NULL;
 }
 
@@ -800,7 +806,8 @@ static const OSD_Entry cmsx_menuFilterGlobalEntries[] =
     { "GYRO NF2",   OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_soft_notch_hz_2,     0, 500, 1 } },
     { "GYRO NF2C",  OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_soft_notch_cutoff_2, 0, 500, 1 } },
 #ifdef USE_MULTI_GYRO
-    { "GYRO TO USE",  OME_TAB | REBOOT_REQUIRED,  NULL, &(OSD_TAB_t)    { &gyroConfig_gyro_to_use,  2, osdTableGyroToUse} },
+    { "GYRO TO USE",    OME_TAB | REBOOT_REQUIRED,  NULL, &(OSD_TAB_t)    { &gyroConfig_gyro_to_use,  2, osdTableGyroToUse} },
+    { "GYRO NOISE CUT", OME_UINT8, NULL, &(OSD_UINT8_t) { &gyroConfig_gyro_noise_est_cut,  1, 250, 1 } },
 #endif
 
     { "BACK", OME_Back, NULL, NULL },

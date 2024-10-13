@@ -1865,7 +1865,7 @@ case MSP_NAME:
         sbufWriteU8(dst, gyroConfig()->gyroMovementCalibrationThreshold);
         sbufWriteU16(dst, gyroConfig()->gyroCalibrationDuration);
         sbufWriteU16(dst, gyroConfig()->gyro_offset_yaw);
-        sbufWriteU8(dst, gyroConfig()->checkOverflow);
+        sbufWriteU8(dst, 0); // check overflow
         //Added in MSP API 1.42
         sbufWriteU8(dst, systemConfig()->debug_mode);
         sbufWriteU8(dst, DEBUG_COUNT);
@@ -3037,7 +3037,7 @@ static mspResult_e mspProcessInCommand(mspDescriptor_t srcDesc, int16_t cmdMSP, 
             gyroConfigMutable()->gyroMovementCalibrationThreshold = sbufReadU8(src);
             gyroConfigMutable()->gyroCalibrationDuration = sbufReadU16(src);
             gyroConfigMutable()->gyro_offset_yaw = sbufReadU16(src);
-            gyroConfigMutable()->checkOverflow = sbufReadU8(src);
+            sbufReadU8(src); // check overflow
         }
         if (sbufBytesRemaining(src) >= 1) {
             //Added in MSP API 1.42

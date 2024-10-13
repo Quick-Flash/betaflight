@@ -95,6 +95,7 @@ typedef struct gyro_s {
     gyroSensor_t gyroSensor1;
 #ifdef USE_MULTI_GYRO
     gyroSensor_t gyroSensor2;
+    SensorFusion gyroFusion;
 #endif
 
     gyroDev_t *rawSensorDev;           // pointer to the sensor providing the raw data for DEBUG_GYRO_RAW
@@ -117,7 +118,6 @@ typedef struct gyro_s {
     uint16_t accSampleRateHz;
     uint8_t gyroToUse;
     uint8_t gyroDebugMode;
-    bool gyroHasOverflowProtection;
     bool useDualGyroDebugging;
     flight_dynamics_index_t gyroDebugAxis;
 
@@ -128,20 +128,11 @@ typedef struct gyro_s {
     uint8_t dynLpfCurveExpo;
 #endif
 
-#ifdef USE_GYRO_OVERFLOW_CHECK
-    uint8_t overflowAxisMask;
-#endif
     Pt1Filter imuGyroFilter[XYZ_AXIS_COUNT];
 } gyro_t;
 
 extern gyro_t gyro;
 extern uint8_t activePidLoopDenom;
-
-enum {
-    GYRO_OVERFLOW_CHECK_NONE = 0,
-    GYRO_OVERFLOW_CHECK_YAW,
-    GYRO_OVERFLOW_CHECK_ALL_AXES
-};
 
 enum {
     DYN_LPF_NONE = 0,
@@ -180,7 +171,6 @@ typedef struct gyroConfig_s {
     uint16_t gyro_soft_notch_hz_2;
     uint16_t gyro_soft_notch_cutoff_2;
     int16_t gyro_offset_yaw;
-    uint8_t checkOverflow;
 
     // Lowpass primary/secondary
     uint8_t gyro_lpf1_type;
@@ -200,6 +190,9 @@ typedef struct gyroConfig_s {
     uint8_t gyro_lpf1_dyn_expo; // set the curve for dynamic gyro lowpass filter
     uint8_t simplified_gyro_filter;
     uint8_t simplified_gyro_filter_multiplier;
+#ifdef USE_MULTI_GYRO
+    uint8_t gyro_noise_est_cut;
+#endif
 } gyroConfig_t;
 
 PG_DECLARE(gyroConfig_t, gyroConfig);
@@ -212,7 +205,6 @@ bool isFirstArmingGyroCalibrationRunning(void);
 bool gyroIsCalibrationComplete(void);
 void gyroReadTemperature(void);
 int16_t gyroGetTemperature(void);
-bool gyroOverflowDetected(void);
 bool gyroYawSpinDetected(void);
 uint16_t gyroAbsRateDps(int axis);
 #ifdef USE_DYN_LPF

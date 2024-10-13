@@ -105,7 +105,6 @@ typedef struct gyroDev_s {
     float scale;                                             // scalefactor
     float gyroZero[XYZ_AXIS_COUNT];
     vector3_t gyroADC;                                       // gyro data after calibration and alignment
-    int32_t gyroADCRawPrevious[XYZ_AXIS_COUNT];
     int16_t gyroADCRaw[XYZ_AXIS_COUNT];                      // raw data from sensor
     int16_t temperature;
     mpuDetectionResult_t mpuDetectionResult;
@@ -124,7 +123,6 @@ typedef struct gyroDev_s {
     uint8_t hardware_32khz_lpf;
     uint8_t mpuDividerDrops;
     ioTag_t mpuIntExtiTag;
-    uint8_t gyroHasOverflowProtection;
     gyroHardware_e gyroHardware;
     matrix33_t rotationMatrix;
     uint16_t gyroSampleRateHz;

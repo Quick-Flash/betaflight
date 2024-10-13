@@ -280,6 +280,11 @@ void gyroInitFilters(void)
     dynNotchInit(dynNotchConfig(), gyro.targetLooptime);
 #endif
 
+#ifdef USE_MULTI_GYRO
+    // uses sampleLooptime instead of targetLooptime as this runs at gyro rate, not gyro filter rate
+    sensor_fusion_new(&gyro.gyroFusion, gyroConfig()->gyro_noise_est_cut, gyro.sampleLooptime * 1e-6f);
+#endif
+
     const float k = pt1FilterGain(GYRO_IMU_DOWNSAMPLE_CUTOFF_HZ, gyro.targetLooptime * 1e-6f);
     for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
         pt1FilterInit(&gyro.imuGyroFilter[axis], k);
@@ -297,41 +302,6 @@ void gyroInitSensor(gyroSensor_t *gyroSensor, const gyroDeviceConfig_t *config)
     // The targetLooptime gets set later based on the active sensor's gyroSampleRateHz and pid_process_denom
     gyroSensor->gyroDev.gyroSampleRateHz = gyroSetSampleRate(&gyroSensor->gyroDev);
     gyroSensor->gyroDev.initFn(&gyroSensor->gyroDev);
-
-    // As new gyros are supported, be sure to add them below based on whether they are subject to the overflow/inversion bug
-    // Any gyro not explicitly defined will default to not having built-in overflow protection as a safe alternative.
-    switch (gyroSensor->gyroDev.gyroHardware) {
-    case GYRO_NONE:    // Won't ever actually get here, but included to account for all gyro types
-    case GYRO_DEFAULT:
-    case GYRO_VIRTUAL:
-    case GYRO_MPU6050:
-    case GYRO_L3G4200D:
-    case GYRO_MPU3050:
-    case GYRO_L3GD20:
-    case GYRO_BMI160:
-    case GYRO_BMI270:
-    case GYRO_MPU6000:
-    case GYRO_MPU6500:
-    case GYRO_MPU9250:
-    case GYRO_LSM6DSO:
-    case GYRO_LSM6DSV16X:
-    case GYRO_ICM42688P:
-    case GYRO_ICM42605:
-        gyroSensor->gyroDev.gyroHasOverflowProtection = true;
-        break;
-
-    case GYRO_ICM20601:
-    case GYRO_ICM20602:
-    case GYRO_ICM20608G:
-    case GYRO_ICM20649:  // we don't actually know if this is affected, but as there are currently no flight controllers using it we err on the side of caution
-    case GYRO_ICM20689:
-        gyroSensor->gyroDev.gyroHasOverflowProtection = false;
-        break;
-
-    default:
-        gyroSensor->gyroDev.gyroHasOverflowProtection = false;  // default catch for newly added gyros until proven to be unaffected
-        break;
-    }
 }
 
 STATIC_UNIT_TESTED gyroHardware_e gyroDetect(gyroDev_t *dev)
@@ -558,19 +528,8 @@ void gyroPreInit(void)
 
 bool gyroInit(void)
 {
-#ifdef USE_GYRO_OVERFLOW_CHECK
-    if (gyroConfig()->checkOverflow == GYRO_OVERFLOW_CHECK_YAW) {
-        gyro.overflowAxisMask = GYRO_OVERFLOW_Z;
-    } else if (gyroConfig()->checkOverflow == GYRO_OVERFLOW_CHECK_ALL_AXES) {
-        gyro.overflowAxisMask = GYRO_OVERFLOW_X | GYRO_OVERFLOW_Y | GYRO_OVERFLOW_Z;
-    } else {
-        gyro.overflowAxisMask = 0;
-    }
-#endif
-
     gyro.gyroDebugMode = DEBUG_NONE;
     gyro.useDualGyroDebugging = false;
-    gyro.gyroHasOverflowProtection = true;
 
     switch (debugMode) {
     case DEBUG_FFT:
@@ -646,7 +605,6 @@ bool gyroInit(void)
         gyro.gyroSensor2.gyroDev.dev.rxBuf = &gyroBuf2[GYRO_BUF_SIZE / 2];
 
         gyroInitSensor(&gyro.gyroSensor2, gyroDeviceConfig(1));
-        gyro.gyroHasOverflowProtection = gyro.gyroHasOverflowProtection && gyro.gyroSensor2.gyroDev.gyroHasOverflowProtection;
         detectedSensors[SENSOR_INDEX_GYRO] = gyro.gyroSensor2.gyroDev.gyroHardware;
     }
 #endif
@@ -661,7 +619,6 @@ bool gyroInit(void)
         gyro.gyroSensor1.gyroDev.dev.txBuf = gyroBuf1;
         gyro.gyroSensor1.gyroDev.dev.rxBuf = &gyroBuf1[GYRO_BUF_SIZE / 2];
         gyroInitSensor(&gyro.gyroSensor1, gyroDeviceConfig(0));
-        gyro.gyroHasOverflowProtection =  gyro.gyroHasOverflowProtection && gyro.gyroSensor1.gyroDev.gyroHasOverflowProtection;
         detectedSensors[SENSOR_INDEX_GYRO] = gyro.gyroSensor1.gyroDev.gyroHardware;
     }
 

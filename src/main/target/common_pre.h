@@ -305,7 +305,6 @@
 
 #define USE_RUNAWAY_TAKEOFF     // Runaway Takeoff Prevention (anti-taz)
 
-#define USE_GYRO_OVERFLOW_CHECK
 #define USE_YAW_SPIN_RECOVERY
 
 #ifdef USE_DSHOT

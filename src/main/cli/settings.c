@@ -350,12 +350,6 @@ static const char * const lookupTableFrskySpiA1Source[] = {
 };
 #endif
 
-#ifdef USE_GYRO_OVERFLOW_CHECK
-static const char * const lookupTableGyroOverflowCheck[] = {
-    "OFF", "YAW", "ALL"
-};
-#endif
-
 static const char * const lookupTableRatesType[] = {
     "BETAFLIGHT", "RACEFLIGHT", "KISS", "ACTUAL", "QUICK"
 };
@@ -599,9 +593,6 @@ const lookupTableEntry_t lookupTables[] = {
 #ifdef USE_RANGEFINDER
     LOOKUP_TABLE_ENTRY(lookupTableRangefinderHardware),
 #endif
-#ifdef USE_GYRO_OVERFLOW_CHECK
-    LOOKUP_TABLE_ENTRY(lookupTableGyroOverflowCheck),
-#endif
     LOOKUP_TABLE_ENTRY(lookupTableRatesType),
 #ifdef USE_OVERCLOCK
     LOOKUP_TABLE_ENTRY(lookupOverclock),
@@ -691,9 +682,6 @@ const clivalue_t valueTable[] = {
     { "gyro_calib_duration",        VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 50,  3000 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyroCalibrationDuration) },
     { "gyro_calib_noise_limit",     VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 0,  200 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyroMovementCalibrationThreshold) },
     { "gyro_offset_yaw",            VAR_INT16  | MASTER_VALUE, .config.minmax = { -1000, 1000 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_offset_yaw) },
-#ifdef USE_GYRO_OVERFLOW_CHECK
-    { "gyro_overflow_detect",       VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_GYRO_OVERFLOW_CHECK }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, checkOverflow) },
-#endif
 #ifdef USE_YAW_SPIN_RECOVERY
     { "yaw_spin_recovery",          VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON_AUTO }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, yaw_spin_recovery) },
     { "yaw_spin_threshold",         VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { YAW_SPIN_RECOVERY_THRESHOLD_MIN,  YAW_SPIN_RECOVERY_THRESHOLD_MAX }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, yaw_spin_threshold) },
@@ -714,7 +702,9 @@ const clivalue_t valueTable[] = {
     { "gyro_lpf1_dyn_expo",         VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 0, 10 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf1_dyn_expo) },
 #endif
     { "gyro_filter_debug_axis",     VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_GYRO_FILTER_DEBUG }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_filter_debug_axis) },
-
+#ifdef USE_MULTI_GYRO
+    { "gyro_noise_est_cut",         VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 1, 250 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_noise_est_cut) },
+#endif
 // PG_ACCELEROMETER_CONFIG
 #if defined(USE_ACC)
     { PARAM_NAME_ACC_HARDWARE,      VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_ACC_HARDWARE }, PG_ACCELEROMETER_CONFIG, offsetof(accelerometerConfig_t, acc_hardware) },

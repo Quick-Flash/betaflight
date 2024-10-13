@@ -1584,6 +1584,9 @@ static bool blackboxWriteSysinfo(void)
                                                                             gyroConfig()->gyro_soft_notch_cutoff_2);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_TO_USE, "%d",            gyroConfig()->gyro_to_use);
         BLACKBOX_PRINT_HEADER_LINE("gyro_debug_axis", "%d",                 gyroConfig()->gyro_filter_debug_axis);
+#ifdef USE_MULTI_GYRO
+        BLACKBOX_PRINT_HEADER_LINE("gyro_noise_est_cut", "%d",              gyroConfig()->gyro_noise_est_cut);
+#endif
 #ifdef USE_DYN_NOTCH_FILTER
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_DYN_NOTCH_MAX_HZ, "%d",       dynNotchConfig()->dyn_notch_max_hz);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_DYN_NOTCH_COUNT, "%d",        dynNotchConfig()->dyn_notch_count);

@@ -536,7 +536,7 @@ static FAST_CODE_NOINLINE void detectAndSetCrashRecovery(
 {
     // if crash recovery is on and accelerometer enabled and there is no gyro overflow, then check for a crash
     // no point in trying to recover if the crash is so severe that the gyro overflows
-    if ((crash_recovery || FLIGHT_MODE(GPS_RESCUE_MODE)) && !gyroOverflowDetected()) {
+    if (crash_recovery || FLIGHT_MODE(GPS_RESCUE_MODE)) {
         if (ARMING_FLAG(ARMED)) {
             if (getMotorMixRange() >= 1.0f && !pidRuntime.inCrashRecoveryMode
                 && fabsf(delta) > pidRuntime.crashDtermThreshold
@@ -1307,7 +1307,7 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
 
     // Disable PID control if at zero throttle or if gyro overflow detected
     // This may look very innefficient, but it is done on purpose to always show real CPU usage as in flight
-    if (!pidRuntime.pidStabilisationEnabled || gyroOverflowDetected()) {
+    if (!pidRuntime.pidStabilisationEnabled) {
         for (int axis = FD_ROLL; axis <= FD_YAW; ++axis) {
             pidData[axis].P = 0;
             pidData[axis].I = 0;
