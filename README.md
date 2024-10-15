@@ -1,4 +1,17 @@
 # Changelog
+### 10/15/2024
+- Remove iterm from anti-gravity, rejoice!
+- Modify `DEBUG_DUAL_GYRO` to display the sensor fusion. 
+
+Debug 0: first gyro roll  
+Debug 1: first gyro roll noise  
+Debug 2: second gyro roll  
+Debug 3: second gyro roll noise  
+Debug 4: first gyro pitch  
+Debug 5: first gyro pitch noise  
+Debug 6: second gyro pitch  
+Debug 7: second gyro pitch noise
+
 ### 10/13/2024
 - Remove gyro overflow protection (sounds scary but few gyros implement this). Removed as I don't plan on implementing this logic into the Rust PID loop logic.
 - For FC with dual gyros of the same type added smarter sensor fusion. Adding one new parameter `gyro_noise_est_cut`. 
