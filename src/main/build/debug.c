@@ -25,6 +25,18 @@
 int16_t debug[DEBUG16_VALUE_COUNT];
 uint8_t debugMode;
 
+void debug_set(uint8_t mode, size_t index, int16_t value) {
+    if (debugMode == mode) {
+        debug[index] = value;
+    }
+}
+
+void debug_set_float(uint8_t mode, size_t index, float value) {
+    if (debugMode == mode) {
+        debug[index] = lrintf(value);
+    }
+}
+
 // Please ensure that these names are aligned with the enum values defined in 'debug.h' - for OSD be sure the name is unique with 12 chars.
 const char * const debugModeNames[DEBUG_COUNT] = {
     [DEBUG_NONE] = "NONE",

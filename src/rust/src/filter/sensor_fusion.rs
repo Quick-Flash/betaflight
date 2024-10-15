@@ -1,6 +1,7 @@
 use crate::filter::ptn::Pt1Filter;
 use crate::math::abs::Absf;
-
+use crate::c_interop::*;
+use crate::c_interop::DebugType::DEBUG_DUAL_GYRO_DIFF;
 // just support dual gyros for the moment
 // takes the absolute value of the derivative and filters is
 // this gives a rough measure of how much noise each gyro has
@@ -70,22 +71,53 @@ impl SensorFusion {
 
         fused_output
     }
+
+    pub fn fuse_sensors_debug(&mut self, sensor1: [f32; 3], sensor2: [f32; 3]) -> [f32; 3] {
+        let noise1 = self.noise_estimate_1.estimate_noise(sensor1);
+        let noise2 = self.noise_estimate_2.estimate_noise(sensor2);
+
+        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 0, sensor1[0]);
+        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 1, noise1[0] * 100.0);
+        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 2, sensor2[0]);
+        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 3, noise2[0] * 100.0);
+        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 4, sensor1[1]);
+        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 5, noise1[1] * 100.0);
+        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 6, sensor2[1]);
+        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 7, noise2[1] * 100.0);
+
+        let mut fused_output = [0.0; 3];
+        for axis in 0..3 {
+            let noise1_squared = noise1[axis] * noise1[axis];
+            let noise2_squared = noise2[axis] * noise2[axis];
+            let denominator = noise1_squared + noise2_squared;
+
+            // Handle divide by 0 bugs
+            fused_output[axis] = if denominator != 0.0 {
+                (noise2_squared * sensor1[axis] + noise1_squared * sensor2[axis]) / denominator
+            } else {
+                // Fallback: filter each evenly
+                0.5 * (sensor1[axis] + sensor2[axis])
+            };
+        }
+
+        fused_output
+    }
 }
 
 // C stuff
 #[no_mangle] pub extern "C" fn sensor_fusion_new(fusion: *mut SensorFusion, noise_estimation_cutoff: f32, dt: f32)
 {
     unsafe {
-        (*fusion) = SensorFusion::new(noise_estimation_cutoff, dt)
+        (*fusion) = SensorFusion::new(noise_estimation_cutoff, dt);
     }
 }
 
 #[link_section = ".tcm_code"]
 #[inline]
-#[no_mangle] pub extern "C" fn fuse_sensors(fusion: *mut SensorFusion, gyro_output: *mut [f32; 3], sensor1: *const [f32; 3], sensor2: *const [f32; 3])
+#[no_mangle] pub extern "C" fn fuse_sensors_debug(fusion: *mut SensorFusion, gyro_output: *mut [f32; 3], sensor1: *const [f32; 3], sensor2: *const [f32; 3])
 {
     unsafe {
-        *gyro_output = (*fusion).fuse_sensors(*sensor1, *sensor2)
+        *gyro_output = (*fusion).fuse_sensors_debug(*sensor1, *sensor2);
     }
 }
 

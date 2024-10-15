@@ -1,37 +1,14 @@
-/*
- * This file is part of Cleanflight and Betaflight.
- *
- * Cleanflight and Betaflight are free software. You can redistribute
- * this software and/or modify this software under the terms of the
- * GNU General Public License as published by the Free Software
- * Foundation, either version 3 of the License, or (at your option)
- * any later version.
- *
- * Cleanflight and Betaflight are distributed in the hope that they
- * will be useful, but WITHOUT ANY WARRANTY; without even the implied
- * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this software.
- *
- * If not, see <http://www.gnu.org/licenses/>.
- */
+extern "C" {
+    // Import the external C function
+    pub fn debug_set(mode: u8, index: usize, value: i16);
 
-#pragma once
+    pub fn debug_set_float(mode: u8, index: usize, value: f32);
+}
 
-#include <stdint.h>
-
-#define DEBUG16_VALUE_COUNT 8
-extern int16_t debug[DEBUG16_VALUE_COUNT];
-extern uint8_t debugMode;
-
-#define DEBUG_SET(mode, index, value) do { if (debugMode == (mode)) { debug[(index)] = (value); } } while (0)
-
-void debug_set(uint8_t mode, size_t index, int16_t value);
-void debug_set_float(uint8_t mode, size_t index, float value);
-
-typedef enum {
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+#[allow(non_camel_case_types)]
+pub enum DebugType {
     DEBUG_NONE,
     DEBUG_CYCLETIME,
     DEBUG_BATTERY,
@@ -128,8 +105,11 @@ typedef enum {
     DEBUG_TASK,
     DEBUG_ALTHOLD,
     DEBUG_COUNT
-} debugType_e;
+}
 
-extern const char * const debugModeNames[DEBUG_COUNT];
-
-void debugInit(void);
+#[inline(always)]
+pub fn set_debug_float(mode: DebugType, index: usize, value: f32) {
+    unsafe {
+        debug_set_float(mode as u8, index, value);
+    }
+}

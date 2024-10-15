@@ -4,6 +4,7 @@
 
 pub mod filter;
 pub mod math;
+pub mod c_interop;
 
 // dev profile: easier to debug panics; can put a breakpoint on `rust_begin_unwind`
 #[cfg(all(debug_assertions, not(any(test, feature = "testing"))))]
