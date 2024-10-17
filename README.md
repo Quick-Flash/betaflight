@@ -1,3 +1,11 @@
+# Provizora
+The word Provizora comes from the Esperanto word for temporary.
+The name was picked because this project is meant to be temporary until a fully Rust project can take hold.
+This will lay the groundwork for the Rust project and will help launch its success.
+But why an Esperanto word? 
+Esperanto was created to be easy to use, easy to learn language made for the purpose of bringing others together through easy to understand communication.
+I like that message and feel like this project, in the long term, can play the role of an easy to use firmware that can bring the drone world together.
+
 # Changelog
 ### 10/15/2024
 - Remove iterm from anti-gravity, rejoice!
