@@ -21,6 +21,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define DEBUG16_VALUE_COUNT 8
 extern int16_t debug[DEBUG16_VALUE_COUNT];
