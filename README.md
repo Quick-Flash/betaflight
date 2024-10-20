@@ -11,8 +11,8 @@ I like that message and feel like this project, in the long term, can play the r
 - Remove the BF gyro lowpass filters and replace with my own.
 - Added a median filter as a downsampling filter to remove BF's lpf2 downsampling
 - Add lowpass filter options of off, pt1, pt2, pt3, first order, second order, predictive pt1, predictive first order, predictive second order.
-- setting cutoff to 0 will not set the filter to off, you instead need to set the filter variant to off
-- All new settings are found in the cli under the gyro filters tab
+- Setting cutoff to 0 will not set the filter to off, you instead need to set the filter variant to off
+- All new settings are found in the OSD under the gyro filters tab
 - Below are the new settings:
   - `gyro_lpf1_cutoff` -> Filter cutoff for the first lowpass filter
   - `gyro_lpf1_pred_cutoff` -> The cutoff for the predictive part of the filter. Higher values will remove latency faster, but may also lead to more noise.
