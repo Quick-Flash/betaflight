@@ -84,6 +84,18 @@ static const char * const osdTableGyroToUse[] = {
 };
 #endif
 
+static const char * const osdTableGyroLowpassVariant[] = {
+    "OFF",
+    "PT1",
+    "PT2",
+    "PT3",
+    "1ST_ORD",
+    "2ND_ORD",
+    "PRED_PT1",
+    "PRED_1ST_ORD",
+    "PRED_2ND_ORD",
+};
+
 static void setProfileIndexString(char *profileString, int profileIndex, const char *profileName)
 {
     int charIndex = 0;
@@ -259,8 +271,6 @@ static uint8_t cmsx_simplified_pitch_pi_gain;
 
 static uint8_t cmsx_simplified_dterm_filter;
 static uint8_t cmsx_simplified_dterm_filter_multiplier;
-static uint8_t cmsx_simplified_gyro_filter;
-static uint8_t cmsx_simplified_gyro_filter_multiplier;
 static uint8_t cmsx_tpa_rate;
 static uint16_t cmsx_tpa_breakpoint;
 static int8_t cmsx_tpa_low_rate;
@@ -288,8 +298,6 @@ static const void *cmsx_simplifiedTuningOnEnter(displayPort_t *pDisp)
 
     cmsx_simplified_dterm_filter = pidProfile->simplified_dterm_filter;
     cmsx_simplified_dterm_filter_multiplier = pidProfile->simplified_dterm_filter_multiplier;
-    cmsx_simplified_gyro_filter = gyroConfig()->simplified_gyro_filter;
-    cmsx_simplified_gyro_filter_multiplier = gyroConfig()->simplified_gyro_filter_multiplier;
 
     return 0;
 }
@@ -313,9 +321,7 @@ static const void *cmsx_simplifiedTuningOnExit(displayPort_t *pDisp, const OSD_E
         || pidProfile->simplified_feedforward_gain != cmsx_simplified_feedforward_gain
         || pidProfile->simplified_pitch_pi_gain != cmsx_simplified_pitch_pi_gain
         || pidProfile->simplified_dterm_filter != cmsx_simplified_dterm_filter
-        || pidProfile->simplified_dterm_filter_multiplier != cmsx_simplified_dterm_filter_multiplier
-        || gyroConfigMutable()->simplified_gyro_filter != cmsx_simplified_gyro_filter
-        || gyroConfigMutable()->simplified_gyro_filter_multiplier != cmsx_simplified_gyro_filter_multiplier;
+        || pidProfile->simplified_dterm_filter_multiplier != cmsx_simplified_dterm_filter_multiplier;
 
     if (anySettingChanged) {
         pidProfile->simplified_pids_mode = cmsx_simplified_pids_mode;
@@ -332,10 +338,8 @@ static const void *cmsx_simplifiedTuningOnExit(displayPort_t *pDisp, const OSD_E
 
         pidProfile->simplified_dterm_filter = cmsx_simplified_dterm_filter;
         pidProfile->simplified_dterm_filter_multiplier = cmsx_simplified_dterm_filter_multiplier;
-        gyroConfigMutable()->simplified_gyro_filter = cmsx_simplified_gyro_filter;
-        gyroConfigMutable()->simplified_gyro_filter_multiplier = cmsx_simplified_gyro_filter_multiplier;
 
-        applySimplifiedTuning(currentPidProfile, gyroConfigMutable());
+        applySimplifiedTuning(currentPidProfile);
     }
 
     return 0;
@@ -362,8 +366,6 @@ static const OSD_Entry cmsx_menuSimplifiedTuningEntries[] =
     { "MASTER MULT",       OME_FLOAT, NULL, &(OSD_FLOAT_t) { &cmsx_simplified_master_multiplier, SIMPLIFIED_TUNING_PIDS_MIN, SIMPLIFIED_TUNING_MAX, 5, 10 } },
 
     { "-- SIMPLIFIED FILTER --", OME_Label, NULL, NULL},
-    { "GYRO TUNING",       OME_TAB,   NULL, &(OSD_TAB_t)   { &cmsx_simplified_gyro_filter,  1, lookupTableOffOn } },
-    { "GYRO MULT",         OME_FLOAT, NULL, &(OSD_FLOAT_t) { &cmsx_simplified_gyro_filter_multiplier,  SIMPLIFIED_TUNING_FILTERS_MIN, SIMPLIFIED_TUNING_MAX, 5, 10 } },
     { "DTERM TUNING",      OME_TAB,   NULL, &(OSD_TAB_t)   { &cmsx_simplified_dterm_filter, 1, lookupTableOffOn } },
     { "DTERM MULT",        OME_FLOAT, NULL, &(OSD_FLOAT_t) { &cmsx_simplified_dterm_filter_multiplier, SIMPLIFIED_TUNING_FILTERS_MIN, SIMPLIFIED_TUNING_MAX, 5, 10 } },
 
@@ -676,7 +678,7 @@ static const void *cmsx_profileOtherOnExit(displayPort_t *pDisp, const OSD_Entry
 }
 
 static const OSD_Entry cmsx_menuProfileOtherEntries[] = {
-    { "-- OTHER PP --", OME_Label, NULL, pidProfileIndexString },
+    { "-- OTHER PID --", OME_Label, NULL, pidProfileIndexString },
 
 #ifdef USE_FEEDFORWARD
     { "FF TRANSITION", OME_FLOAT,  NULL, &(OSD_FLOAT_t)  { &cmsx_feedforward_transition,        0,    100,   1, 10 } },
@@ -748,12 +750,18 @@ static CMS_Menu cmsx_menuProfileOther = {
 };
 
 
-static uint16_t gyroConfig_gyro_lpf1_static_hz;
-static uint16_t gyroConfig_gyro_lpf2_static_hz;
-static uint16_t gyroConfig_gyro_soft_notch_hz_1;
-static uint16_t gyroConfig_gyro_soft_notch_cutoff_1;
-static uint16_t gyroConfig_gyro_soft_notch_hz_2;
-static uint16_t gyroConfig_gyro_soft_notch_cutoff_2;
+static uint16_t gyroConfig_gyro_lpf1_cutoff;
+static uint8_t  gyroConfig_gyro_lpf1_predictive_cutoff;
+static uint16_t gyroConfig_gyro_lpf1_cutoff_q;
+static uint16_t gyroConfig_gyro_lpf1_predictive_q;
+static uint8_t  gyroConfig_gyro_lpf1_variant;
+
+static uint16_t gyroConfig_gyro_lpf2_cutoff;
+static uint8_t  gyroConfig_gyro_lpf2_predictive_cutoff;
+static uint16_t gyroConfig_gyro_lpf2_cutoff_q;
+static uint16_t gyroConfig_gyro_lpf2_predictive_q;
+static uint8_t  gyroConfig_gyro_lpf2_variant;
+
 #ifdef USE_MULTI_GYRO
 static uint8_t gyroConfig_gyro_to_use;
 static uint8_t gyroConfig_gyro_noise_est_cut;
@@ -762,12 +770,18 @@ static const void *cmsx_menuGyro_onEnter(displayPort_t *pDisp)
 {
     UNUSED(pDisp);
 
-    gyroConfig_gyro_lpf1_static_hz =  gyroConfig()->gyro_lpf1_static_hz;
-    gyroConfig_gyro_lpf2_static_hz =  gyroConfig()->gyro_lpf2_static_hz;
-    gyroConfig_gyro_soft_notch_hz_1 = gyroConfig()->gyro_soft_notch_hz_1;
-    gyroConfig_gyro_soft_notch_cutoff_1 = gyroConfig()->gyro_soft_notch_cutoff_1;
-    gyroConfig_gyro_soft_notch_hz_2 = gyroConfig()->gyro_soft_notch_hz_2;
-    gyroConfig_gyro_soft_notch_cutoff_2 = gyroConfig()->gyro_soft_notch_cutoff_2;
+    gyroConfig_gyro_lpf1_cutoff =  gyroConfig()->gyro_lpf1_cutoff;
+    gyroConfig_gyro_lpf1_predictive_cutoff =  gyroConfig()->gyro_lpf1_predictive_cutoff;
+    gyroConfig_gyro_lpf1_cutoff_q =  gyroConfig()->gyro_lpf1_cutoff_q;
+    gyroConfig_gyro_lpf1_predictive_q =  gyroConfig()->gyro_lpf1_predictive_q;
+    gyroConfig_gyro_lpf1_variant =  gyroConfig()->gyro_lpf1_variant;
+
+    gyroConfig_gyro_lpf2_cutoff =  gyroConfig()->gyro_lpf2_cutoff;
+    gyroConfig_gyro_lpf2_predictive_cutoff =  gyroConfig()->gyro_lpf2_predictive_cutoff;
+    gyroConfig_gyro_lpf2_cutoff_q =  gyroConfig()->gyro_lpf2_cutoff_q;
+    gyroConfig_gyro_lpf2_predictive_q =  gyroConfig()->gyro_lpf2_predictive_q;
+    gyroConfig_gyro_lpf2_variant =  gyroConfig()->gyro_lpf2_variant;
+
 #ifdef USE_MULTI_GYRO
     gyroConfig_gyro_to_use = gyroConfig()->gyro_to_use;
     gyroConfig_gyro_noise_est_cut = gyroConfig()->gyro_noise_est_cut;
@@ -780,12 +794,18 @@ static const void *cmsx_menuGyro_onExit(displayPort_t *pDisp, const OSD_Entry *s
     UNUSED(pDisp);
     UNUSED(self);
 
-    gyroConfigMutable()->gyro_lpf1_static_hz =  gyroConfig_gyro_lpf1_static_hz;
-    gyroConfigMutable()->gyro_lpf2_static_hz =  gyroConfig_gyro_lpf2_static_hz;
-    gyroConfigMutable()->gyro_soft_notch_hz_1 = gyroConfig_gyro_soft_notch_hz_1;
-    gyroConfigMutable()->gyro_soft_notch_cutoff_1 = gyroConfig_gyro_soft_notch_cutoff_1;
-    gyroConfigMutable()->gyro_soft_notch_hz_2 = gyroConfig_gyro_soft_notch_hz_2;
-    gyroConfigMutable()->gyro_soft_notch_cutoff_2 = gyroConfig_gyro_soft_notch_cutoff_2;
+    gyroConfigMutable()->gyro_lpf1_cutoff =             gyroConfig_gyro_lpf1_cutoff;
+    gyroConfigMutable()->gyro_lpf1_predictive_cutoff =  gyroConfig_gyro_lpf1_predictive_cutoff;
+    gyroConfigMutable()->gyro_lpf1_cutoff_q =           gyroConfig_gyro_lpf1_cutoff_q;
+    gyroConfigMutable()->gyro_lpf1_predictive_q =       gyroConfig_gyro_lpf1_predictive_q;
+    gyroConfigMutable()->gyro_lpf1_variant =            gyroConfig_gyro_lpf1_variant;
+
+    gyroConfigMutable()->gyro_lpf2_cutoff =             gyroConfig_gyro_lpf2_cutoff;
+    gyroConfigMutable()->gyro_lpf2_predictive_cutoff =  gyroConfig_gyro_lpf2_predictive_cutoff;
+    gyroConfigMutable()->gyro_lpf2_cutoff_q =           gyroConfig_gyro_lpf2_cutoff_q;
+    gyroConfigMutable()->gyro_lpf2_predictive_q =       gyroConfig_gyro_lpf2_predictive_q;
+    gyroConfigMutable()->gyro_lpf2_variant =            gyroConfig_gyro_lpf2_variant;
+
 #ifdef USE_MULTI_GYRO
     gyroConfigMutable()->gyro_to_use = gyroConfig_gyro_to_use;
     gyroConfigMutable()->gyro_noise_est_cut = gyroConfig_gyro_noise_est_cut;
@@ -795,19 +815,23 @@ static const void *cmsx_menuGyro_onExit(displayPort_t *pDisp, const OSD_Entry *s
 
 static const OSD_Entry cmsx_menuFilterGlobalEntries[] =
 {
-    { "-- FILTER GLB  --", OME_Label, NULL, NULL },
+    { "-- FILTER GYRO  --", OME_Label, NULL, NULL },
 
-    { "GYRO LPF1",  OME_UINT16 | SLIDER_GYRO, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_lpf1_static_hz, 0, LPF_MAX_HZ, 1 } },
-#ifdef USE_GYRO_LPF2
-    { "GYRO LPF2",  OME_UINT16 | SLIDER_GYRO, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_lpf2_static_hz,  0, LPF_MAX_HZ, 1 } },
-#endif
-    { "GYRO NF1",   OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_soft_notch_hz_1,     0, 500, 1 } },
-    { "GYRO NF1C",  OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_soft_notch_cutoff_1, 0, 500, 1 } },
-    { "GYRO NF2",   OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_soft_notch_hz_2,     0, 500, 1 } },
-    { "GYRO NF2C",  OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_soft_notch_cutoff_2, 0, 500, 1 } },
+    { "LPF1 CUT",       OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_lpf1_cutoff, 10, LPF_MAX_HZ, 1 } },
+    { "LPF1 PRED CUT",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &gyroConfig_gyro_lpf1_predictive_cutoff, 1, 250, 1 } },
+    { "LPF1 Q",         OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_lpf1_cutoff_q, 100, 1500, 1 } },
+    { "LPF1 PRED Q",    OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_lpf1_predictive_q, 100, 1500, 1 } },
+    { "LPF1 VAR",       OME_TAB | REBOOT_REQUIRED,  NULL, &(OSD_TAB_t)    { &gyroConfig_gyro_lpf1_variant,  8, osdTableGyroLowpassVariant} },
+
+    { "LPF2 CUT",       OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_lpf2_cutoff, 10, LPF_MAX_HZ, 1 } },
+    { "LPF2 PRED CUT",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &gyroConfig_gyro_lpf2_predictive_cutoff, 1, 250, 1 } },
+    { "LPF2 Q",         OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_lpf2_cutoff_q, 100, 1500, 1 } },
+    { "LPF2 PRED Q",    OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_lpf2_predictive_q, 100, 1500, 1 } },
+    { "LPF2 VAR",       OME_TAB | REBOOT_REQUIRED,  NULL, &(OSD_TAB_t)    { &gyroConfig_gyro_lpf2_variant,  8, osdTableGyroLowpassVariant} },
+
 #ifdef USE_MULTI_GYRO
     { "GYRO TO USE",    OME_TAB | REBOOT_REQUIRED,  NULL, &(OSD_TAB_t)    { &gyroConfig_gyro_to_use,  2, osdTableGyroToUse} },
-    { "GYRO NOISE CUT", OME_UINT8, NULL, &(OSD_UINT8_t) { &gyroConfig_gyro_noise_est_cut,  1, 250, 1 } },
+    { "FUSE NOISE CUT", OME_UINT8, NULL, &(OSD_UINT8_t) { &gyroConfig_gyro_noise_est_cut,  1, 250, 1 } },
 #endif
 
     { "BACK", OME_Back, NULL, NULL },
@@ -834,9 +858,6 @@ static uint16_t dynFiltNotchQ;
 static uint16_t dynFiltNotchMinHz;
 #endif
 #ifdef USE_DYN_LPF
-static uint16_t gyroLpfDynMin;
-static uint16_t gyroLpfDynMax;
-static uint8_t gyroLpfDynExpo;
 static uint16_t dtermLpfDynMin;
 static uint16_t dtermLpfDynMax;
 static uint8_t dtermLpfDynExpo;
@@ -854,9 +875,6 @@ static const void *cmsx_menuDynFilt_onEnter(displayPort_t *pDisp)
 #endif
 #ifdef USE_DYN_LPF
     const pidProfile_t *pidProfile = pidProfiles(pidProfileIndex);
-    gyroLpfDynMin   = gyroConfig()->gyro_lpf1_dyn_min_hz;
-    gyroLpfDynMax   = gyroConfig()->gyro_lpf1_dyn_max_hz;
-    gyroLpfDynExpo  = gyroConfig()->gyro_lpf1_dyn_expo;
     dtermLpfDynMin  = pidProfile->dterm_lpf1_dyn_min_hz;
     dtermLpfDynMax  = pidProfile->dterm_lpf1_dyn_max_hz;
     dtermLpfDynExpo = pidProfile->dterm_lpf1_dyn_expo;
@@ -878,9 +896,6 @@ static const void *cmsx_menuDynFilt_onExit(displayPort_t *pDisp, const OSD_Entry
 #endif
 #ifdef USE_DYN_LPF
     pidProfile_t *pidProfile = currentPidProfile;
-    gyroConfigMutable()->gyro_lpf1_dyn_min_hz = gyroLpfDynMin;
-    gyroConfigMutable()->gyro_lpf1_dyn_max_hz = gyroLpfDynMax;
-    gyroConfigMutable()->gyro_lpf1_dyn_expo   = gyroLpfDynExpo;
     pidProfile->dterm_lpf1_dyn_min_hz         = dtermLpfDynMin;
     pidProfile->dterm_lpf1_dyn_max_hz         = dtermLpfDynMax;
     pidProfile->dterm_lpf1_dyn_expo           = dtermLpfDynExpo;
@@ -901,9 +916,6 @@ static const OSD_Entry cmsx_menuDynFiltEntries[] =
 #endif
 
 #ifdef USE_DYN_LPF
-    { "GYRO DLPF MIN",   OME_UINT16 | SLIDER_GYRO, NULL, &(OSD_UINT16_t) { &gyroLpfDynMin,  0, 1000, 1 } },
-    { "GYRO DLPF MAX",   OME_UINT16 | SLIDER_GYRO, NULL, &(OSD_UINT16_t) { &gyroLpfDynMax,  0, 1000, 1 } },
-    { "GYRO DLPF EXPO",  OME_UINT8, NULL, &(OSD_UINT8_t) { &gyroLpfDynExpo,   0, 10, 1 } },
     { "DTERM DLPF MIN",  OME_UINT16 | SLIDER_DTERM, NULL, &(OSD_UINT16_t) { &dtermLpfDynMin, 0, 1000, 1 } },
     { "DTERM DLPF MAX",  OME_UINT16 | SLIDER_DTERM, NULL, &(OSD_UINT16_t) { &dtermLpfDynMax, 0, 1000, 1 } },
     { "DTERM DLPF EXPO", OME_UINT8, NULL, &(OSD_UINT8_t) { &dtermLpfDynExpo,  0, 10, 1 } },
@@ -965,7 +977,7 @@ static const void *cmsx_FilterPerProfileWriteback(displayPort_t *pDisp, const OS
 
 static const OSD_Entry cmsx_menuFilterPerProfileEntries[] =
 {
-    { "-- FILTER PP  --", OME_Label, NULL, NULL },
+    { "-- FILTER PID  --", OME_Label, NULL, NULL },
 
     { "DTERM LPF1", OME_UINT16 | SLIDER_DTERM, NULL, &(OSD_UINT16_t){ &cmsx_dterm_lpf1_static_hz, 0, LPF_MAX_HZ, 1 } },
     { "DTERM LPF2", OME_UINT16 | SLIDER_DTERM, NULL, &(OSD_UINT16_t){ &cmsx_dterm_lpf2_static_hz, 0, LPF_MAX_HZ, 1 } },
@@ -1070,15 +1082,15 @@ static const OSD_Entry cmsx_menuImuEntries[] =
     {"PID PROF",  OME_TAB,     cmsx_profileIndexOnChange,     &(OSD_TAB_t){&tmpPidProfileIndex, PID_PROFILE_COUNT-1, pidProfileNamePtrs}},
     {"PID",       OME_Submenu, cmsMenuChange,                 &cmsx_menuPid},
 #ifdef USE_SIMPLIFIED_TUNING
-    {"SIMPLIFIED TUNING",   OME_Submenu, cmsMenuChange,                 &cmsx_menuSimplifiedTuning},
+    {"SIMPLIFIED TUNING",   OME_Submenu, cmsMenuChange,       &cmsx_menuSimplifiedTuning},
 #endif
-    {"MISC PP",   OME_Submenu, cmsMenuChange,                 &cmsx_menuProfileOther},
-    {"FILT PP",   OME_Submenu, cmsMenuChange,                 &cmsx_menuFilterPerProfile},
+    {"MISC PID",   OME_Submenu, cmsMenuChange,                &cmsx_menuProfileOther},
+    {"FILT PID",   OME_Submenu, cmsMenuChange,                &cmsx_menuFilterPerProfile},
 
     {"RATE PROF", OME_TAB,   cmsx_rateProfileIndexOnChange, &(OSD_TAB_t){&tmpRateProfileIndex, CONTROL_RATE_PROFILE_COUNT-1, rateProfileNamePtrs}},
     {"RATE",      OME_Submenu, cmsMenuChange,                 &cmsx_menuRateProfile},
 
-    {"FILT GLB",  OME_Submenu, cmsMenuChange,                 &cmsx_menuFilterGlobal},
+    {"FILT GYRO",  OME_Submenu, cmsMenuChange,                &cmsx_menuFilterGlobal},
 #if  (defined(USE_DYN_NOTCH_FILTER) || defined(USE_DYN_LPF)) && defined(USE_EXTENDED_CMS_MENUS)
     {"DYN FILT",  OME_Submenu, cmsMenuChange,                 &cmsx_menuDynFilt},
 #endif

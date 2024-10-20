@@ -7,6 +7,20 @@ Esperanto was created to be easy to use, easy to learn language made for the pur
 I like that message and feel like this project, in the long term, can play the role of an easy to use firmware that can bring the drone world together.
 
 # Changelog
+### 10/20/2024
+- Remove the BF gyro lowpass filters and replace with my own.
+- Added a median filter as a downsampling filter to remove BF's lpf2 downsampling
+- Add lowpass filter options of off, pt1, pt2, pt3, first order, second order, predictive pt1, predictive first order, predictive second order.
+- setting cutoff to 0 will not set the filter to off, you instead need to set the filter variant to off
+- All new settings are found in the cli under the gyro filters tab
+- Below are the new settings:
+  - `gyro_lpf1_cutoff` -> Filter cutoff for the first lowpass filter
+  - `gyro_lpf1_pred_cutoff` -> The cutoff for the predictive part of the filter. Higher values will remove latency faster, but may also lead to more noise.
+  - `gyro_lpf1_q` -> Q value for the lowpass filter. Only applies to second order filters (both predictive and non predictive). A value of 707 will mimic a BF "biquad" filter. Higher values is less latent with a bit less filtering around cutoff, and lower values are more latent with more filtering around cutoff. Values greater than 707 will start to increase noise just below the cutoff.
+  - `gyro_lpf1_pre_q` -> Q value for the predictive part of the lowpass filter. Only applies to the predictive second order filter
+  - `gyro_lpf1_variant` -> Sets which filter variant you will be using.
+- Options are the same for the `gyro_lpf2`
+
 ### 10/15/2024
 - Remove iterm from anti-gravity, rejoice!
 - Modify `DEBUG_DUAL_GYRO` to display the sensor fusion. 

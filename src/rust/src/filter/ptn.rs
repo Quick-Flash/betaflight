@@ -95,8 +95,7 @@ impl Pt1Filter {
     Pt1Filter::time_constant_k(delay, dt)
 }
 
-#[no_mangle] pub extern "C" fn pt1FilterInit(filter: *mut Pt1Filter, k: f32)
-{
+#[no_mangle] pub extern "C" fn pt1FilterInit(filter: *mut Pt1Filter, k: f32) {
     unsafe {
         (*filter).state = 0.0;
         (*filter).k = k;
@@ -105,8 +104,7 @@ impl Pt1Filter {
 
 #[link_section = ".tcm_code"]
 #[inline]
-#[no_mangle] pub extern "C" fn pt1FilterUpdateCutoff(filter: *mut Pt1Filter, k: f32)
-{
+#[no_mangle] pub extern "C" fn pt1FilterUpdateCutoff(filter: *mut Pt1Filter, k: f32) {
     unsafe {
     (*filter).k = k;
     }
@@ -114,8 +112,7 @@ impl Pt1Filter {
 
 #[link_section = ".tcm_code"]
 #[inline]
-#[no_mangle] pub extern "C" fn pt1FilterApply(filter: *mut Pt1Filter, input: f32) -> f32
-{
+#[no_mangle] pub extern "C" fn pt1FilterApply(filter: *mut Pt1Filter, input: f32) -> f32 {
     unsafe {
         (*filter).apply(input)
     }

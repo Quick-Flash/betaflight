@@ -78,22 +78,6 @@ static void calculateNewDTermFilterValues(pidProfile_t *pidProfile)
     }
 }
 
-static void calculateNewGyroFilterValues(gyroConfig_t *gyroConfig)
-{
-    if (gyroConfig->gyro_lpf1_dyn_min_hz) {
-        gyroConfig->gyro_lpf1_dyn_min_hz = constrain(GYRO_LPF1_DYN_MIN_HZ_DEFAULT * gyroConfig->simplified_gyro_filter_multiplier / 100, 0, DYN_LPF_MAX_HZ);
-        gyroConfig->gyro_lpf1_dyn_max_hz = constrain(GYRO_LPF1_DYN_MAX_HZ_DEFAULT * gyroConfig->simplified_gyro_filter_multiplier / 100, 0, DYN_LPF_MAX_HZ);
-    }
-
-    if (gyroConfig->gyro_lpf1_static_hz) {
-        gyroConfig->gyro_lpf1_static_hz = constrain(GYRO_LPF1_DYN_MIN_HZ_DEFAULT * gyroConfig->simplified_gyro_filter_multiplier / 100, 0, DYN_LPF_MAX_HZ);
-    }
-
-    if (gyroConfig->gyro_lpf2_static_hz) {
-        gyroConfig->gyro_lpf2_static_hz = constrain(GYRO_LPF2_HZ_DEFAULT * gyroConfig->simplified_gyro_filter_multiplier / 100, 0, LPF_MAX_HZ);
-    }
-}
-
 void applySimplifiedTuningPids(pidProfile_t *pidProfile)
 {
     if (pidProfile->simplified_pids_mode != PID_SIMPLIFIED_TUNING_OFF) {
@@ -108,27 +92,16 @@ void applySimplifiedTuningDtermFilters(pidProfile_t *pidProfile)
     }
 }
 
-void applySimplifiedTuningGyroFilters(gyroConfig_t *gyroConfig)
-{
-    if (gyroConfig->simplified_gyro_filter) {
-        calculateNewGyroFilterValues(gyroConfig);
-    }
-}
-
-
-void applySimplifiedTuning(pidProfile_t *pidProfile, gyroConfig_t *gyroConfig)
+void applySimplifiedTuning(pidProfile_t *pidProfile)
 {
     applySimplifiedTuningPids(pidProfile);
     applySimplifiedTuningDtermFilters(pidProfile);
-    applySimplifiedTuningGyroFilters(gyroConfig);
 }
 
-void disableSimplifiedTuning(pidProfile_t *pidProfile, gyroConfig_t *gyroConfig)
+void disableSimplifiedTuning(pidProfile_t *pidProfile)
 {
     pidProfile->simplified_pids_mode = PID_SIMPLIFIED_TUNING_OFF;
 
     pidProfile->simplified_dterm_filter = false;
-
-    gyroConfig->simplified_gyro_filter = false;
 }
 #endif // USE_SIMPLIFIED_TUNING

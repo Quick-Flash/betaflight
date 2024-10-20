@@ -34,17 +34,7 @@ static FAST_CODE void GYRO_FILTER_FUNCTION_NAME(void)
         GYRO_FILTER_AXIS_DEBUG_SET(axis, DEBUG_GYRO_SAMPLE, 0, lrintf(gyro.gyroADC[axis]));
 
         // downsample the individual gyro samples
-        float gyroADCf = 0;
-        if (gyro.downsampleFilterEnabled) {
-            // using gyro lowpass 2 filter for downsampling
-            gyroADCf = gyro.sampleSum[axis];
-        } else {
-            // using simple average for downsampling
-            if (gyro.sampleCount) {
-                gyroADCf = gyro.sampleSum[axis] / gyro.sampleCount;
-            }
-            gyro.sampleSum[axis] = 0;
-        }
+        float gyroADCf = gyro.gyroADC[axis];
 
         // DEBUG_GYRO_SAMPLE(1) Record the post-downsample value for the selected debug axis
         GYRO_FILTER_AXIS_DEBUG_SET(axis, DEBUG_GYRO_SAMPLE, 1, lrintf(gyroADCf));
@@ -55,11 +45,14 @@ static FAST_CODE void GYRO_FILTER_FUNCTION_NAME(void)
 
         // DEBUG_GYRO_SAMPLE(2) Record the post-RPM Filter value for the selected debug axis
         GYRO_FILTER_AXIS_DEBUG_SET(axis, DEBUG_GYRO_SAMPLE, 2, lrintf(gyroADCf));
+        gyro.gyroADCf[axis] = gyroADCf;
+     }
 
-        // apply static notch filters and software lowpass filters
-        gyroADCf = gyro.notchFilter1ApplyFn((FilterT *)&gyro.notchFilter1[axis], gyroADCf);
-        gyroADCf = gyro.notchFilter2ApplyFn((FilterT *)&gyro.notchFilter2[axis], gyroADCf);
-        gyroADCf = gyro.lowpassFilterApplyFn((FilterT *)&gyro.lowpassFilter[axis], gyroADCf);
+     // lowpass filters
+     gyro_filter_apply(&gyro.gyro_filtering, &gyro.gyro_lowpass_variants, &gyro.gyroADCf);
+
+     for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
+        float gyroADCf = gyro.gyroADCf[axis];
 
         // DEBUG_GYRO_SAMPLE(3) Record the post-static notch and lowpass filter value for the selected debug axis
         GYRO_FILTER_AXIS_DEBUG_SET(axis, DEBUG_GYRO_SAMPLE, 3, lrintf(gyroADCf));

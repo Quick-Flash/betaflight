@@ -73,6 +73,8 @@ impl SecondOrderPredictiveNotchFilter {
     }
 }
 
+#[derive(Copy, Clone)]
+#[repr(C)]
 pub struct PredictivePt1Filter {
     main_lpf: Pt1Filter,
     leftover_lpf: Pt1Filter,
@@ -87,8 +89,8 @@ impl PredictivePt1Filter {
     }
 
     pub fn apply(&mut self, input: f32) -> f32 {
-        let notched = self.main_lpf.apply(input);
-        notched + self.leftover_lpf.apply(input - notched)
+        let filtered = self.main_lpf.apply(input);
+        filtered + self.leftover_lpf.apply(input - filtered)
     }
 
     pub fn reset(&mut self) {
@@ -97,6 +99,8 @@ impl PredictivePt1Filter {
     }
 }
 
+#[derive(Copy, Clone)]
+#[repr(C)]
 pub struct PredictiveFirstOrderFilter {
     main_lpf: FirstOrderLowpassFilter,
     leftover_lpf: FirstOrderLowpassFilter,
@@ -111,8 +115,8 @@ impl PredictiveFirstOrderFilter {
     }
 
     pub fn apply(&mut self, input: f32) -> f32 {
-        let notched = self.main_lpf.apply(input);
-        notched + self.leftover_lpf.apply(input - notched)
+        let filtered = self.main_lpf.apply(input);
+        filtered + self.leftover_lpf.apply(input - filtered)
     }
 
     pub fn reset(&mut self) {
@@ -121,6 +125,8 @@ impl PredictiveFirstOrderFilter {
     }
 }
 
+#[derive(Copy, Clone)]
+#[repr(C)]
 pub struct PredictiveSecondOrderFilter {
     main_lpf: SecondOrderLowpassFilter,
     leftover_lpf: SecondOrderLowpassFilter,
@@ -135,8 +141,8 @@ impl PredictiveSecondOrderFilter {
     }
 
     pub fn apply(&mut self, input: f32) -> f32 {
-        let notched = self.main_lpf.apply(input);
-        notched + self.leftover_lpf.apply(input - notched)
+        let filtered = self.main_lpf.apply(input);
+        filtered + self.leftover_lpf.apply(input - filtered)
     }
 
     pub fn reset(&mut self) {

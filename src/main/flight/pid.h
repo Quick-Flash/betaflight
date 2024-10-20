@@ -319,7 +319,7 @@ typedef struct pidAxisData_s {
 
 typedef union dtermLowpass_u {
     Pt1Filter pt1Filter;
-    SecondOrderLowpassFilter biquadFilter;
+    biquadFilter_t biquadFilter;
     Pt2Filter pt2Filter;
     Pt3Filter pt3Filter;
 } dtermLowpass_t;

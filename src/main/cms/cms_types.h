@@ -83,7 +83,7 @@ typedef struct
 #define SCROLLING_TICKER 0x0400  // Long values are displayed as horizontally scrolling tickers (OME_TAB only)
 #define SLIDER_RP        0x0800  // Value should be read only if simplified RP slider is enabled
 #define SLIDER_RPY       0x1000  // Value should be read only if simplified RPY slider is enabled
-#define SLIDER_GYRO      0x2000  // Value should be read only if simplified gyro slider is enabled
+#define SLIDER_UNUSED    0x2000  // Value should be read only if simplified gyro slider is enabled
 #define SLIDER_DTERM     0x4000  // Value should be read only if simplified D term slider is enabled
 
 #define IS_PRINTVALUE(x) ((x) & PRINT_VALUE)

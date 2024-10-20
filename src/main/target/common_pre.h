@@ -318,7 +318,6 @@
 #define USE_SERIAL_4WAY_BLHELI_BOOTLOADER
 #define USE_RCDEVICE
 
-#define USE_GYRO_LPF2
 #define USE_DYN_LPF
 #define USE_D_MAX
 

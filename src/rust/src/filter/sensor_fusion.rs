@@ -105,8 +105,7 @@ impl SensorFusion {
 }
 
 // C stuff
-#[no_mangle] pub extern "C" fn sensor_fusion_new(fusion: *mut SensorFusion, noise_estimation_cutoff: f32, dt: f32)
-{
+#[no_mangle] pub extern "C" fn sensor_fusion_new(fusion: *mut SensorFusion, noise_estimation_cutoff: f32, dt: f32) {
     unsafe {
         (*fusion) = SensorFusion::new(noise_estimation_cutoff, dt);
     }
@@ -114,8 +113,7 @@ impl SensorFusion {
 
 #[link_section = ".tcm_code"]
 #[inline]
-#[no_mangle] pub extern "C" fn fuse_sensors_debug(fusion: *mut SensorFusion, gyro_output: *mut [f32; 3], sensor1: *const [f32; 3], sensor2: *const [f32; 3])
-{
+#[no_mangle] pub extern "C" fn fuse_sensors_debug(fusion: *mut SensorFusion, gyro_output: *mut [f32; 3], sensor1: *const [f32; 3], sensor2: *const [f32; 3]) {
     unsafe {
         *gyro_output = (*fusion).fuse_sensors_debug(*sensor1, *sensor2);
     }

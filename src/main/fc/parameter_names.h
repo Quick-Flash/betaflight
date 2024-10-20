@@ -21,10 +21,10 @@
 #pragma once
 
 #define PARAM_NAME_GYRO_HARDWARE_LPF "gyro_hardware_lpf"
-#define PARAM_NAME_GYRO_LPF1_TYPE "gyro_lpf1_type"
-#define PARAM_NAME_GYRO_LPF1_STATIC_HZ "gyro_lpf1_static_hz"
-#define PARAM_NAME_GYRO_LPF2_TYPE "gyro_lpf2_type"
-#define PARAM_NAME_GYRO_LPF2_STATIC_HZ "gyro_lpf2_static_hz"
+#define PARAM_NAME_GYRO_LPF1_VARIANT "gyro_lpf1_variant"
+#define PARAM_NAME_GYRO_LPF1_CUTOFF "gyro_lpf1_cutoff"
+#define PARAM_NAME_GYRO_LPF2_VARIANT "gyro_lpf2_variant"
+#define PARAM_NAME_GYRO_LPF2_STATIC_HZ "gyro_lpf2_cutoff"
 #define PARAM_NAME_GYRO_TO_USE "gyro_to_use"
 #define PARAM_NAME_DYN_NOTCH_MAX_HZ "dyn_notch_max_hz"
 #define PARAM_NAME_DYN_NOTCH_COUNT "dyn_notch_count"

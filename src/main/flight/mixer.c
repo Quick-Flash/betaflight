@@ -510,7 +510,6 @@ static void updateDynLpfCutoffs(timeUs_t currentTimeUs, float throttle)
         if (quantizedThrottle != dynLpfPreviousQuantizedThrottle) {
             // scale the quantized value back to the throttle range so the filter cutoff steps are repeatable
             const float dynLpfThrottle = (float)quantizedThrottle / DYN_LPF_THROTTLE_STEPS;
-            dynLpfGyroUpdate(dynLpfThrottle);
             dynLpfDTermUpdate(dynLpfThrottle);
             dynLpfPreviousQuantizedThrottle = quantizedThrottle;
             lastDynLpfUpdateUs = currentTimeUs;
