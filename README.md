@@ -13,12 +13,13 @@ I like that message and feel like this project, in the long term, can play the r
 - Add lowpass filter options of off, pt1, pt2, pt3, first order, second order, predictive pt1, predictive first order, predictive second order.
 - Setting cutoff to 0 will not set the filter to off, you instead need to set the filter variant to off
 - All new settings are found in the OSD under the gyro filters tab
+- All predictive filters are a lowpass filter with another lowpass filter on the error between the filter and the raw input. Example, if your raw input is 50.1, but the filter output is 25.1, then the error would be 25.0 and there would be an additional filter being fed that value. It then adds its output together with the main lowpass filter. This "predictive" part is able to remove latency at the cost of a little additional noise at lower frequencies. The higher the predictive cutoff the less latency, but more noise you will have.
 - Below are the new settings:
   - `gyro_lpf1_cutoff` -> Filter cutoff for the first lowpass filter
   - `gyro_lpf1_pred_cutoff` -> The cutoff for the predictive part of the filter. Higher values will remove latency faster, but may also lead to more noise.
   - `gyro_lpf1_q` -> Q value for the lowpass filter. Only applies to second order filters (both predictive and non predictive). A value of 707 will mimic a BF "biquad" filter. Higher values is less latent with a bit less filtering around cutoff, and lower values are more latent with more filtering around cutoff. Values greater than 707 will start to increase noise just below the cutoff.
   - `gyro_lpf1_pre_q` -> Q value for the predictive part of the lowpass filter. Only applies to the predictive second order filter
-  - `gyro_lpf1_variant` -> Sets which filter variant you will be using.
+  - `gyro_lpf1_variant` -> Sets which filter variant you will be using. pt1, pt2, pt3 are what you expect them to be. first order is a lowpass filter that filters slightly more than a pt1, mainly at very high frequencies. second order is the BF biquad filter.
 - Options are the same for the `gyro_lpf2`
 
 ### 10/15/2024
