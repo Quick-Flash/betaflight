@@ -7,6 +7,11 @@ Esperanto was created to be easy to use, easy to learn language made for the pur
 I like that message and feel like this project, in the long term, can play the role of an easy to use firmware that can bring the drone world together.
 
 # Changelog
+### 10/22/2024
+- Prevent lowpass filters from being set above nyquist and causing issues.
+- Fix blackbox logging (probably) and add the new lowpass settings to blackbox.
+- make the AHRS use raw gyro input instead of filtered gyro, this should make the attitude estimation more accurate.
+
 ### 10/20/2024
 - Remove the BF gyro lowpass filters and replace with my own.
 - Added a median filter as a downsampling filter to remove BF's lpf2 downsampling
