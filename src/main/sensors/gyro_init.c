@@ -102,6 +102,8 @@ void gyroInitFilters(void)
 {
     float sample_rate_dt = gyro.sampleLooptime * 1e-6f; // things that run at gyro rate
     float target_rate_dt = gyro.targetLooptime * 1e-6f; // things that run at pid rate
+    float target_rate_nyquist = (1.0f / target_rate_dt) / 2.0;
+    float adjusted_nyquist = target_rate_nyquist * 0.95;
 
     for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
         nonlinear_median_init(&gyro.non_linear_median[axis]);
@@ -109,13 +111,16 @@ void gyroInitFilters(void)
 
     gyro_lowpass_init(&gyro.gyro_lowpass_variants, gyroConfig()->gyro_lpf1_variant, gyroConfig()->gyro_lpf2_variant);
 
+    float lpf1_cutoff = MIN(gyroConfig()->gyro_lpf1_cutoff, adjusted_nyquist);
+    float lpf2_cutoff = MIN(gyroConfig()->gyro_lpf2_cutoff, adjusted_nyquist);
+
     gyro_filter_init(
         &gyro.gyro_filtering,
-        gyroConfig()->gyro_lpf1_cutoff,
+        lpf1_cutoff,
         gyroConfig()->gyro_lpf1_predictive_cutoff,
         gyroConfig()->gyro_lpf1_cutoff_q / 1000.0f,
         gyroConfig()->gyro_lpf1_predictive_q / 1000.0f,
-        gyroConfig()->gyro_lpf2_cutoff,
+        lpf2_cutoff,
         gyroConfig()->gyro_lpf2_predictive_cutoff,
         gyroConfig()->gyro_lpf2_cutoff_q / 1000.0f,
         gyroConfig()->gyro_lpf2_predictive_q / 1000.0f,
