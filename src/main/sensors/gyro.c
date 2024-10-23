@@ -417,7 +417,7 @@ FAST_CODE void gyroFiltering(timeUs_t currentTimeUs)
 #endif
 
     for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
-        gyroFilteredDownsampled[axis] = pt1FilterApply(&gyro.imuGyroFilter[axis], gyro.gyroADCf[axis]); // this should probably be filtering raw gyro
+        gyroFilteredDownsampled[axis] = pt1FilterApply(&gyro.imuGyroFilter[axis], gyro.gyroADC[axis]); // this is filtering raw gyro
     }
 
 #if !defined(USE_YAW_SPIN_RECOVERY)
