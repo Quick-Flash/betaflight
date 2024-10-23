@@ -673,17 +673,17 @@ const clivalue_t valueTable[] = {
     { "gyro_high_range",            VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_high_fsr) },
 #endif
 
-    { PARAM_NAME_GYRO_LPF1_VARIANT,   VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_GYRO_LPF_TYPE }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf1_variant) },
-    { PARAM_NAME_GYRO_LPF1_CUTOFF,    VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 10, LPF_MAX_HZ }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf1_cutoff) },
-    { "gyro_lpf1_pred_cutoff",        VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 1, 250 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf1_predictive_cutoff) },
-    { "gyro_lpf1_q",                  VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 100, 1500 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf1_cutoff_q) },
-    { "gyro_lpf1_pred_q",             VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 100, 1500 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf1_predictive_q) },
+    { PARAM_NAME_GYRO_LPF1_VARIANT,     VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_GYRO_LPF_TYPE }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf1_variant) },
+    { PARAM_NAME_GYRO_LPF1_CUTOFF,      VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 10, LPF_MAX_HZ }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf1_cutoff) },
+    { PARAM_NAME_GYRO_LPF1_PRED_CUTOFF, VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 1, 250 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf1_predictive_cutoff) },
+    { PARAM_NAME_GYRO_LPF1_Q,           VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 100, 1500 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf1_cutoff_q) },
+    { PARAM_NAME_GYRO_LPF1_PRED_Q,      VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 100, 1500 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf1_predictive_q) },
 
-    { PARAM_NAME_GYRO_LPF2_VARIANT,   VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_GYRO_LPF_TYPE }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf2_variant) },
-    { PARAM_NAME_GYRO_LPF2_STATIC_HZ, VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 10,  LPF_MAX_HZ }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf2_cutoff) },
-    { "gyro_lpf2_pred_cutoff",        VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 1, 250 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf2_predictive_cutoff) },
-    { "gyro_lpf2_q",                  VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 100, 1500 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf2_cutoff_q) },
-    { "gyro_lpf2_pred_q",             VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 100, 1500 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf2_predictive_q) },
+    { PARAM_NAME_GYRO_LPF2_VARIANT,     VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_GYRO_LPF_TYPE }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf2_variant) },
+    { PARAM_NAME_GYRO_LPF2_CUTOFF,      VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 10,  LPF_MAX_HZ }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf2_cutoff) },
+    { PARAM_NAME_GYRO_LPF2_PRED_CUTOFF, VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 1, 250 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf2_predictive_cutoff) },
+    { PARAM_NAME_GYRO_LPF2_Q,           VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 100, 1500 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf2_cutoff_q) },
+    { PARAM_NAME_GYRO_LPF2_PRED_Q,      VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 100, 1500 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyro_lpf2_predictive_q) },
 
     { "gyro_calib_duration",        VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 50,  3000 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyroCalibrationDuration) },
     { "gyro_calib_noise_limit",     VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 0,  200 }, PG_GYRO_CONFIG, offsetof(gyroConfig_t, gyroMovementCalibrationThreshold) },

@@ -1569,10 +1569,30 @@ static bool blackboxWriteSysinfo(void)
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_YAW_DEADBAND, "%d",           rcControlsConfig()->yaw_deadband);
 
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_HARDWARE_LPF, "%d",      gyroConfig()->gyro_hardware_lpf);
+
+        // don't mess with these values, doing so breaks the headers in BF BBL, its silly but oh well
+        /*****************************************************************************************************/
+        BLACKBOX_PRINT_HEADER_LINE("gyro_lpf1_type", "%d",                  0);
+        BLACKBOX_PRINT_HEADER_LINE("gyro_lpf1_static_hz", "%d",             0);
+        BLACKBOX_PRINT_HEADER_LINE("gyro_lpf2_type", "%d",                  0);
+        BLACKBOX_PRINT_HEADER_LINE("gyro_lpf2_static_hz", "%d",             0);
+        BLACKBOX_PRINT_HEADER_LINE("gyro_notch_hz", "%d,%d",                0, 0);
+        BLACKBOX_PRINT_HEADER_LINE("gyro_notch_cutoff", "%d,%d",            0, 0);
+        /*****************************************************************************************************/
+
+
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF1_VARIANT, "%d",      gyroConfig()->gyro_lpf1_variant);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF1_CUTOFF, "%d",       gyroConfig()->gyro_lpf1_cutoff);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF1_PRED_CUTOFF, "%d",  gyroConfig()->gyro_lpf1_predictive_cutoff);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF1_Q, "%d",            gyroConfig()->gyro_lpf1_cutoff_q);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF1_PRED_Q, "%d",       gyroConfig()->gyro_lpf1_predictive_q);
+
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF2_VARIANT, "%d",      gyroConfig()->gyro_lpf2_variant);
-        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF2_STATIC_HZ, "%d",    gyroConfig()->gyro_lpf2_cutoff);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF2_CUTOFF, "%d",       gyroConfig()->gyro_lpf2_cutoff);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF2_PRED_CUTOFF, "%d",  gyroConfig()->gyro_lpf2_predictive_cutoff);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF2_Q, "%d",            gyroConfig()->gyro_lpf2_cutoff_q);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF2_PRED_Q, "%d",       gyroConfig()->gyro_lpf2_predictive_q);
+
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_TO_USE, "%d",            gyroConfig()->gyro_to_use);
         BLACKBOX_PRINT_HEADER_LINE("gyro_debug_axis", "%d",                 gyroConfig()->gyro_filter_debug_axis);
 #ifdef USE_MULTI_GYRO
