@@ -7,6 +7,17 @@ Esperanto was created to be easy to use, easy to learn language made for the pur
 I like that message and feel like this project, in the long term, can play the role of an easy to use firmware that can bring the drone world together.
 
 # Changelog
+### 10/24/2024
+- Major lowpas filtering overhaul!
+- Removal of Predictive filter variants, now all lowpass filters can be optionally made predictive.
+- Lowpass filter variants are now `"OFF", "PT1", "PT2", "PT3", "FIRST_ORDER", "SECOND_ORDER", "SLIDING_ORDER", "PT_SECOND_ORDER"`
+- `gyro_lpf1_variant` is for the main filter
+- `gyro_lpf1_pred_variant` is for the predictive portion of the filter. If you set this to `OFF` then there will be no predictive part to the filter and it will act like normal.
+- `gyro_lpf1_pred_weight` is how much of the prediction you want to use. It is set as a percent, with 0 disabling the prediction and 100 being full predictive strength.
+- `SLIDING_ORDER` is a lowpass filter that can be configured to be between a `FIRST_ORDER` and `SECOND_ORDER` filter. It does make use of `Q`. The setting `gyro_lpf1_cutoff_shift` determine how much like a `FIRST_ORDER` or `SECOND_ORDER` filter it is. A value of 0 is like a `FIRST_ORDER`, and a value of 100 is like a `SECOND_ORDER`. This applies for the predictive part as well.
+- `PT_SECOND_ORDER` is a lowpass filter that can be configured to be between a `PT1` and `SECOND_ORDER` filter. It does make use of `Q`. The setting `gyro_lpf1_cutoff_shift` determine how much like a `FIRST_ORDER` or `SECOND_ORDER` filter it is. A value of 0 is like a `PT1`, and a value of 100 is like a `SECOND_ORDER`. This applies for the predictive part as well.
+- BF version bump to 4.6.1
+
 ### 10/22/2024
 - Prevent lowpass filters from being set above nyquist and causing issues.
 - Fix blackbox logging (probably) and add the new lowpass settings to blackbox.

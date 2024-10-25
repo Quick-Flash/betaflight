@@ -100,16 +100,24 @@ void pgResetFn_gyroConfig(gyroConfig_t *gyroConfig)
     gyroConfig->gyro_hardware_lpf = GYRO_HARDWARE_LPF_NORMAL;
 
     gyroConfig->gyro_lpf1_variant = Pt1;
+    gyroConfig->gyro_lpf1_predictive_variant = Off;
     gyroConfig->gyro_lpf1_cutoff = 125;
     gyroConfig->gyro_lpf1_predictive_cutoff = 15;
     gyroConfig->gyro_lpf1_cutoff_q = 707;
     gyroConfig->gyro_lpf1_predictive_q = 707;
+    gyroConfig->gyro_lpf1_cutoff_shift = 75;
+    gyroConfig->gyro_lpf1_predictive_shift = 75;
+    gyroConfig->gyro_lpf1_predictive_weight = 100;
 
     gyroConfig->gyro_lpf2_variant = Pt1;
+    gyroConfig->gyro_lpf1_predictive_variant = Off;
     gyroConfig->gyro_lpf2_cutoff = 160;
     gyroConfig->gyro_lpf2_predictive_cutoff = 15;
     gyroConfig->gyro_lpf2_cutoff_q = 707;
     gyroConfig->gyro_lpf2_predictive_q = 707;
+    gyroConfig->gyro_lpf2_cutoff_shift = 75;
+    gyroConfig->gyro_lpf2_predictive_shift = 75;
+    gyroConfig->gyro_lpf2_predictive_weight = 100;
 
     gyroConfig->gyro_high_fsr = false;
     gyroConfig->gyro_to_use = DEFAULT_GYRO_TO_USE;

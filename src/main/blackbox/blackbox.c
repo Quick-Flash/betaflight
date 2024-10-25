@@ -1582,16 +1582,24 @@ static bool blackboxWriteSysinfo(void)
 
 
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF1_VARIANT, "%d",      gyroConfig()->gyro_lpf1_variant);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF1_PRED_VARIANT, "%d", gyroConfig()->gyro_lpf1_predictive_variant);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF1_CUTOFF, "%d",       gyroConfig()->gyro_lpf1_cutoff);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF1_PRED_CUTOFF, "%d",  gyroConfig()->gyro_lpf1_predictive_cutoff);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF1_Q, "%d",            gyroConfig()->gyro_lpf1_cutoff_q);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF1_PRED_Q, "%d",       gyroConfig()->gyro_lpf1_predictive_q);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF1_CUT_SHIFT, "%d",    gyroConfig()->gyro_lpf1_cutoff_shift);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF1_PRED_SHIFT, "%d",   gyroConfig()->gyro_lpf1_predictive_shift);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF1_PRED_WEIGHT, "%d",  gyroConfig()->gyro_lpf1_predictive_weight);
 
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF2_VARIANT, "%d",      gyroConfig()->gyro_lpf2_variant);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF2_PRED_VARIANT, "%d", gyroConfig()->gyro_lpf2_predictive_variant);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF2_CUTOFF, "%d",       gyroConfig()->gyro_lpf2_cutoff);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF2_PRED_CUTOFF, "%d",  gyroConfig()->gyro_lpf2_predictive_cutoff);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF2_Q, "%d",            gyroConfig()->gyro_lpf2_cutoff_q);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF2_PRED_Q, "%d",       gyroConfig()->gyro_lpf2_predictive_q);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF2_CUT_SHIFT, "%d",    gyroConfig()->gyro_lpf2_cutoff_shift);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF2_PRED_SHIFT, "%d",   gyroConfig()->gyro_lpf2_predictive_shift);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_LPF2_PRED_WEIGHT, "%d",  gyroConfig()->gyro_lpf2_predictive_weight);
 
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GYRO_TO_USE, "%d",            gyroConfig()->gyro_to_use);
         BLACKBOX_PRINT_HEADER_LINE("gyro_debug_axis", "%d",                 gyroConfig()->gyro_filter_debug_axis);

@@ -109,7 +109,13 @@ void gyroInitFilters(void)
         nonlinear_median_init(&gyro.non_linear_median[axis]);
     }
 
-    gyro_lowpass_init(&gyro.gyro_lowpass_variants, gyroConfig()->gyro_lpf1_variant, gyroConfig()->gyro_lpf2_variant);
+    gyro_lowpass_init(
+        &gyro.gyro_lowpass_variants,
+        gyroConfig()->gyro_lpf1_variant,
+        gyroConfig()->gyro_lpf1_predictive_variant,
+        gyroConfig()->gyro_lpf2_variant,
+        gyroConfig()->gyro_lpf2_predictive_variant
+        );
 
     float lpf1_cutoff = MIN(gyroConfig()->gyro_lpf1_cutoff, adjusted_nyquist);
     float lpf2_cutoff = MIN(gyroConfig()->gyro_lpf2_cutoff, adjusted_nyquist);
@@ -120,10 +126,16 @@ void gyroInitFilters(void)
         gyroConfig()->gyro_lpf1_predictive_cutoff,
         gyroConfig()->gyro_lpf1_cutoff_q / 1000.0f,
         gyroConfig()->gyro_lpf1_predictive_q / 1000.0f,
+        gyroConfig()->gyro_lpf1_cutoff_shift / 100.0f,
+        gyroConfig()->gyro_lpf1_predictive_shift / 100.0f,
+        gyroConfig()->gyro_lpf1_predictive_weight / 100.0f,
         lpf2_cutoff,
         gyroConfig()->gyro_lpf2_predictive_cutoff,
         gyroConfig()->gyro_lpf2_cutoff_q / 1000.0f,
         gyroConfig()->gyro_lpf2_predictive_q / 1000.0f,
+        gyroConfig()->gyro_lpf2_cutoff_shift / 100.0f,
+        gyroConfig()->gyro_lpf2_predictive_shift / 100.0f,
+        gyroConfig()->gyro_lpf2_predictive_weight / 100.0f,
         &gyro.gyro_lowpass_variants,
         target_rate_dt
     );

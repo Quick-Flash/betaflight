@@ -54,7 +54,9 @@ impl Biquad {
 }
 
 struct BiquadHelper {
+    omega: f32,
     cos: f32,
+    sin: f32,
     alpha: f32,
     a0: f32,
 }
@@ -68,7 +70,9 @@ impl BiquadHelper {
         let a0: f32 = 1.0 / (1.0 + alpha);
 
         Self {
+            omega,
             cos: cos_omega,
+            sin: sin_omega,
             alpha,
             a0,
         }
@@ -247,7 +251,6 @@ impl SecondOrderLowpassFilter {
     }
 }
 
-
 #[derive(Copy, Clone)]
 pub struct SecondOrderHighpassFilter {
     biquad: Biquad,
@@ -285,6 +288,114 @@ impl SecondOrderHighpassFilter {
     }
 }
 
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct SlidingOrderLowpassFilter {
+    biquad: Biquad,
+}
+
+impl SlidingOrderLowpassFilter {
+    pub fn update_cutoff(&mut self, quality_factor: f32, cutoff: f32, shift: f32, dt: f32) {
+        let helper = BiquadHelper::new(quality_factor, cutoff, dt);
+        let cos = helper.cos;
+        let sin = helper.sin;
+        let alpha = helper.alpha;
+        let a0 = helper.a0;
+
+        let transform = 2.0 * sin / (cos + 1.0);
+        let transformed_a0 = 1.0 / (2.0 + transform);
+
+        let first_b0 = transform * transformed_a0;
+        let first_b1 = first_b0;
+        let first_a1 = (transform - 2.0) * transformed_a0;
+
+        let second_b1 = (1.0 - cos) * a0;
+        let second_b0 = second_b1 * 0.5;
+        let second_b2 = second_b0;
+        let second_a1 = -2.0 * cos * a0;
+        let second_a2 = (1.0 - alpha) * a0;
+
+        let recip_shift = 1.0 - shift;
+
+        self.biquad.b0 = first_b0 * shift + second_b0 * recip_shift;
+        self.biquad.b1 = first_b1 * shift + second_b1 * recip_shift;
+        self.biquad.b2 = second_b2 * recip_shift;
+        self.biquad.a1 = first_a1 * shift + second_a1 * recip_shift;
+        self.biquad.a2 = second_a2 * recip_shift;
+    }
+
+    pub fn new(quality_factor: f32, cutoff: f32, shift: f32, dt: f32) -> Self {
+        let mut lowpass = Self {
+            biquad: Biquad::empty(),
+        };
+        lowpass.update_cutoff(quality_factor, cutoff, shift, dt);
+
+        lowpass
+    }
+
+    pub fn apply(&mut self, input: f32) -> f32 {
+        self.biquad.apply(input)
+    }
+
+    pub fn reset(&mut self) {
+        self.biquad.reset();
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct PtSecondOrderLowpassFilter {
+    biquad: Biquad,
+}
+
+impl PtSecondOrderLowpassFilter {
+    pub fn update_cutoff(&mut self, quality_factor: f32, cutoff: f32, shift: f32, dt: f32) {
+        let helper = BiquadHelper::new(quality_factor, cutoff, dt);
+        let omega = helper.omega;
+        let cos = helper.cos;
+        let alpha = helper.alpha;
+        let a0 = helper.a0;
+
+        let pt1_a1 = PtSecondOrderLowpassFilter::pt1_a1(omega);
+        let pt1_b0 = pt1_a1 + 1.0;
+
+        let second_b1 = (1.0 - cos) * a0;
+        let second_b0 = second_b1 * 0.5;
+        let second_b2 = second_b0;
+        let second_a1 = -2.0 * cos * a0;
+        let second_a2 = (1.0 - alpha) * a0;
+
+        let recip_shift = 1.0 - shift;
+
+        self.biquad.b0 = pt1_b0 * shift + second_b0 * recip_shift;
+        self.biquad.b1 = second_b1 * recip_shift;
+        self.biquad.b2 = second_b2 * recip_shift;
+        self.biquad.a1 = pt1_a1 * shift + second_a1 * recip_shift;
+        self.biquad.a2 = second_a2 * recip_shift;
+    }
+
+    pub fn new(quality_factor: f32, cutoff: f32, shift: f32, dt: f32) -> Self {
+        let mut lowpass = Self {
+            biquad: Biquad::empty(),
+        };
+        lowpass.update_cutoff(quality_factor, cutoff, shift, dt);
+
+        lowpass
+    }
+
+    fn pt1_a1(omega: f32) -> f32 {
+        -1.0 / ((6.0 + omega * (6.0 + omega * (3.0 + omega))) * 0.16666666)
+    }
+
+    pub fn apply(&mut self, input: f32) -> f32 {
+        self.biquad.apply(input)
+    }
+
+    pub fn reset(&mut self) {
+        self.biquad.reset();
+    }
+}
+
 #[no_mangle] pub extern "C" fn q_from_center_and_end_freq(center_freq: f32, cutoff_freq: f32) -> f32 {
     NotchFilter::q_from_center_and_end_freq(center_freq, cutoff_freq)
 }
@@ -299,6 +410,7 @@ mod biquad_tests {
     const Q: f32 = 1.0;
     const CUTOFF: f32 = 100.0;
     const INPUT: f32 = 1000.0;
+    const SHIFT: f32 = 0.5;
 
     #[cfg(test)]
     mod notch_tests {
@@ -430,6 +542,60 @@ mod biquad_tests {
 
             // then
             assert_eq!(highpass.apply(INPUT), 960.7682);
+        }
+    }
+
+    #[cfg(test)]
+    mod sliding_order_tests {
+        use super::*;
+
+        #[test]
+        fn sliding_order_gains() {
+            // given
+            let lowpass = SlidingOrderLowpassFilter::new(Q, CUTOFF, SHIFT, DT);
+
+            // then
+            assert_eq!(lowpass.biquad.b0, 0.019643942);
+            assert_eq!(lowpass.biquad.b1, 0.020385524);
+            assert_eq!(lowpass.biquad.b2, 0.0007415813);
+            assert_eq!(lowpass.biquad.a1, -1.4214803);
+            assert_eq!(lowpass.biquad.a2, 0.46225137);
+        }
+
+        #[test]
+        fn sliding_order_apply() {
+            // given
+            let mut lowpass = SlidingOrderLowpassFilter::new(Q, CUTOFF, SHIFT, DT);
+
+            // then
+            assert_eq!(lowpass.apply(INPUT), 19.643942);
+        }
+    }
+
+    #[cfg(test)]
+    mod pt_second_order_tests {
+        use super::*;
+
+        #[test]
+        fn pt_second_order_gains() {
+            // given
+            let lowpass = PtSecondOrderLowpassFilter::new(Q, CUTOFF, SHIFT, DT);
+
+            // then
+            assert_eq!(lowpass.biquad.b0, 0.038508248);
+            assert_eq!(lowpass.biquad.b1, 0.0014831626);
+            assert_eq!(lowpass.biquad.b2, 0.0007415813);
+            assert_eq!(lowpass.biquad.a1, -1.4215183);
+            assert_eq!(lowpass.biquad.a2, 0.46225137);
+        }
+
+        #[test]
+        fn pt_second_apply() {
+            // given
+            let mut lowpass = PtSecondOrderLowpassFilter::new(Q, CUTOFF, SHIFT, DT);
+
+            // then
+            assert_eq!(lowpass.apply(INPUT), 38.508247);
         }
     }
 }

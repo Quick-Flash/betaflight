@@ -141,15 +141,23 @@ typedef struct gyroConfig_s {
     uint8_t gyro_lpf1_predictive_cutoff;
     uint16_t gyro_lpf1_cutoff_q;
     uint16_t gyro_lpf1_predictive_q;
+    uint8_t gyro_lpf1_cutoff_shift;
+    uint8_t gyro_lpf1_predictive_shift;
+    uint8_t gyro_lpf1_predictive_weight;
 
     uint16_t gyro_lpf2_cutoff;
     uint8_t gyro_lpf2_predictive_cutoff;
     uint16_t gyro_lpf2_cutoff_q;
     uint16_t gyro_lpf2_predictive_q;
+    uint8_t gyro_lpf2_cutoff_shift;
+    uint8_t gyro_lpf2_predictive_shift;
+    uint8_t gyro_lpf2_predictive_weight;
 
     // Lowpass primary/secondary
     uint8_t gyro_lpf1_variant;
+    uint8_t gyro_lpf1_predictive_variant;
     uint8_t gyro_lpf2_variant;
+    uint8_t gyro_lpf2_predictive_variant;
 
     int16_t gyro_offset_yaw;
     uint8_t yaw_spin_recovery;

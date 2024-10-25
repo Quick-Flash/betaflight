@@ -91,9 +91,8 @@ static const char * const osdTableGyroLowpassVariant[] = {
     "PT3",
     "1ST_ORD",
     "2ND_ORD",
-    "PRED_PT1",
-    "PRED_1ST_ORD",
-    "PRED_2ND_ORD",
+    "SLIDING_ORD",
+    "PT_2ND_ORD",
 };
 
 static void setProfileIndexString(char *profileString, int profileIndex, const char *profileName)
@@ -750,17 +749,25 @@ static CMS_Menu cmsx_menuProfileOther = {
 };
 
 
+static uint8_t  gyroConfig_gyro_lpf1_variant;
+static uint8_t  gyroConfig_gyro_lpf1_predictive_variant;
 static uint16_t gyroConfig_gyro_lpf1_cutoff;
 static uint8_t  gyroConfig_gyro_lpf1_predictive_cutoff;
 static uint16_t gyroConfig_gyro_lpf1_cutoff_q;
 static uint16_t gyroConfig_gyro_lpf1_predictive_q;
-static uint8_t  gyroConfig_gyro_lpf1_variant;
+static uint8_t  gyroConfig_gyro_lpf1_cutoff_shift;
+static uint8_t  gyroConfig_gyro_lpf1_predictive_shift;
+static uint8_t  gyroConfig_gyro_lpf1_predictive_weight;
 
+static uint8_t  gyroConfig_gyro_lpf2_variant;
+static uint8_t  gyroConfig_gyro_lpf2_predictive_variant;
 static uint16_t gyroConfig_gyro_lpf2_cutoff;
 static uint8_t  gyroConfig_gyro_lpf2_predictive_cutoff;
 static uint16_t gyroConfig_gyro_lpf2_cutoff_q;
 static uint16_t gyroConfig_gyro_lpf2_predictive_q;
-static uint8_t  gyroConfig_gyro_lpf2_variant;
+static uint8_t  gyroConfig_gyro_lpf2_cutoff_shift;
+static uint8_t  gyroConfig_gyro_lpf2_predictive_shift;
+static uint8_t  gyroConfig_gyro_lpf2_predictive_weight;
 
 #ifdef USE_MULTI_GYRO
 static uint8_t gyroConfig_gyro_to_use;
@@ -770,17 +777,25 @@ static const void *cmsx_menuGyro_onEnter(displayPort_t *pDisp)
 {
     UNUSED(pDisp);
 
-    gyroConfig_gyro_lpf1_cutoff =  gyroConfig()->gyro_lpf1_cutoff;
-    gyroConfig_gyro_lpf1_predictive_cutoff =  gyroConfig()->gyro_lpf1_predictive_cutoff;
-    gyroConfig_gyro_lpf1_cutoff_q =  gyroConfig()->gyro_lpf1_cutoff_q;
-    gyroConfig_gyro_lpf1_predictive_q =  gyroConfig()->gyro_lpf1_predictive_q;
-    gyroConfig_gyro_lpf1_variant =  gyroConfig()->gyro_lpf1_variant;
+    gyroConfig_gyro_lpf1_variant =             gyroConfig()->gyro_lpf1_variant;
+    gyroConfig_gyro_lpf1_predictive_variant =  gyroConfig()->gyro_lpf1_predictive_variant;
+    gyroConfig_gyro_lpf1_cutoff =              gyroConfig()->gyro_lpf1_cutoff;
+    gyroConfig_gyro_lpf1_predictive_cutoff =   gyroConfig()->gyro_lpf1_predictive_cutoff;
+    gyroConfig_gyro_lpf1_cutoff_q =            gyroConfig()->gyro_lpf1_cutoff_q;
+    gyroConfig_gyro_lpf1_predictive_q =        gyroConfig()->gyro_lpf1_predictive_q;
+    gyroConfig_gyro_lpf1_cutoff_shift =        gyroConfig()->gyro_lpf1_cutoff_shift;
+    gyroConfig_gyro_lpf1_predictive_shift =    gyroConfig()->gyro_lpf1_predictive_shift;
+    gyroConfig_gyro_lpf1_predictive_weight =   gyroConfig()->gyro_lpf1_predictive_weight;
 
-    gyroConfig_gyro_lpf2_cutoff =  gyroConfig()->gyro_lpf2_cutoff;
-    gyroConfig_gyro_lpf2_predictive_cutoff =  gyroConfig()->gyro_lpf2_predictive_cutoff;
-    gyroConfig_gyro_lpf2_cutoff_q =  gyroConfig()->gyro_lpf2_cutoff_q;
-    gyroConfig_gyro_lpf2_predictive_q =  gyroConfig()->gyro_lpf2_predictive_q;
-    gyroConfig_gyro_lpf2_variant =  gyroConfig()->gyro_lpf2_variant;
+    gyroConfig_gyro_lpf2_variant =             gyroConfig()->gyro_lpf2_variant;
+    gyroConfig_gyro_lpf2_predictive_variant =  gyroConfig()->gyro_lpf2_predictive_variant;
+    gyroConfig_gyro_lpf2_cutoff =              gyroConfig()->gyro_lpf2_cutoff;
+    gyroConfig_gyro_lpf2_predictive_cutoff =   gyroConfig()->gyro_lpf2_predictive_cutoff;
+    gyroConfig_gyro_lpf2_cutoff_q =            gyroConfig()->gyro_lpf2_cutoff_q;
+    gyroConfig_gyro_lpf2_predictive_q =        gyroConfig()->gyro_lpf2_predictive_q;
+    gyroConfig_gyro_lpf2_cutoff_shift =        gyroConfig()->gyro_lpf2_cutoff_shift;
+    gyroConfig_gyro_lpf2_predictive_shift =    gyroConfig()->gyro_lpf2_predictive_shift;
+    gyroConfig_gyro_lpf2_predictive_weight =   gyroConfig()->gyro_lpf2_predictive_weight;
 
 #ifdef USE_MULTI_GYRO
     gyroConfig_gyro_to_use = gyroConfig()->gyro_to_use;
@@ -794,17 +809,25 @@ static const void *cmsx_menuGyro_onExit(displayPort_t *pDisp, const OSD_Entry *s
     UNUSED(pDisp);
     UNUSED(self);
 
+    gyroConfigMutable()->gyro_lpf1_variant =            gyroConfig_gyro_lpf1_variant;
+    gyroConfigMutable()->gyro_lpf1_predictive_variant = gyroConfig_gyro_lpf1_predictive_variant;
     gyroConfigMutable()->gyro_lpf1_cutoff =             gyroConfig_gyro_lpf1_cutoff;
     gyroConfigMutable()->gyro_lpf1_predictive_cutoff =  gyroConfig_gyro_lpf1_predictive_cutoff;
     gyroConfigMutable()->gyro_lpf1_cutoff_q =           gyroConfig_gyro_lpf1_cutoff_q;
     gyroConfigMutable()->gyro_lpf1_predictive_q =       gyroConfig_gyro_lpf1_predictive_q;
-    gyroConfigMutable()->gyro_lpf1_variant =            gyroConfig_gyro_lpf1_variant;
+    gyroConfigMutable()->gyro_lpf1_cutoff_shift =       gyroConfig_gyro_lpf1_cutoff_shift;
+    gyroConfigMutable()->gyro_lpf1_predictive_shift =   gyroConfig_gyro_lpf1_predictive_shift;
+    gyroConfigMutable()->gyro_lpf1_predictive_weight =  gyroConfig_gyro_lpf1_predictive_weight;
 
+    gyroConfigMutable()->gyro_lpf2_variant =            gyroConfig_gyro_lpf2_variant;
+    gyroConfigMutable()->gyro_lpf2_predictive_variant = gyroConfig_gyro_lpf2_predictive_variant;
     gyroConfigMutable()->gyro_lpf2_cutoff =             gyroConfig_gyro_lpf2_cutoff;
     gyroConfigMutable()->gyro_lpf2_predictive_cutoff =  gyroConfig_gyro_lpf2_predictive_cutoff;
     gyroConfigMutable()->gyro_lpf2_cutoff_q =           gyroConfig_gyro_lpf2_cutoff_q;
     gyroConfigMutable()->gyro_lpf2_predictive_q =       gyroConfig_gyro_lpf2_predictive_q;
-    gyroConfigMutable()->gyro_lpf2_variant =            gyroConfig_gyro_lpf2_variant;
+    gyroConfigMutable()->gyro_lpf1_cutoff_shift =       gyroConfig_gyro_lpf2_cutoff_shift;
+    gyroConfigMutable()->gyro_lpf2_predictive_shift =   gyroConfig_gyro_lpf2_predictive_shift;
+    gyroConfigMutable()->gyro_lpf2_predictive_weight =  gyroConfig_gyro_lpf2_predictive_weight;
 
 #ifdef USE_MULTI_GYRO
     gyroConfigMutable()->gyro_to_use = gyroConfig_gyro_to_use;
@@ -817,17 +840,24 @@ static const OSD_Entry cmsx_menuFilterGlobalEntries[] =
 {
     { "-- FILTER GYRO  --", OME_Label, NULL, NULL },
 
+    { "LPF1 VAR",       OME_TAB | REBOOT_REQUIRED,  NULL, &(OSD_TAB_t)    { &gyroConfig_gyro_lpf1_variant,  7, osdTableGyroLowpassVariant} },
     { "LPF1 CUT",       OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_lpf1_cutoff, 10, LPF_MAX_HZ, 1 } },
-    { "LPF1 PRED CUT",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &gyroConfig_gyro_lpf1_predictive_cutoff, 1, 250, 1 } },
     { "LPF1 Q",         OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_lpf1_cutoff_q, 100, 1500, 1 } },
+    { "LPF1 SHIFT",     OME_UINT8,  NULL, &(OSD_UINT8_t)  { &gyroConfig_gyro_lpf1_cutoff_shift, 0, 100, 1 } },
+    { "LPF1 PRED VAR",  OME_TAB | REBOOT_REQUIRED,  NULL, &(OSD_TAB_t)    { &gyroConfig_gyro_lpf1_predictive_variant,  7, osdTableGyroLowpassVariant} },
+    { "LPF1 PRED CUT",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &gyroConfig_gyro_lpf1_predictive_cutoff, 1, 250, 1 } },
     { "LPF1 PRED Q",    OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_lpf1_predictive_q, 100, 1500, 1 } },
-    { "LPF1 VAR",       OME_TAB | REBOOT_REQUIRED,  NULL, &(OSD_TAB_t)    { &gyroConfig_gyro_lpf1_variant,  8, osdTableGyroLowpassVariant} },
+    { "LPF1 PRED SHFT", OME_UINT8,  NULL, &(OSD_UINT8_t)  { &gyroConfig_gyro_lpf1_predictive_shift, 0, 100, 1 } },
+    { "LPF1 PRED WGT",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &gyroConfig_gyro_lpf1_predictive_weight, 0, 100, 1 } },
 
+    { "LPF2 VAR",       OME_TAB | REBOOT_REQUIRED,  NULL, &(OSD_TAB_t)    { &gyroConfig_gyro_lpf2_variant,  7, osdTableGyroLowpassVariant} },
     { "LPF2 CUT",       OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_lpf2_cutoff, 10, LPF_MAX_HZ, 1 } },
-    { "LPF2 PRED CUT",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &gyroConfig_gyro_lpf2_predictive_cutoff, 1, 250, 1 } },
     { "LPF2 Q",         OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_lpf2_cutoff_q, 100, 1500, 1 } },
+    { "LPF2 PRED VAR",  OME_TAB | REBOOT_REQUIRED,  NULL, &(OSD_TAB_t)    { &gyroConfig_gyro_lpf2_predictive_variant,  7, osdTableGyroLowpassVariant} },
+    { "LPF2 PRED CUT",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &gyroConfig_gyro_lpf2_predictive_cutoff, 1, 250, 1 } },
     { "LPF2 PRED Q",    OME_UINT16, NULL, &(OSD_UINT16_t) { &gyroConfig_gyro_lpf2_predictive_q, 100, 1500, 1 } },
-    { "LPF2 VAR",       OME_TAB | REBOOT_REQUIRED,  NULL, &(OSD_TAB_t)    { &gyroConfig_gyro_lpf2_variant,  8, osdTableGyroLowpassVariant} },
+    { "LPF2 PRED SHFT", OME_UINT8,  NULL, &(OSD_UINT8_t)  { &gyroConfig_gyro_lpf2_predictive_shift, 0, 100, 1 } },
+    { "LPF2 PRED WGT",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &gyroConfig_gyro_lpf2_predictive_weight, 0, 100, 1 } },
 
 #ifdef USE_MULTI_GYRO
     { "GYRO TO USE",    OME_TAB | REBOOT_REQUIRED,  NULL, &(OSD_TAB_t)    { &gyroConfig_gyro_to_use,  2, osdTableGyroToUse} },
