@@ -56,6 +56,11 @@ static uint8_t activeMacArray[MAX_MODE_ACTIVATION_CONDITION_COUNT];
 static int activeLinkedMacCount = 0;
 static uint8_t activeLinkedMacArray[MAX_MODE_ACTIVATION_CONDITION_COUNT];
 
+static TwoTapSwitch two_tap_arm = {
+    .start_time_us = 0,
+    .stage = Idle
+};
+
 PG_REGISTER_ARRAY(modeActivationCondition_t, MAX_MODE_ACTIVATION_CONDITION_COUNT, modeActivationConditions, PG_MODE_ACTIVATION_PROFILE, 3);
 
 #if defined(USE_CUSTOM_BOX_NAMES)
@@ -70,6 +75,14 @@ bool IS_RC_MODE_ACTIVE(boxId_e boxId)
 void rcModeUpdate(const boxBitmask_t *newState)
 {
     rcModeActivationMask = *newState;
+}
+
+void enableRcMode(boxId_e modeId) {
+    bitArraySet(&rcModeActivationMask, modeId);
+}
+
+void disableRcMode(boxId_e modeId) {
+    bitArrayClr(&rcModeActivationMask, modeId);
 }
 
 bool airmodeIsEnabled(void)
@@ -167,6 +180,10 @@ void updateActivatedModes(void)
     bitArrayXor(&newMask, sizeof(newMask), &newMask, &andMask);
 
     rcModeUpdate(&newMask);
+
+    if (!two_tap_apply(&two_tap_arm, micros(), IS_RC_MODE_ACTIVE(BOXARM))) { // disable arming if it doesn't pass two tap
+        disableRcMode(BOXARM);
+    }
 
     airmodeEnabled = featureIsEnabled(FEATURE_AIRMODE) || IS_RC_MODE_ACTIVE(BOXAIRMODE);
 }
