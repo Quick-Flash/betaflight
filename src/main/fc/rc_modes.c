@@ -181,7 +181,7 @@ void updateActivatedModes(void)
 
     rcModeUpdate(&newMask);
 
-    if (!two_tap_apply(&two_tap_arm, micros(), IS_RC_MODE_ACTIVE(BOXARM))) { // disable arming if it doesn't pass two tap
+    if (rxConfig()->two_tap_arming && !two_tap_apply(&two_tap_arm, micros(), IS_RC_MODE_ACTIVE(BOXARM))) { // disable arming if it doesn't pass two tap
         disableRcMode(BOXARM);
     }
 
