@@ -114,7 +114,6 @@ void pgResetFn_rxConfig(rxConfig_t *rxConfig)
         .sbus_baud_fast = false,
         .msp_override_channels_mask = 0,
         .crsf_use_negotiated_baud = false,
-        .two_tap_arming = true,
     );
 
 #ifdef RX_CHANNELS_TAER
