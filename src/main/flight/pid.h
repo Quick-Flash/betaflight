@@ -291,6 +291,7 @@ typedef struct pidProfile_s {
     uint16_t tpa_curve_pid_thr0;            // For wings: PIDs multiplier at stall speed
     uint16_t tpa_curve_pid_thr100;          // For wings: PIDs multiplier at full speed
     int8_t tpa_curve_expo;                  // For wings: how fast PIDs do transition as speed grows
+    uint8_t soft_arm_throttle_threshold;     // Above this throttle you are outside of soft arm until next disarm
 } pidProfile_t;
 
 PG_DECLARE_ARRAY(pidProfile_t, PID_PROFILE_COUNT, pidProfiles);
@@ -488,6 +489,9 @@ typedef struct pidRuntime_s {
     float tpaCurvePwl_yValues[TPA_CURVE_PWL_SIZE];
     tpaCurveType_t tpaCurveType;
 #endif // USE_ADVANCED_TPA
+
+    SoftArm softArm;
+    float softArmThrottleThreshold;
 } pidRuntime_t;
 
 extern pidRuntime_t pidRuntime;

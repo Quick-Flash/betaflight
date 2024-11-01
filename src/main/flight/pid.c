@@ -245,6 +245,7 @@ void resetPidProfile(pidProfile_t *pidProfile)
         .tpa_curve_pid_thr0 = 200,
         .tpa_curve_pid_thr100 = 70,
         .tpa_curve_expo = 20,
+        .soft_arm_throttle_threshold = 25,
     );
 }
 
@@ -1306,7 +1307,7 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
     }
 
     // Disable PID control if at zero throttle or if gyro overflow detected
-    // This may look very innefficient, but it is done on purpose to always show real CPU usage as in flight
+    // This may look very inefficient, but it is done on purpose to always show real CPU usage as in flight
     if (!pidRuntime.pidStabilisationEnabled) {
         for (int axis = FD_ROLL; axis <= FD_YAW; ++axis) {
             pidData[axis].P = 0;
@@ -1319,6 +1320,25 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
         }
     } else if (pidRuntime.zeroThrottleItermReset) {
         pidResetIterm();
+    }
+
+    if (ARMING_FLAG(ARMED)) {
+        if (in_soft_arm(pidRuntime.softArm)) {
+            float attenuation = soft_arm_attenuate(&pidRuntime.softArm, pidRuntime.softArmThrottleThreshold, mixerGetRcThrottle());
+            pidResetIterm();
+
+            for (int axis = FD_ROLL; axis <= FD_YAW; ++axis) {
+                pidData[axis].P *= attenuation;
+                pidData[axis].I *= attenuation;
+                pidData[axis].D *= attenuation;
+                pidData[axis].F *= attenuation;
+                pidData[axis].S *= attenuation;
+
+                pidData[axis].Sum *= attenuation;
+            }
+        }
+    } else {
+        soft_arm_reset(&pidRuntime.softArm);
     }
 }
 

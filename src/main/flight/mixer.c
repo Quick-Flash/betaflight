@@ -264,6 +264,7 @@ static void calculateThrottleAndCurrentMotorEndpoints(timeUs_t currentTimeUs)
 #else
         motorRangeMax = mixerRuntime.motorOutputHigh;
 #endif
+        // TODO replace mixerRuntime.motorOutputLow with a variable tied to soft arming
         motorRangeMin = mixerRuntime.motorOutputLow + motorRangeMinIncrease * (mixerRuntime.motorOutputHigh - mixerRuntime.motorOutputLow);
         motorOutputMin = motorRangeMin;
         motorOutputRange = motorRangeMax - motorRangeMin;

@@ -498,6 +498,8 @@ void pidInitConfig(const pidProfile_t *pidProfile)
     pidRuntime.useEzDisarm = pidProfile->landing_disarm_threshold > 0;
     pidRuntime.landingDisarmThreshold = pidProfile->landing_disarm_threshold * 10.0f;
 
+    soft_arm_init(&pidRuntime.softArm);
+    pidRuntime.softArmThrottleThreshold = pidProfile->soft_arm_throttle_threshold / 100.0f;
 }
 
 void pidCopyProfile(uint8_t dstPidProfileIndex, uint8_t srcPidProfileIndex)

@@ -1,4 +1,3 @@
-use crate::filter::gyro_filter::{GyroFilters, GyroLowpassVariants};
 use crate::two_tap_switch::TwoTapSwitchStage::*;
 
 #[repr(C)]
@@ -72,20 +71,20 @@ impl TwoTapSwitch {
     }
 }
 
-#[no_mangle] pub extern "C" fn two_tap_init(two_tap: *mut TwoTapSwitch)
-{
+#[no_mangle]
+pub extern "C" fn two_tap_init(two_tap: *mut TwoTapSwitch) {
     unsafe {
         *two_tap = TwoTapSwitch::new();
     }
 }
 
 #[inline]
-#[no_mangle] pub extern "C" fn two_tap_apply(
+#[no_mangle]
+pub extern "C" fn two_tap_apply(
     two_tap: *mut TwoTapSwitch,
     timestamp: u32,
     switch_high: bool,
-) -> bool
-{
+) -> bool {
     unsafe {
         (*two_tap).process(timestamp, switch_high)
     }
