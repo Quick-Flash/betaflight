@@ -1,14 +1,14 @@
-// TODO linearly go from very low min throttle to a higher one as we leave soft arm
-
 #[repr(C)]
 pub struct SoftArm {
     pub exceeded_throttle_threshold: bool,
+    pub soft_arm_percent_inv: f32,
 }
 
 impl SoftArm {
     pub fn new() -> Self {
         Self {
             exceeded_throttle_threshold: false,
+            soft_arm_percent_inv: 0.0,
         }
     }
 
@@ -19,13 +19,22 @@ impl SoftArm {
     pub fn in_soft_arm(&self) -> bool {
         !self.exceeded_throttle_threshold
     }
+    
+    pub fn soft_arm_percent(&self) -> f32 {
+        self.soft_arm_percent_inv
+    }
 
     // TODO look at using this to attenuate the mixer range, requires updating the mixer, but that's needed and will be a mess...
     pub fn attenuate(&mut self, throttle_threshold: f32, throttle: f32) -> f32 {
         if throttle < throttle_threshold {
-            throttle / throttle_threshold
+            let percent = throttle / throttle_threshold;
+            self.soft_arm_percent_inv = percent;
+            
+            percent
         } else {
             self.exceeded_throttle_threshold = true;
+            self.soft_arm_percent_inv = 1.0;
+            
             1.0
         }
     }
@@ -38,9 +47,16 @@ pub extern "C" fn soft_arm_init(soft_arm: *mut SoftArm) {
     }
 }
 
+#[inline]
 #[no_mangle]
 pub extern "C" fn in_soft_arm(soft_arm: SoftArm) -> bool {
     soft_arm.in_soft_arm()
+}
+
+#[inline]
+#[no_mangle]
+pub extern "C" fn soft_arm_percent(soft_arm: SoftArm) -> f32 {
+    soft_arm.soft_arm_percent()
 }
 
 #[no_mangle]

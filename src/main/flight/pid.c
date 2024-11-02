@@ -1342,6 +1342,11 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
     }
 }
 
+float getSoftArmPercentInv(void)
+{
+    return soft_arm_percent(pidRuntime.softArm);
+}
+
 bool crashRecoveryModeActive(void)
 {
     return pidRuntime.inCrashRecoveryMode;

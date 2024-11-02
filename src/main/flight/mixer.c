@@ -222,6 +222,9 @@ static void calculateThrottleAndCurrentMotorEndpoints(timeUs_t currentTimeUs)
             // keep iterm zero for 250ms after motor reversal
             pidResetIterm();
         }
+
+        throttle = constrainf(throttle / currentThrottleInputRange, 0.0f, 1.0f);
+        rcThrottle = throttle;
     } else {
         throttle = rcCommand[THROTTLE] - PWM_RANGE_MIN + throttleAngleCorrection;
         currentThrottleInputRange = PWM_RANGE;
@@ -248,6 +251,11 @@ static void calculateThrottleAndCurrentMotorEndpoints(timeUs_t currentTimeUs)
             motorRangeMinIncrease = 0;
         }
 #endif
+        throttle = constrainf(throttle / currentThrottleInputRange, 0.0f, 1.0f);
+        rcThrottle = throttle;
+
+        float soft_arm_percent_inv = getSoftArmPercentInv();
+        float motor_output_low = soft_arm_percent_inv * mixerRuntime.motorOutputLow + (1.0f - soft_arm_percent_inv) * mixerRuntime.motorOutputSoftLow; // go between soft arm output low and normal idle
 
 #if defined(USE_BATTERY_VOLTAGE_SAG_COMPENSATION)
         float motorRangeAttenuationFactor = 0;
@@ -265,14 +273,11 @@ static void calculateThrottleAndCurrentMotorEndpoints(timeUs_t currentTimeUs)
         motorRangeMax = mixerRuntime.motorOutputHigh;
 #endif
         // TODO replace mixerRuntime.motorOutputLow with a variable tied to soft arming
-        motorRangeMin = mixerRuntime.motorOutputLow + motorRangeMinIncrease * (mixerRuntime.motorOutputHigh - mixerRuntime.motorOutputLow);
+        motorRangeMin = motor_output_low + motorRangeMinIncrease * (mixerRuntime.motorOutputHigh - motor_output_low);
         motorOutputMin = motorRangeMin;
         motorOutputRange = motorRangeMax - motorRangeMin;
         motorOutputMixSign = 1;
     }
-
-    throttle = constrainf(throttle / currentThrottleInputRange, 0.0f, 1.0f);
-    rcThrottle = throttle;
 }
 
 static bool applyCrashFlipModeToMotors(void)

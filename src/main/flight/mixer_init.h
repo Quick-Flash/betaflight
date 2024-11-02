@@ -31,6 +31,7 @@ typedef struct mixerRuntime_s {
     motorMixer_t launchControlMixer[MAX_SUPPORTED_MOTORS];
 #endif
     bool feature3dEnabled;
+    float motorOutputSoftLow;
     float motorOutputLow;
     float motorOutputHigh;
     float disarmMotorOutput;

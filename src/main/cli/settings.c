@@ -858,7 +858,8 @@ const clivalue_t valueTable[] = {
     { "max_throttle",               VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { PWM_PULSE_MIN, PWM_PULSE_MAX }, PG_MOTOR_CONFIG, offsetof(motorConfig_t, maxthrottle) },
     { "min_command",                VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { PWM_PULSE_MIN, PWM_PULSE_MAX }, PG_MOTOR_CONFIG, offsetof(motorConfig_t, mincommand) },
     { "motor_kv",                   VAR_UINT16 | HARDWARE_VALUE, .config.minmaxUnsigned = { 1, 40000 },                   PG_MOTOR_CONFIG, offsetof(motorConfig_t, kv) },
-    { PARAM_NAME_MOTOR_IDLE, VAR_UINT16  | MASTER_VALUE, .config.minmaxUnsigned = { 0, 2000 },                            PG_MOTOR_CONFIG, offsetof(motorConfig_t, motorIdle) },
+    { PARAM_NAME_MOTOR_IDLE,        VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 2000 },                      PG_MOTOR_CONFIG, offsetof(motorConfig_t, motorIdle) },
+    { "motor_soft_idle",            VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 2000 },                      PG_MOTOR_CONFIG, offsetof(motorConfig_t, motorSoftIdle) },
 #ifdef USE_DSHOT
 #ifdef USE_DSHOT_DMAR
     { "dshot_burst",                VAR_UINT8  | HARDWARE_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON_AUTO }, PG_MOTOR_CONFIG, offsetof(motorConfig_t, dev.useBurstDshot) },
@@ -1023,9 +1024,9 @@ const clivalue_t valueTable[] = {
 #endif
 
 // PG_ARMING_CONFIG
-    { "auto_disarm_delay",          VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 0, 60 }, PG_ARMING_CONFIG, offsetof(armingConfig_t, auto_disarm_delay) },
+    { "auto_disarm_delay",              VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 0, 60 }, PG_ARMING_CONFIG, offsetof(armingConfig_t, auto_disarm_delay) },
     { PARAM_NAME_GYRO_CAL_ON_FIRST_ARM, VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_ARMING_CONFIG, offsetof(armingConfig_t, gyro_cal_on_first_arm) },
-    { "two_tap_arming",             VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_RX_CONFIG, offsetof(armingConfig_t, two_tap_arming) },
+    { "two_tap_arming",                 VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_ARMING_CONFIG, offsetof(armingConfig_t, two_tap_arming) },
 
 
 // PG_GPS_CONFIG

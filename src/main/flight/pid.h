@@ -510,6 +510,7 @@ void resetPidProfile(pidProfile_t *profile);
 void pidResetIterm(void);
 void pidStabilisationState(pidStabilisationState_e pidControllerState);
 void pidSetItermAccelerator(float newItermAccelerator);
+float getSoftArmPercentInv(void);
 bool crashRecoveryModeActive(void);
 void pidAcroTrainerInit(void);
 void pidSetAcroTrainerState(bool newState);
@@ -533,7 +534,7 @@ float pidGetAirmodeThrottleOffset();
 #include "sensors/acceleration.h"
 extern float axisError[XYZ_AXIS_COUNT];
 void applyItermRelax(const int axis, const float iterm,
-    const float gyroRate, float *itermErrorRate, float *currentPidSetpoint);
+const float gyroRate, float *itermErrorRate, float *currentPidSetpoint);
 void applyAbsoluteControl(const int axis, const float gyroRate, float *currentPidSetpoint, float *itermErrorRate);
 void rotateItermAndAxisError();
 float pidLevel(int axis, const pidProfile_t *pidProfile,

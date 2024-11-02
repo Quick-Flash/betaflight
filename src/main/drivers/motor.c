@@ -136,19 +136,22 @@ motorVTable_t *motorGetVTable(void)
 }
 
 // This is not motor generic anymore; should be moved to analog pwm module
-static void analogInitEndpoints(const motorConfig_t *motorConfig, float outputLimit, float *outputLow, float *outputHigh, float *disarm, float *deadbandMotor3dHigh, float *deadbandMotor3dLow)
+static void analogInitEndpoints(const motorConfig_t *motorConfig, float outputLimit, float *outputLow, float *outputSoftLow, float *outputHigh, float *disarm, float *deadbandMotor3dHigh, float *deadbandMotor3dLow)
 {
     if (featureIsEnabled(FEATURE_3D)) {
         float outputLimitOffset = (flight3DConfig()->limit3d_high - flight3DConfig()->limit3d_low) * (1 - outputLimit) / 2;
         *disarm = flight3DConfig()->neutral3d;
         *outputLow = flight3DConfig()->limit3d_low + outputLimitOffset;
+        *outputSoftLow = flight3DConfig()->limit3d_low + outputLimitOffset;
         *outputHigh = flight3DConfig()->limit3d_high - outputLimitOffset;
         *deadbandMotor3dHigh = flight3DConfig()->deadband3d_high;
         *deadbandMotor3dLow = flight3DConfig()->deadband3d_low;
     } else {
         *disarm = motorConfig->mincommand;
         const float minThrottle = motorConfig->mincommand + motorConfig->motorIdle * 0.1f;
+        const float minSoftThrottle = motorConfig->mincommand + motorConfig->motorSoftIdle * 0.1f;
         *outputLow = minThrottle;
+        *outputSoftLow = minSoftThrottle;
         *outputHigh = motorConfig->maxthrottle - ((motorConfig->maxthrottle - minThrottle) * (1 - outputLimit));
     }
 }
@@ -193,17 +196,17 @@ static void checkMotorProtocol(const motorDevConfig_t *motorDevConfig)
 }
 
 // End point initialization is called from mixerInit before motorDevInit; can't use vtable...
-void motorInitEndpoints(const motorConfig_t *motorConfig, float outputLimit, float *outputLow, float *outputHigh, float *disarm, float *deadbandMotor3dHigh, float *deadbandMotor3dLow)
+void motorInitEndpoints(const motorConfig_t *motorConfig, float outputLimit, float *outputLow, float *outputSoftLow, float *outputHigh, float *disarm, float *deadbandMotor3dHigh, float *deadbandMotor3dLow)
 {
     checkMotorProtocol(&motorConfig->dev);
 
     if (isMotorProtocolEnabled()) {
         if (!isMotorProtocolDshot()) {
-            analogInitEndpoints(motorConfig, outputLimit, outputLow, outputHigh, disarm, deadbandMotor3dHigh, deadbandMotor3dLow);
+            analogInitEndpoints(motorConfig, outputLimit, outputLow, outputSoftLow, outputHigh, disarm, deadbandMotor3dHigh, deadbandMotor3dLow);
         }
 #ifdef USE_DSHOT
         else {
-            dshotInitEndpoints(motorConfig, outputLimit, outputLow, outputHigh, disarm, deadbandMotor3dHigh, deadbandMotor3dLow);
+            dshotInitEndpoints(motorConfig, outputLimit, outputLow, outputSoftLow, outputHigh, disarm, deadbandMotor3dHigh, deadbandMotor3dLow);
         }
 #endif
     }
