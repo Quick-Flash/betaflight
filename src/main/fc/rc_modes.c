@@ -61,6 +61,9 @@ static TwoTapSwitch two_tap_arm = {
     .stage = Idle
 };
 
+static bool armed_with_turtle = false;
+static bool just_armed = false;
+
 PG_REGISTER_ARRAY(modeActivationCondition_t, MAX_MODE_ACTIVATION_CONDITION_COUNT, modeActivationConditions, PG_MODE_ACTIVATION_PROFILE, 3);
 
 #if defined(USE_CUSTOM_BOX_NAMES)
@@ -183,6 +186,20 @@ void updateActivatedModes(void)
 
     if (armingConfig()->two_tap_arming && !two_tap_apply(&two_tap_arm, micros(), IS_RC_MODE_ACTIVE(BOXARM))) { // disable arming if it doesn't pass two tap
         disableRcMode(BOXARM);
+    }
+
+    if (IS_RC_MODE_ACTIVE(BOXARM) && !just_armed) {
+        just_armed = true;
+        if (IS_RC_MODE_ACTIVE(BOXCRASHFLIP)) {
+            armed_with_turtle = true;
+        }
+    }
+
+    if (!IS_RC_MODE_ACTIVE(BOXARM)) {
+        just_armed = false;
+        armed_with_turtle = false;
+    } else if (armed_with_turtle) { // this fixes turtle mode
+        enableRcMode(BOXCRASHFLIP);
     }
 
     airmodeEnabled = featureIsEnabled(FEATURE_AIRMODE) || IS_RC_MODE_ACTIVE(BOXAIRMODE);
