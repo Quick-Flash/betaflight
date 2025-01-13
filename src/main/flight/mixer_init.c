@@ -59,7 +59,6 @@ void pgResetFn_mixerConfig(mixerConfig_t *mixerConfig)
 #else
     mixerConfig->crashflip_rate = 0;
 #endif
-    mixerConfig->mixer_type = MIXER_LEGACY;
 #ifdef USE_RPM_LIMIT
     mixerConfig->rpm_limit = false;
     mixerConfig->rpm_limit_p = 25;
@@ -336,6 +335,16 @@ void initEscEndpoints(void)
 
 void mixerInitProfile(void)
 {
+    mixer_update_non_motor_gains(
+        &mixerRuntime.motor_mixer,
+        currentPidProfile->thrust_linear_low / 100.0f,
+        currentPidProfile->thrust_linear_high / 100.0f,
+        currentPidProfile->linearization_cut,
+        currentPidProfile->motor_cut_low,
+        currentPidProfile->motor_cut_high,
+        pidGetDT()
+    );
+
 #ifdef USE_DYN_IDLE
     if (useDshotTelemetry) {
         mixerRuntime.dynIdleMinRps = currentPidProfile->dyn_idle_min_rpm * 100.0f / 60.0f;
@@ -377,10 +386,6 @@ void mixerInitProfile(void)
     pt1FilterInit(&mixerRuntime.rpmLimiterThrottleScaleOffsetFilter, pt1FilterGain(2.0f, pidGetDT()));
     mixerResetRpmLimiter();
 #endif
-
-    mixerRuntime.ezLandingThreshold = 2.0f * currentPidProfile->ez_landing_threshold / 100.0f;
-    mixerRuntime.ezLandingLimit = currentPidProfile->ez_landing_limit / 100.0f;
-    mixerRuntime.ezLandingSpeed = 2.0f * currentPidProfile->ez_landing_speed / 10.0f;
 }
 
 #ifdef USE_RPM_LIMIT
@@ -491,6 +496,27 @@ void mixerInit(mixerMode_e mixerMode)
 #endif
 
     mixerConfigureOutput();
+
+    MotorGains motor_gains;
+    MotorModel motor_model[] = {
+        { mixerRuntime.currentMixer[0].roll, mixerRuntime.currentMixer[0].pitch, mixerRuntime.currentMixer[0].yaw, mixerRuntime.currentMixer[0].throttle },
+        { mixerRuntime.currentMixer[1].roll, mixerRuntime.currentMixer[1].pitch, mixerRuntime.currentMixer[1].yaw, mixerRuntime.currentMixer[1].throttle },
+        { mixerRuntime.currentMixer[2].roll, mixerRuntime.currentMixer[2].pitch, mixerRuntime.currentMixer[2].yaw, mixerRuntime.currentMixer[2].throttle },
+        { mixerRuntime.currentMixer[3].roll, mixerRuntime.currentMixer[3].pitch, mixerRuntime.currentMixer[3].yaw, mixerRuntime.currentMixer[3].throttle },
+    };
+
+    motor_gains_init(&motor_gains, &motor_model);
+
+    mixer_init(
+        &mixerRuntime.motor_mixer,
+        motor_gains,
+        currentPidProfile->thrust_linear_low / 100.0f,
+        currentPidProfile->thrust_linear_high / 100.0f,
+        currentPidProfile->linearization_cut,
+        currentPidProfile->motor_cut_low,
+        currentPidProfile->motor_cut_high,
+        pidGetDT()
+    );
 }
 
 void mixerResetDisarmedMotors(void)

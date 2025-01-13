@@ -106,7 +106,7 @@ impl Pt1Filter {
 #[inline]
 #[no_mangle] pub extern "C" fn pt1FilterUpdateCutoff(filter: *mut Pt1Filter, k: f32) {
     unsafe {
-    (*filter).k = k;
+        (*filter).k = k;
     }
 }
 

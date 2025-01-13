@@ -185,7 +185,11 @@ void resetPidProfile(pidProfile_t *pidProfile)
         .launchControlAllowTriggerReset = true,
         .use_integrated_yaw = false,
         .integrated_yaw_relax = 200,
-        .thrustLinearization = 0,
+        .thrust_linear_low = 60,
+        .thrust_linear_high = 30,
+        .linearization_cut = 75,
+        .motor_cut_low = 350,
+        .motor_cut_high = 750,
         .d_max = D_MAX_DEFAULT,
         .d_max_gain = 37,
         .d_max_advance = 20,
@@ -228,16 +232,12 @@ void resetPidProfile(pidProfile_t *pidProfile)
         .tpa_low_rate = 20,
         .tpa_low_breakpoint = 1050,
         .tpa_low_always = 0,
-        .ez_landing_threshold = 25,
-        .ez_landing_limit = 15,
-        .ez_landing_speed = 50,
         .tpa_delay_ms = 0,
         .tpa_gravity_thr0 = 0,
         .tpa_gravity_thr100 = 0,
         .spa_center = { 0, 0, 0 },
         .spa_width = { 0, 0, 0 },
         .spa_mode = { 0, 0, 0 },
-        .landing_disarm_threshold = 0, // relatively safe values are around 100
         .feedforward_yaw_hold_gain = 15,  // zero disables; 15-20 is OK for 5in
         .feedforward_yaw_hold_time = 100,  // a value of 100 is a time constant of about 100ms, and is OK for a 5in; smaller values decay faster, eg for smaller props
         .tpa_curve_type = TPA_CURVE_CLASSIC,
@@ -379,24 +379,6 @@ void pidAcroTrainerInit(void)
     pidRuntime.acroTrainerAxisState[FD_PITCH] = 0;
 }
 #endif // USE_ACRO_TRAINER
-
-#ifdef USE_THRUST_LINEARIZATION
-float pidCompensateThrustLinearization(float throttle)
-{
-    if (pidRuntime.thrustLinearization != 0.0f) {
-        // for whoops where a lot of TL is needed, allow more throttle boost
-        const float throttleReversed = (1.0f - throttle);
-        throttle /= 1.0f + pidRuntime.throttleCompensateAmount * sq(throttleReversed);
-    }
-    return throttle;
-}
-
-float pidApplyThrustLinearization(float motorOutput)
-{
-    motorOutput *= 1.0f + pidRuntime.thrustLinearization * sq(1.0f - motorOutput);
-    return motorOutput;
-}
-#endif
 
 #if defined(USE_ACC)
 // Calculate strength of horizon leveling; 0 = none, 1.0 = most leveling
@@ -774,62 +756,6 @@ STATIC_UNIT_TESTED void applyItermRelax(const int axis, const float iterm,
 }
 #endif
 
-#ifdef USE_AIRMODE_LPF
-void pidUpdateAirmodeLpf(float currentOffset)
-{
-    if (pidRuntime.airmodeThrottleOffsetLimit == 0.0f) {
-        return;
-    }
-
-    float offsetHpf = currentOffset * 2.5f;
-    offsetHpf = offsetHpf - pt1FilterApply(&pidRuntime.airmodeThrottleLpf2, offsetHpf);
-
-    // During high frequency oscillation 2 * currentOffset averages to the offset required to avoid mirroring of the waveform
-    pt1FilterApply(&pidRuntime.airmodeThrottleLpf1, offsetHpf);
-    // Bring offset up immediately so the filter only applies to the decline
-    if (currentOffset * pidRuntime.airmodeThrottleLpf1.state >= 0 && fabsf(currentOffset) > pidRuntime.airmodeThrottleLpf1.state) {
-        pidRuntime.airmodeThrottleLpf1.state = currentOffset;
-    }
-    pidRuntime.airmodeThrottleLpf1.state = constrainf(pidRuntime.airmodeThrottleLpf1.state, -pidRuntime.airmodeThrottleOffsetLimit, pidRuntime.airmodeThrottleOffsetLimit);
-}
-
-float pidGetAirmodeThrottleOffset(void)
-{
-    return pidRuntime.airmodeThrottleLpf1.state;
-}
-#endif
-
-static FAST_CODE_NOINLINE void disarmOnImpact(void)
-{
-    // if, after takeoff...
-    if (isAirmodeActivated()
-        // and, either sticks are centred and throttle zeroed,
-        && ((getMaxRcDeflectionAbs() < 0.05f && mixerGetRcThrottle() < 0.05f)
-            // we could test here for stage 2 failsafe (including both landing or GPS Rescue)
-            // this may permit removing the GPS Rescue disarm method altogether
-#ifdef USE_ALT_HOLD_MODE
-            // or in altitude hold mode, including failsafe landing mode, indirectly
-            || FLIGHT_MODE(ALT_HOLD_MODE)
-#endif
-        )) {
-        // increase sensitivity by 50% when low and in altitude hold or failsafe landing
-        // for more reliable disarm with gentle controlled landings
-        float lowAltitudeSensitivity = 1.0f;
-#ifdef USE_ALT_HOLD_MODE
-        lowAltitudeSensitivity = (FLIGHT_MODE(ALT_HOLD_MODE) && isBelowLandingAltitude()) ? 1.5f : 1.0f;
-#endif
-        // and disarm if accelerometer jerk exceeds threshold...
-        if ((fabsf(acc.accDelta) * lowAltitudeSensitivity) > pidRuntime.landingDisarmThreshold) {
-            // then disarm
-            setArmingDisabled(ARMING_DISABLED_ARM_SWITCH); // NB: need a better message
-            disarm(DISARM_REASON_LANDING);
-            // note: threshold should be high enough to avoid unwanted disarms in the air on throttle chops, eg around 10
-        }
-    }
-    DEBUG_SET(DEBUG_EZLANDING, 6, lrintf(getMaxRcDeflectionAbs() * 100.0f));
-    DEBUG_SET(DEBUG_EZLANDING, 7, lrintf(acc.accDelta));
-}
-
 #ifdef USE_LAUNCH_CONTROL
 #define LAUNCH_CONTROL_MAX_RATE 100.0f
 #define LAUNCH_CONTROL_MIN_RATE 5.0f
@@ -1029,10 +955,6 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
 #ifdef USE_RPM_FILTER
     rpmFilterUpdate();
 #endif
-
-    if (pidRuntime.useEzDisarm) {
-        disarmOnImpact();
-    }
 
     // ----------PID controller----------
     for (int axis = FD_ROLL; axis <= FD_YAW; ++axis) {

@@ -7,6 +7,7 @@ pub mod math;
 pub mod c_interop;
 pub mod two_tap_switch;
 pub mod soft_arm;
+pub mod control;
 
 // dev profile: easier to debug panics; can put a breakpoint on `rust_begin_unwind`
 #[cfg(all(debug_assertions, not(any(test, feature = "testing"))))]

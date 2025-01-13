@@ -232,13 +232,6 @@ void pidInitFilters(const pidProfile_t *pidProfile)
      }
 #endif
 
-#if defined(USE_AIRMODE_LPF)
-    if (pidProfile->transient_throttle_limit) {
-        pt1FilterInit(&pidRuntime.airmodeThrottleLpf1, pt1FilterGain(7.0f, pidRuntime.dT));
-        pt1FilterInit(&pidRuntime.airmodeThrottleLpf2, pt1FilterGain(20.0f, pidRuntime.dT));
-    }
-#endif
-
 #ifdef USE_ACC
     const float k = pt3FilterGain(ATTITUDE_CUTOFF_HZ, pidRuntime.dT);
     const float angleCutoffHz = 1000.0f / (2.0f * M_PIf * pidProfile->angle_feedforward_smoothing_ms); // default of 80ms -> 2.0Hz, 160ms -> 1.0Hz, approximately
@@ -443,11 +436,6 @@ void pidInitConfig(const pidProfile_t *pidProfile)
     pidRuntime.integratedYawRelax = pidProfile->integrated_yaw_relax;
 #endif
 
-#ifdef USE_THRUST_LINEARIZATION
-    pidRuntime.thrustLinearization = pidProfile->thrustLinearization / 100.0f;
-    pidRuntime.throttleCompensateAmount = pidRuntime.thrustLinearization - 0.5f * sq(pidRuntime.thrustLinearization);
-#endif
-
 #ifdef USE_D_MAX
     for (int axis = FD_ROLL; axis <= FD_YAW; ++axis) {
         const uint8_t dMax = pidProfile->d_max[axis];
@@ -461,10 +449,6 @@ void pidInitConfig(const pidProfile_t *pidProfile)
     pidRuntime.dMaxGyroGain = D_MAX_GAIN_FACTOR * pidProfile->d_max_gain / D_MAX_LOWPASS_HZ;
     pidRuntime.dMaxSetpointGain = D_MAX_SETPOINT_GAIN_FACTOR * pidProfile->d_max_gain * pidProfile->d_max_advance / 100.0f / D_MAX_LOWPASS_HZ;
     // lowpass included inversely in gain since stronger lowpass decreases peak effect
-#endif
-
-#if defined(USE_AIRMODE_LPF)
-    pidRuntime.airmodeThrottleOffsetLimit = pidProfile->transient_throttle_limit / 100.0f;
 #endif
 
 #ifdef USE_FEEDFORWARD
@@ -494,9 +478,6 @@ void pidInitConfig(const pidProfile_t *pidProfile)
     pidRuntime.tpaLowBreakpoint = MIN(pidRuntime.tpaLowBreakpoint, pidRuntime.tpaBreakpoint);
     pidRuntime.tpaLowMultiplier = pidProfile->tpa_low_rate / (100.0f * pidRuntime.tpaLowBreakpoint);
     pidRuntime.tpaLowAlways = pidProfile->tpa_low_always;
-
-    pidRuntime.useEzDisarm = pidProfile->landing_disarm_threshold > 0;
-    pidRuntime.landingDisarmThreshold = pidProfile->landing_disarm_threshold * 10.0f;
 
     soft_arm_init(&pidRuntime.softArm);
     pidRuntime.softArmThrottleThreshold = pidProfile->soft_arm_throttle_threshold / 100.0f;

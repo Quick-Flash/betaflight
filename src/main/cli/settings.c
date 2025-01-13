@@ -507,10 +507,6 @@ const char * const lookupTableSimplifiedTuningPidsMode[] = {
     "OFF", "RP", "RPY",
 };
 
-const char* const lookupTableMixerType[] = {
-    "LEGACY", "LINEAR", "DYNAMIC", "EZLANDING",
-};
-
 #ifdef USE_OSD
 const char * const lookupTableCMSMenuBackgroundType[] = {
     "TRANSPARENT", "BLACK", "GRAY", "LIGHT_GRAY"
@@ -649,7 +645,6 @@ const lookupTableEntry_t lookupTables[] = {
 #ifdef USE_OSD
     LOOKUP_TABLE_ENTRY(lookupTableOsdLogoOnArming),
 #endif
-    LOOKUP_TABLE_ENTRY(lookupTableMixerType),
     LOOKUP_TABLE_ENTRY(lookupTableSimplifiedTuningPidsMode),
 #ifdef USE_OSD
     LOOKUP_TABLE_ENTRY(lookupTableCMSMenuBackgroundType),
@@ -958,7 +953,6 @@ const clivalue_t valueTable[] = {
 
 // PG_MIXER_CONFIG
     { "yaw_motors_reversed",        VAR_INT8   | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_MIXER_CONFIG, offsetof(mixerConfig_t, yaw_motors_reversed) },
-    { PARAM_NAME_MIXER_TYPE,        VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_MIXER_TYPE }, PG_MIXER_CONFIG, offsetof(mixerConfig_t, mixer_type) },
     { "crashflip_motor_percent",    VAR_UINT8 |  MASTER_VALUE,  .config.minmaxUnsigned = { 0, 100 }, PG_MIXER_CONFIG, offsetof(mixerConfig_t, crashflip_motor_percent) },
     { "crashflip_rate",             VAR_UINT8 |  MASTER_VALUE,  .config.minmaxUnsigned = { 0, 250 }, PG_MIXER_CONFIG, offsetof(mixerConfig_t, crashflip_rate) },
 #ifdef USE_RPM_LIMIT
@@ -1228,13 +1222,11 @@ const clivalue_t valueTable[] = {
     { "launch_control_gain",        VAR_UINT8 | PROFILE_VALUE,  .config.minmaxUnsigned = { 0, 200 }, PG_PID_PROFILE, offsetof(pidProfile_t, launchControlGain) },
 #endif
 
-#ifdef USE_THRUST_LINEARIZATION
-    { "thrust_linear",              VAR_UINT8 | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 150 }, PG_PID_PROFILE, offsetof(pidProfile_t, thrustLinearization) },
-#endif
-
-#ifdef USE_AIRMODE_LPF
-    { "transient_throttle_limit",   VAR_UINT8 | PROFILE_VALUE, .config.minmax = { 0, 30 }, PG_PID_PROFILE, offsetof(pidProfile_t, transient_throttle_limit) },
-#endif
+    { PARAM_NAME_THRUST_LINEAR_LOW,              VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 100 }, PG_PID_PROFILE, offsetof(pidProfile_t, thrust_linear_low) },
+    { PARAM_NAME_THRUST_LINEAR_HIGH,             VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 100 }, PG_PID_PROFILE, offsetof(pidProfile_t, thrust_linear_high) },
+    { PARAM_NAME_LINEARIZATION_CUT,              VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 250 }, PG_PID_PROFILE, offsetof(pidProfile_t, linearization_cut) },
+    { PARAM_NAME_MOTOR_CUT_LOW,                  VAR_UINT16 | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 2000 }, PG_PID_PROFILE, offsetof(pidProfile_t, motor_cut_low) },
+    { PARAM_NAME_MOTOR_CUT_HIGH,                  VAR_UINT16 | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 2000 }, PG_PID_PROFILE, offsetof(pidProfile_t, motor_cut_high) },
 
 #ifdef USE_FEEDFORWARD
     { PARAM_NAME_FEEDFORWARD_TRANSITION,     VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 100 }, PG_PID_PROFILE, offsetof(pidProfile_t, feedforward_transition) },
@@ -1290,11 +1282,6 @@ const clivalue_t valueTable[] = {
     { PARAM_NAME_TPA_CURVE_PID_THR100, VAR_UINT16  | PROFILE_VALUE, .config.minmaxUnsigned = { 0, TPA_CURVE_PID_MAX}, PG_PID_PROFILE, offsetof(pidProfile_t, tpa_curve_pid_thr100) },
     { PARAM_NAME_TPA_CURVE_EXPO, VAR_INT8  | PROFILE_VALUE, .config.minmaxUnsigned = { TPA_CURVE_EXPO_MIN, TPA_CURVE_EXPO_MAX}, PG_PID_PROFILE, offsetof(pidProfile_t, tpa_curve_expo) },
 #endif // USE_ADVANCED_TPA
-
-    { PARAM_NAME_EZ_LANDING_THRESHOLD,      VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 200 }, PG_PID_PROFILE, offsetof(pidProfile_t, ez_landing_threshold) },
-    { PARAM_NAME_EZ_LANDING_LIMIT,          VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 75 }, PG_PID_PROFILE, offsetof(pidProfile_t, ez_landing_limit) },
-    { PARAM_NAME_EZ_LANDING_SPEED,          VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 250 }, PG_PID_PROFILE, offsetof(pidProfile_t, ez_landing_speed) },
-    { PARAM_NAME_LANDING_DISARM_THRESHOLD,       VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 250 }, PG_PID_PROFILE, offsetof(pidProfile_t, landing_disarm_threshold) },
 
 #ifdef USE_WING
     { PARAM_NAME_SPA_ROLL_CENTER,    VAR_UINT16  | PROFILE_VALUE, .config.minmaxUnsigned = { 0, UINT16_MAX }, PG_PID_PROFILE, offsetof(pidProfile_t, spa_center[FD_ROLL]) },

@@ -2044,7 +2044,7 @@ case MSP_NAME:
         sbufWriteU8(dst, 0);
 #endif
 #if defined(USE_THRUST_LINEARIZATION)
-        sbufWriteU8(dst, currentPidProfile->thrustLinearization);
+        sbufWriteU8(dst, currentPidProfile->thrust_linear_low);
 #else
         sbufWriteU8(dst, 0);
 #endif
@@ -3245,7 +3245,7 @@ static mspResult_e mspProcessInCommand(mspDescriptor_t srcDesc, int16_t cmdMSP, 
             sbufReadU8(src);
 #endif
 #if defined(USE_THRUST_LINEARIZATION)
-            currentPidProfile->thrustLinearization = sbufReadU8(src);
+            currentPidProfile->thrust_linear_low = sbufReadU8(src);
 #else
             sbufReadU8(src);
 #endif

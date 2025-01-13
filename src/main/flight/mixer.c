@@ -272,7 +272,6 @@ static void calculateThrottleAndCurrentMotorEndpoints(timeUs_t currentTimeUs)
 #else
         motorRangeMax = mixerRuntime.motorOutputHigh;
 #endif
-        // TODO replace mixerRuntime.motorOutputLow with a variable tied to soft arming
         motorRangeMin = motor_output_low + motorRangeMinIncrease * (mixerRuntime.motorOutputHigh - motor_output_low);
         motorOutputMin = motorRangeMin;
         motorOutputRange = motorRangeMax - motorRangeMin;
@@ -444,15 +443,23 @@ static void applyRpmLimiter(mixerRuntime_t *mixer)
 }
 #endif // USE_RPM_LIMIT
 
-static void applyMixToMotors(const float motorMix[MAX_SUPPORTED_MOTORS], motorMixer_t *activeMixer)
+static void applyMixToMotors(RateControls rate_controls, float throttle_final)
 {
-    // Now add in the desired throttle, but keep in a range that doesn't clip adjusted
-    // roll/pitch/yaw. This could move throttle down, but also up for those low throttle flips.
+    float motor_values [4];
+    mix_motors(&mixerRuntime.motor_mixer, &motor_values, &rate_controls, throttle_final, 1.0f /*motor_delta_max*/); // use proper motor_delta_max later
+
+    float min_motor = 10000.0;
+    float max_motor = -10000.0;
+
     for (int i = 0; i < mixerRuntime.motorCount; i++) {
-        float motorOutput = motorOutputMixSign * motorMix[i] + throttle * activeMixer[i].throttle;
-#ifdef USE_THRUST_LINEARIZATION
-        motorOutput = pidApplyThrustLinearization(motorOutput);
-#endif
+        float motorOutput = motor_values[i];
+        if (motorOutput > max_motor) {
+            max_motor = motorOutput;
+        }
+        if (motorOutput < min_motor) {
+            min_motor = motorOutput;
+        }
+
         motorOutput = motorOutputMin + motorOutputRange * motorOutput;
 
 #ifdef USE_SERVOS
@@ -473,14 +480,14 @@ static void applyMixToMotors(const float motorMix[MAX_SUPPORTED_MOTORS], motorMi
         motor[i] = motorOutput;
     }
 
+    motorMixRange = max_motor - min_motor + 0.05;
+
     // Disarmed mode
     if (!ARMING_FLAG(ARMED)) {
         for (int i = 0; i < mixerRuntime.motorCount; i++) {
             motor[i] = motor_disarmed[i];
         }
     }
-    DEBUG_SET(DEBUG_EZLANDING, 1, throttle * 10000U);
-    // DEBUG_EZLANDING 0 is the ezLanding factor 2 is the throttle limit
 }
 
 static float applyThrottleLimit(float throttle)
@@ -524,136 +531,6 @@ static void updateDynLpfCutoffs(timeUs_t currentTimeUs, float throttle)
 }
 #endif
 
-static void applyMixerAdjustmentLinear(float *motorMix, const bool airmodeEnabled)
-{
-    float airmodeTransitionPercent = 1.0f;
-    float motorDeltaScale = 0.5f;
-
-    if (!airmodeEnabled && throttle < 0.5f) {
-        // this scales the motor mix authority to be 0.5 at 0 throttle, and 1.0 at 0.5 throttle as airmode off intended for things to work.
-        // also lays the groundwork for how an airmode percent would work.
-        airmodeTransitionPercent = scaleRangef(throttle, 0.0f, 0.5f, 0.5f, 1.0f); // 0.5 throttle is full transition, and 0.0 throttle is 50% airmodeTransitionPercent
-        motorDeltaScale *= airmodeTransitionPercent; // this should be half of the motor authority allowed
-    }
-
-    const float motorMixNormalizationFactor = motorMixRange > 1.0f ? airmodeTransitionPercent / motorMixRange : airmodeTransitionPercent;
-
-    const float motorMixDelta = motorDeltaScale * motorMixRange;
-
-    float minMotor = FLT_MAX;
-    float maxMotor = FLT_MIN;
-
-    for (int i = 0; i < mixerRuntime.motorCount; ++i) {
-        if (mixerConfig()->mixer_type == MIXER_LINEAR) {
-            motorMix[i] = scaleRangef(throttle, 0.0f, 1.0f, motorMix[i] + motorMixDelta, motorMix[i] - motorMixDelta);
-        } else {
-            motorMix[i] = scaleRangef(throttle, 0.0f, 1.0f, motorMix[i] + fabsf(motorMix[i]), motorMix[i] - fabsf(motorMix[i]));
-        }
-        motorMix[i] *= motorMixNormalizationFactor;
-
-        maxMotor = MAX(motorMix[i], maxMotor);
-        minMotor = MIN(motorMix[i], minMotor);
-    }
-
-    // constrain throttle so it won't clip any outputs
-    throttle = constrainf(throttle, -minMotor, 1.0f - maxMotor);
-}
-
-static float calcEzLandLimit(float maxDeflection, float speed)
-{
-    // calculate limit to where the mixer can raise the throttle based on RPY stick deflection
-    // 0.0 = no increas allowed, 1.0 = 100% increase allowed
-    const float deflectionLimit = mixerRuntime.ezLandingThreshold > 0.0f ? fminf(1.0f, maxDeflection / mixerRuntime.ezLandingThreshold) : 0.0f;
-    DEBUG_SET(DEBUG_EZLANDING, 4, lrintf(deflectionLimit * 10000.0f));
-
-    // calculate limit to where the mixer can raise the throttle based on speed
-    // TODO sanity checks like number of sats, dop, accuracy?
-    const float speedLimit = mixerRuntime.ezLandingSpeed > 0.0f ? fminf(1.0f, speed / mixerRuntime.ezLandingSpeed) : 0.0f;
-    DEBUG_SET(DEBUG_EZLANDING, 5, lrintf(speedLimit * 10000.0f));
-
-    // get the highest of the limits from deflection, speed, and the base ez_landing_limit
-    const float deflectionAndSpeedLimit = fmaxf(deflectionLimit, speedLimit);
-    return fmaxf(mixerRuntime.ezLandingLimit, deflectionAndSpeedLimit);
-}
-
-static void applyMixerAdjustmentEzLand(float *motorMix, const float motorMixMin, const float motorMixMax)
-{
-    // Calculate factor for normalizing motor mix range to <= 1.0
-    const float baseNormalizationFactor = motorMixRange > 1.0f ? 1.0f / motorMixRange : 1.0f;
-    const float normalizedMotorMixMin = motorMixMin * baseNormalizationFactor;
-    const float normalizedMotorMixMax = motorMixMax * baseNormalizationFactor;
-
-#ifdef USE_GPS
-    const float speed = STATE(GPS_FIX) ? gpsSol.speed3d / 100.0f : 0.0f;  // m/s
-#else
-    const float speed = 0.0f;
-#endif
-
-    const float ezLandLimit = calcEzLandLimit(getMaxRcDeflectionAbs(), speed);
-    // use the largest of throttle and limit calculated from RPY stick positions
-    float upperLimit = fmaxf(ezLandLimit, throttle);
-    // limit throttle to avoid clipping the highest motor output
-    upperLimit = fminf(upperLimit, 1.0f - normalizedMotorMixMax);
-
-    // Lower throttle Limit
-    const float epsilon = 1.0e-6f;  // add small value to avoid divisions by zero
-    const float absMotorMixMin = fabsf(normalizedMotorMixMin) + epsilon;
-    const float lowerLimit = fminf(upperLimit, absMotorMixMin);
-
-    // represents how much motor values have to be scaled to avoid clipping
-    const float ezLandFactor = upperLimit / absMotorMixMin;
-
-    // scale motor values
-    const float normalizationFactor = baseNormalizationFactor * fminf(1.0f, ezLandFactor);
-    for (int i = 0; i < mixerRuntime.motorCount; i++) {
-        motorMix[i] *= normalizationFactor;
-    }
-    motorMixRange *= baseNormalizationFactor;
-    // Make anti windup recognize reduced authority range
-    motorMixRange = fmaxf(motorMixRange, 1.0f / ezLandFactor);
-
-    // Constrain throttle
-    throttle = constrainf(throttle, lowerLimit, upperLimit);
-
-    // Log ezLandFactor, upper throttle limit, and ezLandFactor if throttle was zero
-    DEBUG_SET(DEBUG_EZLANDING, 0, fminf(1.0f, ezLandFactor) * 10000U);
-    // DEBUG_EZLANDING 1 is the adjusted throttle
-    DEBUG_SET(DEBUG_EZLANDING, 2, upperLimit * 10000U);
-    DEBUG_SET(DEBUG_EZLANDING, 3, fminf(1.0f, ezLandLimit / absMotorMixMin) * 10000U);
-    // DEBUG_EZLANDING 4 and 5 is the upper limits based on stick input and speed respectively
-}
-
-static void applyMixerAdjustment(float *motorMix, const float motorMixMin, const float motorMixMax, const bool airmodeEnabled)
-{
-#ifdef USE_AIRMODE_LPF
-    const float unadjustedThrottle = throttle;
-    throttle += pidGetAirmodeThrottleOffset();
-    float airmodeThrottleChange = 0.0f;
-#endif
-    float airmodeTransitionPercent = 1.0f;
-
-    if (!airmodeEnabled && throttle < 0.5f) {
-        // this scales the motor mix authority to be 0.5 at 0 throttle, and 1.0 at 0.5 throttle as airmode off intended for things to work.
-        // also lays the groundwork for how an airmode percent would work.
-        airmodeTransitionPercent = scaleRangef(throttle, 0.0f, 0.5f, 0.5f, 1.0f); // 0.5 throttle is full transition, and 0.0 throttle is 50% airmodeTransitionPercent
-    }
-
-    const float motorMixNormalizationFactor = motorMixRange > 1.0f ? airmodeTransitionPercent / motorMixRange : airmodeTransitionPercent;
-
-    for (int i = 0; i < mixerRuntime.motorCount; i++) {
-        motorMix[i] *= motorMixNormalizationFactor;
-    }
-
-    const float normalizedMotorMixMin = motorMixMin * motorMixNormalizationFactor;
-    const float normalizedMotorMixMax = motorMixMax * motorMixNormalizationFactor;
-    throttle = constrainf(throttle, -normalizedMotorMixMin, 1.0f - normalizedMotorMixMax);
-
-#ifdef USE_AIRMODE_LPF
-    airmodeThrottleChange = constrainf(unadjustedThrottle, -normalizedMotorMixMin, 1.0f - normalizedMotorMixMax) - unadjustedThrottle;
-    pidUpdateAirmodeLpf(airmodeThrottleChange);
-#endif
-}
-
 FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs)
 {
     // Find min and max throttle based on conditions. Throttle has to be known before mixing
@@ -665,7 +542,6 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs)
 
     const bool launchControlActive = isLaunchControlActive();
 
-    motorMixer_t * activeMixer = &mixerRuntime.currentMixer[0];
 #ifdef USE_LAUNCH_CONTROL
     if (launchControlActive && (currentPidProfile->launchControlMode == LAUNCH_CONTROL_MODE_PITCHONLY)) {
         activeMixer = &mixerRuntime.launchControlMixer[0];
@@ -693,6 +569,12 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs)
     if (!mixerConfig()->yaw_motors_reversed) {
         scaledAxisPidYaw = -scaledAxisPidYaw;
     }
+
+    RateControls rate_controls = {
+        .pidsum_roll = scaledAxisPidRoll,
+        .pidsum_pitch = scaledAxisPidPitch,
+        .pidsum_yaw = scaledAxisPidYaw,
+    };
 
     // Apply the throttle_limit_percent to scale or limit the throttle based on throttle_limit_type
     if (currentControlRateProfile->throttle_limit_type != THROTTLE_LIMIT_TYPE_OFF) {
@@ -728,34 +610,11 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs)
     }
 #endif
 
-#ifdef USE_THRUST_LINEARIZATION
-    // reduce throttle to offset additional motor output
-    throttle = pidCompensateThrustLinearization(throttle);
-#endif
-
 #ifdef USE_RPM_LIMIT
     if (RPM_LIMIT_ACTIVE && useDshotTelemetry && ARMING_FLAG(ARMED)) {
         applyRpmLimiter(&mixerRuntime);
     }
 #endif
-
-    // Find roll/pitch/yaw desired output
-    // ??? Where is the optimal location for this code?
-    float motorMix[MAX_SUPPORTED_MOTORS];
-    float motorMixMax = 0, motorMixMin = 0;
-    for (int i = 0; i < mixerRuntime.motorCount; i++) {
-        float mix =
-            scaledAxisPidRoll  * activeMixer[i].roll +
-            scaledAxisPidPitch * activeMixer[i].pitch +
-            scaledAxisPidYaw   * activeMixer[i].yaw;
-
-        if (mix > motorMixMax) {
-            motorMixMax = mix;
-        } else if (mix < motorMixMin) {
-            motorMixMin = mix;
-        }
-        motorMix[i] = mix;
-    }
 
     //  The following fixed throttle values will not be shown in the blackbox log
     // ?? Should they be influenced by airmode?  If not, should go after the apply airmode code.
@@ -791,24 +650,6 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs)
     }
 #endif
 
-    motorMixRange = motorMixMax - motorMixMin;
-
-    switch (mixerConfig()->mixer_type) {
-    case MIXER_LEGACY:
-        applyMixerAdjustment(motorMix, motorMixMin, motorMixMax, airmodeEnabled);
-        break;
-    case MIXER_LINEAR:
-    case MIXER_DYNAMIC:
-        applyMixerAdjustmentLinear(motorMix, airmodeEnabled);
-        break;
-    case MIXER_EZLANDING:
-        applyMixerAdjustmentEzLand(motorMix, motorMixMin, motorMixMax);
-        break;
-    default:
-        applyMixerAdjustment(motorMix, motorMixMin, motorMixMax, airmodeEnabled);
-        break;
-    }
-
     if (featureIsEnabled(FEATURE_MOTOR_STOP)
         && ARMING_FLAG(ARMED)
         && !mixerRuntime.feature3dEnabled
@@ -819,7 +660,7 @@ FAST_CODE_NOINLINE void mixTable(timeUs_t currentTimeUs)
         applyMotorStop();
     } else {
         // Apply the mix to motor endpoints
-        applyMixToMotors(motorMix, activeMixer);
+        applyMixToMotors(rate_controls, throttle);
     }
 }
 

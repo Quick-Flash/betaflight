@@ -8,7 +8,7 @@ publish = false
 panic = "abort"
 
 [profile.release]
-opt-level = 3       # Maximize optimization (this is default)
+opt-level = 2       # Maximize optimization (this is default)
 codegen-units = 1   # Single codegen unit for better optimization across modules
 lto = "fat"         # Use full Link Time Optimization (LTO)
 debug = false       # Disable debug symbols to reduce binary size
@@ -35,7 +35,7 @@ default-features = false
 crate-type = ["staticlib"]
 
 [build-dependencies]
-cbindgen = "0.27.0"
+cbindgen = "0.28.0"
 
 [features]
 testing = ["approx"]

@@ -222,7 +222,11 @@ typedef struct pidProfile_s {
     uint8_t launchControlAllowTriggerReset; // Controls trigger behavior and whether the trigger can be reset
     uint8_t use_integrated_yaw;             // Selects whether the yaw pidsum should integrated
     uint8_t integrated_yaw_relax;           // Specifies how much integrated yaw should be reduced to offset the drag based yaw component
-    uint8_t thrustLinearization;            // Compensation factor for pid linearization
+    uint8_t thrust_linear_low;              // Thrust linear at low motor outputs
+    uint8_t thrust_linear_high;             // Thrust linear at high motor outputs
+    uint8_t linearization_cut;              // Filter on thrust linearization
+    uint16_t motor_cut_low;                 // Filter cutoff for low motor values
+    uint16_t motor_cut_high;                // Filter cutoff for high motor values
     uint8_t d_max[XYZ_AXIS_COUNT];          // Maximum D value on each axis
     uint8_t d_max_gain;                     // Gain factor for amount of gyro / setpoint activity required to boost D
     uint8_t d_max_advance;                  // Percentage multiplier for setpoint input to boost algorithm
@@ -274,11 +278,6 @@ typedef struct pidProfile_s {
     int8_t tpa_low_rate;                    // Percent reduction in P or D at zero throttle
     uint16_t tpa_low_breakpoint;            // Breakpoint where lower TPA is deactivated
     uint8_t tpa_low_always;                 // off, on - if OFF then low TPA is only active until tpa_low_breakpoint is reached the first time
-
-    uint8_t ez_landing_threshold;           // Threshold stick position below which motor output is limited
-    uint8_t ez_landing_limit;               // Maximum motor output when all sticks centred and throttle zero
-    uint8_t ez_landing_speed;               // Speed below which motor output is limited
-    uint8_t landing_disarm_threshold;            // Accelerometer vector delta (jerk) threshold with disarms if exceeded
 
     uint16_t tpa_delay_ms;                  // TPA delay for fixed wings using pt2 filter (time constant)
     uint16_t spa_center[XYZ_AXIS_COUNT];    // RPY setpoint at which PIDs are reduced to 50% (setpoint PID attenuation)
@@ -383,7 +382,6 @@ typedef struct pidRuntime_s {
     float tpaLowBreakpoint;
     float tpaLowMultiplier;
     bool tpaLowAlways;
-    bool useEzDisarm;
     float landingDisarmThreshold;
 
 #ifdef USE_ITERM_RELAX
@@ -411,11 +409,6 @@ typedef struct pidRuntime_s {
     float dMaxSetpointGain;
 #endif
 
-#ifdef USE_AIRMODE_LPF
-    Pt1Filter airmodeThrottleLpf1;
-    Pt1Filter airmodeThrottleLpf2;
-#endif
-
 #ifdef USE_ACRO_TRAINER
     float acroTrainerAngleLimit;
     float acroTrainerLookaheadTime;
@@ -441,15 +434,6 @@ typedef struct pidRuntime_s {
 #ifdef USE_INTEGRATED_YAW_CONTROL
     bool useIntegratedYaw;
     uint8_t integratedYawRelax;
-#endif
-
-#ifdef USE_THRUST_LINEARIZATION
-    float thrustLinearization;
-    float throttleCompensateAmount;
-#endif
-
-#ifdef USE_AIRMODE_LPF
-    float airmodeThrottleOffsetLimit;
 #endif
 
 #ifdef USE_FEEDFORWARD
@@ -519,16 +503,6 @@ void pidUpdateAntiGravityThrottleFilter(float throttle);
 bool pidOsdAntiGravityActive(void);
 void pidSetAntiGravityState(bool newState);
 bool pidAntiGravityEnabled(void);
-
-#ifdef USE_THRUST_LINEARIZATION
-float pidApplyThrustLinearization(float motorValue);
-float pidCompensateThrustLinearization(float throttle);
-#endif
-
-#ifdef USE_AIRMODE_LPF
-void pidUpdateAirmodeLpf(float currentOffset);
-float pidGetAirmodeThrottleOffset();
-#endif
 
 #ifdef UNIT_TEST
 #include "sensors/acceleration.h"

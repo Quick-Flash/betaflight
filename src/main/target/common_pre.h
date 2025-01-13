@@ -322,7 +322,7 @@
 #define USE_D_MAX
 
 #define USE_THROTTLE_BOOST
-#define USE_INTEGRATED_YAW_CONTROL
+//#define USE_INTEGRATED_YAW_CONTROL
 
 #define USE_ITERM_RELAX
 #define USE_RC_SMOOTHING_FILTER
@@ -359,13 +359,12 @@
 #define USE_RX_MSP_OVERRIDE
 #define USE_RX_LINK_UPLINK_POWER
 
-#define USE_AIRMODE_LPF
 #define USE_GYRO_DLPF_EXPERIMENTAL
 #define USE_MULTI_GYRO
 #define USE_SENSOR_NAMES
 #define USE_UNCOMMON_MIXERS
 #define USE_SIGNATURE
-#define USE_ABSOLUTE_CONTROL
+//#define USE_ABSOLUTE_CONTROL
 #define USE_HOTT_TEXTMODE
 #define USE_ESC_SENSOR_TELEMETRY
 #define USE_TELEMETRY_SENSORS_DISABLED_DETAILS
@@ -382,9 +381,9 @@
 // any thing defined here will be in the standard (git hub actions)
 // builds or included in CLOUD_BUILD by default.
 
-#if !defined(USE_LAUNCH_CONTROL)
-#define USE_LAUNCH_CONTROL
-#endif
+//#if !defined(USE_LAUNCH_CONTROL)
+//#define USE_LAUNCH_CONTROL
+//#endif
 
 #endif // !defined(CORE_BUILD)
 

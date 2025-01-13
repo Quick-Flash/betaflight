@@ -275,7 +275,6 @@ static uint16_t cmsx_tpa_breakpoint;
 static int8_t cmsx_tpa_low_rate;
 static uint16_t cmsx_tpa_low_breakpoint;
 static uint8_t cmsx_tpa_low_always;
-static uint8_t cmsx_landing_disarm_threshold;
 
 static const void *cmsx_simplifiedTuningOnEnter(displayPort_t *pDisp)
 {
@@ -524,7 +523,8 @@ static uint8_t  cmsx_horizonLimitSticks;
 static uint8_t  cmsx_horizonLimitDegrees;
 
 static uint8_t  cmsx_throttleBoost;
-static uint8_t  cmsx_thrustLinearization;
+static uint8_t  csmx_thrustLinearLow;
+static uint8_t  csmx_thrustLinearHigh;
 static uint8_t  cmsx_antiGravityGain;
 static uint8_t  cmsx_motorOutputLimit;
 static int8_t   cmsx_autoProfileCellCount;
@@ -578,7 +578,8 @@ static const void *cmsx_profileOtherOnEnter(displayPort_t *pDisp)
     cmsx_antiGravityGain   = pidProfile->anti_gravity_gain;
 
     cmsx_throttleBoost = pidProfile->throttle_boost;
-    cmsx_thrustLinearization = pidProfile->thrustLinearization;
+    csmx_thrustLinearLow = pidProfile->thrust_linear_low;
+    csmx_thrustLinearHigh = pidProfile->thrust_linear_high;
     cmsx_motorOutputLimit = pidProfile->motor_output_limit;
     cmsx_autoProfileCellCount = pidProfile->auto_profile_cell_count;
 
@@ -612,7 +613,6 @@ static const void *cmsx_profileOtherOnEnter(displayPort_t *pDisp)
     cmsx_tpa_low_rate = pidProfile->tpa_low_rate;
     cmsx_tpa_low_breakpoint = pidProfile->tpa_low_breakpoint;
     cmsx_tpa_low_always = pidProfile->tpa_low_always;
-    cmsx_landing_disarm_threshold = pidProfile->landing_disarm_threshold;
     return NULL;
 }
 
@@ -636,7 +636,8 @@ static const void *cmsx_profileOtherOnExit(displayPort_t *pDisp, const OSD_Entry
     pidProfile->anti_gravity_gain   = cmsx_antiGravityGain;
 
     pidProfile->throttle_boost = cmsx_throttleBoost;
-    pidProfile->thrustLinearization = cmsx_thrustLinearization;
+    pidProfile->thrust_linear_low = csmx_thrustLinearLow;
+    pidProfile->thrust_linear_high = csmx_thrustLinearHigh;
     pidProfile->motor_output_limit = cmsx_motorOutputLimit;
     pidProfile->auto_profile_cell_count = cmsx_autoProfileCellCount;
 
@@ -670,7 +671,6 @@ static const void *cmsx_profileOtherOnExit(displayPort_t *pDisp, const OSD_Entry
     pidProfile->tpa_low_rate = cmsx_tpa_low_rate;
     pidProfile->tpa_low_breakpoint = cmsx_tpa_low_breakpoint;
     pidProfile->tpa_low_always = cmsx_tpa_low_always;
-    pidProfile->landing_disarm_threshold = cmsx_landing_disarm_threshold;
 
     initEscEndpoints();
     return NULL;
@@ -699,9 +699,8 @@ static const OSD_Entry cmsx_menuProfileOtherEntries[] = {
 #ifdef USE_THROTTLE_BOOST
     { "THR BOOST",   OME_UINT8,  NULL, &(OSD_UINT8_t)  { &cmsx_throttleBoost,          0,    100,   1  }    },
 #endif
-#ifdef USE_THRUST_LINEARIZATION
-    { "THR LINEAR",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &cmsx_thrustLinearization,    0,    150,   1  }    },
-#endif
+    { "THR LINEAR LOW",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &csmx_thrustLinearLow,    0,    100,   1  }    },
+    { "THR LINEAR HGH",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &csmx_thrustLinearHigh,    0,    100,   1  }    },
 #ifdef USE_ITERM_RELAX
     { "I_RELAX",         OME_TAB,    NULL, &(OSD_TAB_t)     { &cmsx_iterm_relax,        ITERM_RELAX_COUNT - 1,      lookupTableItermRelax       } },
     { "I_RELAX TYPE",    OME_TAB,    NULL, &(OSD_TAB_t)     { &cmsx_iterm_relax_type,   ITERM_RELAX_TYPE_COUNT - 1, lookupTableItermRelaxType   } },
@@ -731,7 +730,6 @@ static const OSD_Entry cmsx_menuProfileOtherEntries[] = {
     { "TPA LOW RATE",  OME_INT8,   NULL, &(OSD_INT8_t) { &cmsx_tpa_low_rate, TPA_LOW_RATE_MIN, TPA_MAX , 1} },
     { "TPA LOW BRKPT", OME_UINT16, NULL, &(OSD_UINT16_t){ &cmsx_tpa_low_breakpoint, 1000, 2000, 10} },
     { "TPA LOW ALWYS", OME_Bool,   NULL, &cmsx_tpa_low_always },
-    { "EZDISARM THR",  OME_UINT8,  NULL, &(OSD_UINT8_t) { &cmsx_landing_disarm_threshold, 0, 150, 1} },
 
     { "BACK", OME_Back, NULL, NULL },
     { NULL, OME_END, NULL, NULL}

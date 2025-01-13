@@ -25,6 +25,7 @@
 #include "flight/mixer.h"
 
 typedef struct mixerRuntime_s {
+    Mixer motor_mixer;
     uint8_t motorCount;
     motorMixer_t currentMixer[MAX_SUPPORTED_MOTORS];
 #ifdef USE_LAUNCH_CONTROL
@@ -64,9 +65,6 @@ typedef struct mixerRuntime_s {
     Pt1Filter rpmLimiterAverageRpmFilter;
     Pt1Filter rpmLimiterThrottleScaleOffsetFilter;
 #endif
-    float ezLandingThreshold;
-    float ezLandingLimit;
-    float ezLandingSpeed;
 } mixerRuntime_t;
 
 extern mixerRuntime_t mixerRuntime;

@@ -1443,11 +1443,6 @@ static bool blackboxWriteSysinfo(void)
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_TPA_LOW_RATE, "%d",           currentPidProfile->tpa_low_rate);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_TPA_LOW_BREAKPOINT, "%d",     currentPidProfile->tpa_low_breakpoint);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_TPA_LOW_ALWAYS, "%d",         currentPidProfile->tpa_low_always);
-        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_MIXER_TYPE, "%s",             lookupTableMixerType[mixerConfig()->mixer_type]);
-        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_EZ_LANDING_THRESHOLD, "%d",   currentPidProfile->ez_landing_threshold);
-        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_EZ_LANDING_LIMIT, "%d",       currentPidProfile->ez_landing_limit);
-        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_EZ_LANDING_SPEED, "%d",       currentPidProfile->ez_landing_speed);
-        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_LANDING_DISARM_THRESHOLD, "%d", currentPidProfile->landing_disarm_threshold);
 
 #ifdef USE_WING
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_SPA_ROLL_CENTER, "%d",        currentPidProfile->spa_center[FD_ROLL]);
@@ -1708,7 +1703,8 @@ static bool blackboxWriteSysinfo(void)
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_THROTTLE_LIMIT_PERCENT, "%d",    currentControlRateProfile->throttle_limit_percent);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_THROTTLE_BOOST, "%d",            currentPidProfile->throttle_boost);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_THROTTLE_BOOST_CUTOFF, "%d",     currentPidProfile->throttle_boost_cutoff);
-        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_THRUST_LINEARIZATION,  "%d",     currentPidProfile->thrustLinearization);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_THRUST_LINEAR_LOW, "%d",         currentPidProfile->thrust_linear_low);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_THRUST_LINEAR_HIGH, "%d",        currentPidProfile->thrust_linear_high);
 
 #ifdef USE_GPS
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GPS_PROVIDER, "%d",               gpsConfig()->provider)
