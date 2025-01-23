@@ -446,7 +446,7 @@ static void applyRpmLimiter(mixerRuntime_t *mixer)
 static void applyMixToMotors(RateControls rate_controls, float throttle_final)
 {
     float motor_values [4];
-    mix_motors(&mixerRuntime.motor_mixer, &motor_values, &rate_controls, throttle_final, 1.0f /*motor_delta_max*/); // use proper motor_delta_max later
+    mix_motors(&mixerRuntime.motor_mixer, &motor_values, &rate_controls, throttle_final, getSoftArmPercentInv());
 
     float min_motor = 10000.0;
     float max_motor = -10000.0;

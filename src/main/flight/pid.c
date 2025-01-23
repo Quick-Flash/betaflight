@@ -1246,18 +1246,9 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
 
     if (ARMING_FLAG(ARMED)) {
         if (in_soft_arm(pidRuntime.softArm)) {
-            float attenuation = soft_arm_attenuate(&pidRuntime.softArm, pidRuntime.softArmThrottleThreshold, mixerGetRcThrottle());
+            // update soft arm state and reset iterm
+            soft_arm_attenuate(&pidRuntime.softArm, pidRuntime.softArmThrottleThreshold, mixerGetRcThrottle());
             pidResetIterm();
-
-            for (int axis = FD_ROLL; axis <= FD_YAW; ++axis) {
-                pidData[axis].P *= attenuation;
-                pidData[axis].I *= attenuation;
-                pidData[axis].D *= attenuation;
-                pidData[axis].F *= attenuation;
-                pidData[axis].S *= attenuation;
-
-                pidData[axis].Sum *= attenuation;
-            }
         }
     } else {
         soft_arm_reset(&pidRuntime.softArm);

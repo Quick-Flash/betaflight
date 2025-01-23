@@ -382,6 +382,74 @@ static CMS_Menu cmsx_menuSimplifiedTuning = {
 };
 #endif // USE_SIMPLIFIED_TUNING
 
+static uint8_t  csmx_thrustLinearLow;
+static uint8_t  csmx_thrustLinearHigh;
+static uint8_t  csmx_thrustLinearCut;
+static uint16_t csmx_motorCutLow;
+static uint16_t csmx_motorCutHigh;
+static uint8_t  cmsx_motorOutputLimit;
+
+
+static const void *cmsx_profileMixerOnEnter(displayPort_t *pDisp)
+{
+    UNUSED(pDisp);
+
+    const pidProfile_t *pidProfile = pidProfiles(pidProfileIndex);
+
+    csmx_thrustLinearLow = pidProfile->thrust_linear_low;
+    csmx_thrustLinearHigh = pidProfile->thrust_linear_high;
+    csmx_thrustLinearCut = pidProfile->linearization_cut;
+    csmx_motorCutLow = pidProfile->motor_cut_low;
+    csmx_motorCutHigh = pidProfile->motor_cut_high;
+    cmsx_motorOutputLimit = pidProfile->motor_output_limit;
+
+    return NULL;
+}
+
+static const void *cmsx_profileMixerOnExit(displayPort_t *pDisp, const OSD_Entry *self)
+{
+    UNUSED(pDisp);
+    UNUSED(self);
+
+    pidProfile_t *pidProfile = currentPidProfile;
+
+    pidProfile->thrust_linear_low = csmx_thrustLinearLow;
+    pidProfile->thrust_linear_high = csmx_thrustLinearHigh;
+    pidProfile->linearization_cut = csmx_thrustLinearCut;
+    pidProfile->motor_cut_low = csmx_motorCutLow;
+    pidProfile->motor_cut_high = csmx_motorCutHigh;
+    pidProfile->motor_output_limit = cmsx_motorOutputLimit;
+
+    initEscEndpoints();
+    return NULL;
+}
+
+static const OSD_Entry cmsx_menuMixerEntries[] = {
+    { "-- MIXER SETTINGS --", OME_Label, NULL, pidProfileIndexString },
+
+    { "THR LINEAR LOW",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &csmx_thrustLinearLow,     0,    100,   1  }    },
+    { "THR LINEAR HGH",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &csmx_thrustLinearHigh,    0,    100,   1  }    },
+    { "THR LINEAR CUT",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &csmx_thrustLinearCut,     0,    250,   1  }    },
+    { "MOTOR CUT LOW",   OME_UINT16, NULL, &(OSD_UINT16_t) { &csmx_motorCutLow,         0,    2000,  1  }    },
+    { "MOTOR CUT HGH",   OME_UINT16, NULL, &(OSD_UINT16_t) { &csmx_motorCutHigh,        0,    2000,  1  }    },
+
+    { "MTR OUT LIM %",   OME_UINT8,  NULL, &(OSD_UINT8_t)  { &cmsx_motorOutputLimit, MOTOR_OUTPUT_LIMIT_PERCENT_MIN,  MOTOR_OUTPUT_LIMIT_PERCENT_MAX,  1} },
+
+    { "BACK", OME_Back, NULL, NULL },
+    { NULL, OME_END, NULL, NULL}
+};
+
+static CMS_Menu cmsx_menuMixer = {
+#ifdef CMS_MENU_DEBUG
+    .GUARD_text = "XMIXER",
+    .GUARD_type = OME_MENU,
+#endif
+    .onEnter = cmsx_profileMixerOnEnter,
+    .onExit = cmsx_profileMixerOnExit,
+    .onDisplayUpdate = NULL,
+    .entries = cmsx_menuMixerEntries,
+};
+
 //
 // Rate & Expo
 //
@@ -523,10 +591,7 @@ static uint8_t  cmsx_horizonLimitSticks;
 static uint8_t  cmsx_horizonLimitDegrees;
 
 static uint8_t  cmsx_throttleBoost;
-static uint8_t  csmx_thrustLinearLow;
-static uint8_t  csmx_thrustLinearHigh;
 static uint8_t  cmsx_antiGravityGain;
-static uint8_t  cmsx_motorOutputLimit;
 static int8_t   cmsx_autoProfileCellCount;
 #ifdef USE_D_MAX
 static uint8_t  cmsx_d_max[XYZ_AXIS_COUNT];
@@ -699,8 +764,6 @@ static const OSD_Entry cmsx_menuProfileOtherEntries[] = {
 #ifdef USE_THROTTLE_BOOST
     { "THR BOOST",   OME_UINT8,  NULL, &(OSD_UINT8_t)  { &cmsx_throttleBoost,          0,    100,   1  }    },
 #endif
-    { "THR LINEAR LOW",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &csmx_thrustLinearLow,    0,    100,   1  }    },
-    { "THR LINEAR HGH",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &csmx_thrustLinearHigh,    0,    100,   1  }    },
 #ifdef USE_ITERM_RELAX
     { "I_RELAX",         OME_TAB,    NULL, &(OSD_TAB_t)     { &cmsx_iterm_relax,        ITERM_RELAX_COUNT - 1,      lookupTableItermRelax       } },
     { "I_RELAX TYPE",    OME_TAB,    NULL, &(OSD_TAB_t)     { &cmsx_iterm_relax_type,   ITERM_RELAX_TYPE_COUNT - 1, lookupTableItermRelaxType   } },
@@ -709,8 +772,6 @@ static const OSD_Entry cmsx_menuProfileOtherEntries[] = {
 #ifdef USE_LAUNCH_CONTROL
     {"LAUNCH CONTROL", OME_Submenu, cmsMenuChange, &cmsx_menuLaunchControl },
 #endif
-    { "MTR OUT LIM %",OME_UINT8, NULL, &(OSD_UINT8_t) { &cmsx_motorOutputLimit, MOTOR_OUTPUT_LIMIT_PERCENT_MIN,  MOTOR_OUTPUT_LIMIT_PERCENT_MAX,  1} },
-
     { "AUTO CELL CNT", OME_INT8, NULL, &(OSD_INT8_t) { &cmsx_autoProfileCellCount, AUTO_PROFILE_CELL_COUNT_CHANGE, MAX_AUTO_DETECT_CELL_COUNT, 1} },
 
 #ifdef USE_D_MAX
@@ -1112,6 +1173,7 @@ static const OSD_Entry cmsx_menuImuEntries[] =
 #ifdef USE_SIMPLIFIED_TUNING
     {"SIMPLIFIED TUNING",   OME_Submenu, cmsMenuChange,       &cmsx_menuSimplifiedTuning},
 #endif
+    {"MIXER",      OME_Submenu, cmsMenuChange,                &cmsx_menuMixer},
     {"MISC PID",   OME_Submenu, cmsMenuChange,                &cmsx_menuProfileOther},
     {"FILT PID",   OME_Submenu, cmsMenuChange,                &cmsx_menuFilterPerProfile},
 
