@@ -6,3 +6,4 @@ pub mod circular_buffer;
 pub mod powi;
 pub mod constrain;
 pub mod range_scaler;
+pub mod sign;

@@ -190,6 +190,7 @@ void resetPidProfile(pidProfile_t *pidProfile)
         .linearization_cut = 75,
         .motor_cut_low = 350,
         .motor_cut_high = 750,
+        .cg_learning_time = 20,
         .d_max = D_MAX_DEFAULT,
         .d_max_gain = 37,
         .d_max_advance = 20,

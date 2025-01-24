@@ -1227,6 +1227,8 @@ const clivalue_t valueTable[] = {
     { PARAM_NAME_LINEARIZATION_CUT,              VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 250 }, PG_PID_PROFILE, offsetof(pidProfile_t, linearization_cut) },
     { PARAM_NAME_MOTOR_CUT_LOW,                  VAR_UINT16 | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 2000 }, PG_PID_PROFILE, offsetof(pidProfile_t, motor_cut_low) },
     { PARAM_NAME_MOTOR_CUT_HIGH,                 VAR_UINT16 | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 2000 }, PG_PID_PROFILE, offsetof(pidProfile_t, motor_cut_high) },
+    { PARAM_NAME_CG_LEARNING_TIME,               VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 200 }, PG_PID_PROFILE, offsetof(pidProfile_t, cg_learning_time) },
+
 
 #ifdef USE_FEEDFORWARD
     { PARAM_NAME_FEEDFORWARD_TRANSITION,     VAR_UINT8  | PROFILE_VALUE, .config.minmaxUnsigned = { 0, 100 }, PG_PID_PROFILE, offsetof(pidProfile_t, feedforward_transition) },

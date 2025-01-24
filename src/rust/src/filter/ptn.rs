@@ -1,4 +1,5 @@
 use core::f32::consts::PI;
+use crate::math::constrain::constrain;
 use crate::math::sqrt::Sqrtf;
 use crate::math::trig::Trig;
 
@@ -62,6 +63,12 @@ impl Pt1Filter {
     pub fn apply(&mut self, input: f32) -> f32 {
         self.state += self.k * (input - self.state);
 
+        self.state
+    }
+
+    pub fn apply_constrained(&mut self, input: f32, limit: f32) -> f32 {
+        self.apply(input);
+        self.state = constrain(self.state, -limit, limit);
         self.state
     }
 

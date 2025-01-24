@@ -342,6 +342,7 @@ void mixerInitProfile(void)
         currentPidProfile->linearization_cut,
         currentPidProfile->motor_cut_low,
         currentPidProfile->motor_cut_high,
+        currentPidProfile->cg_learning_time / 10.0f,
         pidGetDT()
     );
 
@@ -515,6 +516,7 @@ void mixerInit(mixerMode_e mixerMode)
         currentPidProfile->linearization_cut,
         currentPidProfile->motor_cut_low,
         currentPidProfile->motor_cut_high,
+        currentPidProfile->cg_learning_time / 10.0f,
         pidGetDT()
     );
 }

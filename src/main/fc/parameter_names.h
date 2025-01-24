@@ -126,6 +126,7 @@
 #define PARAM_NAME_LINEARIZATION_CUT "thrust_linear_cut"
 #define PARAM_NAME_MOTOR_CUT_LOW "motor_cut_low"
 #define PARAM_NAME_MOTOR_CUT_HIGH "motor_cut_high"
+#define PARAM_NAME_CG_LEARNING_TIME "cg_learning_time"
 #define PARAM_NAME_ABS_CONTROL_GAIN "abs_control_gain"
 #define PARAM_NAME_USE_INTEGRATED_YAW "use_integrated_yaw"
 #define PARAM_NAME_D_MAX_GAIN "d_max_gain"

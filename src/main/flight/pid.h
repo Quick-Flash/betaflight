@@ -227,6 +227,7 @@ typedef struct pidProfile_s {
     uint8_t linearization_cut;              // Filter on thrust linearization
     uint16_t motor_cut_low;                 // Filter cutoff for low motor values
     uint16_t motor_cut_high;                // Filter cutoff for high motor values
+    uint8_t cg_learning_time;               // How long it takes for the drone to learn 70.7% of the cg
     uint8_t d_max[XYZ_AXIS_COUNT];          // Maximum D value on each axis
     uint8_t d_max_gain;                     // Gain factor for amount of gyro / setpoint activity required to boost D
     uint8_t d_max_advance;                  // Percentage multiplier for setpoint input to boost algorithm

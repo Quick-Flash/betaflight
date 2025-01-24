@@ -1705,6 +1705,10 @@ static bool blackboxWriteSysinfo(void)
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_THROTTLE_BOOST_CUTOFF, "%d",     currentPidProfile->throttle_boost_cutoff);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_THRUST_LINEAR_LOW, "%d",         currentPidProfile->thrust_linear_low);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_THRUST_LINEAR_HIGH, "%d",        currentPidProfile->thrust_linear_high);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_LINEARIZATION_CUT, "%d",         currentPidProfile->linearization_cut);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_MOTOR_CUT_LOW, "%d",             currentPidProfile->motor_cut_low);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_MOTOR_CUT_HIGH, "%d",            currentPidProfile->motor_cut_high);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_CG_LEARNING_TIME, "%d",          currentPidProfile->cg_learning_time);
 
 #ifdef USE_GPS
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_GPS_PROVIDER, "%d",               gpsConfig()->provider)

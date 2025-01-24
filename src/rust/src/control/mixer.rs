@@ -1,22 +1,25 @@
 use core::ops::Range;
+use crate::control::cg_learner::CGLearner;
 use crate::filter::ptn::Pt1Filter;
 use crate::math::constrain::constrain;
 use crate::math::range_scaler::RangeScalar;
 use crate::math::sqrt::Sqrtf;
+use crate::math::sign::Sign;
 
 pub const NUM_MOTORS: usize = 4;
 
 #[repr(C)]
 pub struct Mixer {
     /// settings
-    pub motor_gains: MotorGains,
     pub thrust_linear_scalar: RangeScalar,
     pub filter_k_scaler: RangeScalar,
 
     /// runtime
+    pub motor_gains: MotorGains,
     pub throttle_linearization_filter: Pt1Filter,
     pub linearization_filter: [Pt1Filter; NUM_MOTORS],
     pub motor_filter: [Pt1Filter; NUM_MOTORS],
+    pub cg_learner: CGLearner,
 }
 
 impl Mixer {
@@ -27,6 +30,7 @@ impl Mixer {
         linearization_cut: f32,
         motor_cut_low: f32,
         motor_cut_high: f32,
+        cg_learning_time: f32,
         dt: f32
     ) -> Self {
         let unit_range = Range {start: 0.0, end: 1.0};
@@ -46,6 +50,10 @@ impl Mixer {
             linearization_pt1.k = 1.0;
         }
 
+        // todo make this work for roll offsets as well, just more matrix math...
+        // for now one motor is enough to determine this if we only have a pitch offset
+        let y_offset = (1.0 - motor_gains.gains[0].throttle) / motor_gains.gains[0].pitch.sign();
+
         Self {
             motor_gains,
             thrust_linear_scalar: RangeScalar::new(&unit_range, &Range {start: thrust_linear_low, end: thrust_linear_high}),
@@ -53,6 +61,7 @@ impl Mixer {
             throttle_linearization_filter: linearization_pt1,
             linearization_filter: [linearization_pt1; NUM_MOTORS],
             motor_filter: [Pt1Filter::new(motor_cut_low, dt); NUM_MOTORS],
+            cg_learner: CGLearner::new(0.0, y_offset, cg_learning_time, dt),
         }
     }
 
@@ -63,6 +72,7 @@ impl Mixer {
         linearization_cut: f32,
         motor_cut_low: f32,
         motor_cut_high: f32,
+        cg_learning_time: f32,
         dt: f32
     ) {
         let unit_range = Range {start: 0.0, end: 1.0};
@@ -87,6 +97,7 @@ impl Mixer {
         self.throttle_linearization_filter = linearization_pt1;
         self.linearization_filter = [linearization_pt1; NUM_MOTORS];
         self.motor_filter = [Pt1Filter::new(motor_cut_low, dt); NUM_MOTORS];
+        self.cg_learner.update_learning_time(cg_learning_time, dt);
     }
 
     /// converts normalized thrust values to a normalized motor output
@@ -120,7 +131,7 @@ impl Mixer {
         mix
     }
 
-    fn mix_and_constrain(&mut self, rpy_mixed: [f32; NUM_MOTORS], throttle: f32, motor_delta_max: f32) -> [f32; NUM_MOTORS] {
+    fn mix_and_constrain(&mut self, rpy_mixed: [f32; NUM_MOTORS], throttle: f32, motor_delta_max: f32) -> ([f32; NUM_MOTORS], f32) {
         //
         // First pass of allowed throttle range
         // If scaling is needed this will be overwritten
@@ -230,12 +241,12 @@ impl Mixer {
             *motor = thrust + filtered_change;
         }
 
-        motors
+        (motors, constrained_throttle)
     }
 
-    pub fn mix_motors(&mut self, rate_controls: &RateControls, throttle: f32, motor_delta_max: f32) -> [f32; NUM_MOTORS] {
+    pub fn mix_motors(&mut self, rate_controls: &RateControls, throttle: f32, motor_delta_max: f32) -> ([f32; NUM_MOTORS], f32) {
         let rpy_mixed = self.motor_rpy_mix(rate_controls);
-        let mut motors = self.mix_and_constrain(rpy_mixed, throttle, motor_delta_max);
+        let (mut motors, thrust) = self.mix_and_constrain(rpy_mixed, throttle, motor_delta_max);
 
         for (motor, motor_filter) in motors.iter_mut().zip(self.motor_filter.iter_mut()) {
             motor_filter.k = self.filter_k_scaler.apply(*motor);
@@ -245,7 +256,25 @@ impl Mixer {
             // *motor = constrain(*motor, 0.0, 1.0);
         }
 
-        motors
+        (motors, thrust)
+    }
+
+    // only works under the assumption that all motors produce the same thrust total
+    pub fn update_cg_compensation(&mut self, steady_state_roll: f32, steady_state_pitch: f32, thrust: f32) -> f32 {
+        let learning_k = self.cg_learner.learn_cg_offset(steady_state_roll, steady_state_pitch, thrust);
+        let x_cg_offset = self.cg_learner.x.state;
+        let y_cg_offset = self.cg_learner.y.state;
+
+        for gains in self.motor_gains.gains.iter_mut() {
+            let mut throttle = 1.0 + x_cg_offset * gains.roll.sign();
+            throttle -= y_cg_offset * gains.pitch.sign();
+            gains.throttle = throttle;
+        }
+
+        // if you have poor CG your thrust will begin to clip at the top
+        // TODO optionally allow not letting it clip your rc throttle
+
+        learning_k
     }
 }
 
@@ -257,10 +286,11 @@ impl Mixer {
     linearization_cut: f32,
     motor_cut_low: f32,
     motor_cut_high: f32,
+    cg_learning_time: f32,
     dt: f32
 ) {
     unsafe {
-        *mixer = Mixer::new(gains, thrust_linear_low, thrust_linear_high, linearization_cut, motor_cut_low, motor_cut_high, dt);
+        *mixer = Mixer::new(gains, thrust_linear_low, thrust_linear_high, linearization_cut, motor_cut_low, motor_cut_high, cg_learning_time, dt);
     }
 }
 
@@ -271,18 +301,29 @@ impl Mixer {
     linearization_cut: f32,
     motor_cut_low: f32,
     motor_cut_high: f32,
+    cg_learning_time: f32,
     dt: f32
 ) {
     unsafe {
-        (*mixer).update_non_motor_gains(thrust_linear_low, thrust_linear_high, linearization_cut, motor_cut_low, motor_cut_high, dt);
+        (*mixer).update_non_motor_gains(thrust_linear_low, thrust_linear_high, linearization_cut, motor_cut_low, motor_cut_high, cg_learning_time, dt);
     }
 }
 
 #[link_section = ".tcm_code"]
 #[inline]
-#[no_mangle] pub extern "C" fn mix_motors(mixer: *mut Mixer, motors: *mut [f32; NUM_MOTORS], rate_controls: &RateControls, throttle: f32, motor_delta_max: f32) {
+#[no_mangle] pub extern "C" fn mix_motors(mixer: *mut Mixer, motors: *mut [f32; NUM_MOTORS], rate_controls: &RateControls, throttle: f32, motor_delta_max: f32) -> f32 {
     unsafe {
-        *motors = (*mixer).mix_motors(rate_controls, throttle, motor_delta_max)
+        let thrust;
+        (*motors, thrust) = (*mixer).mix_motors(rate_controls, throttle, motor_delta_max);
+        thrust
+    }
+}
+
+#[link_section = ".tcm_code"]
+#[inline]
+#[no_mangle] pub extern "C" fn update_cg_compensation(mixer: *mut Mixer, steady_state_roll: f32, steady_state_pitch: f32, thrust: f32,) -> f32 {
+    unsafe {
+        (*mixer).update_cg_compensation(steady_state_roll, steady_state_pitch, thrust)
     }
 }
 
@@ -624,7 +665,7 @@ mod mixer_tests {
     #[test]
     fn roll_test() {
         // given
-        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, DT);
+        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, DT);
         let roll_control = RateControls {
             pidsum_roll: 0.5,
             pidsum_pitch: 0.0,
@@ -634,7 +675,7 @@ mod mixer_tests {
         let expected_motors = [0.0, 0.0, 1.0, 1.0];
 
         // then
-        let motors = mixer.mix_motors(&roll_control, 0.0, 1.0);
+        let (motors, thrust) = mixer.mix_motors(&roll_control, 0.0, 1.0);
 
 
         // then
@@ -644,7 +685,7 @@ mod mixer_tests {
     #[test]
     fn pitch_test() {
         // given
-        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, DT);
+        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, DT);
         let pitch_control = RateControls {
             pidsum_roll: 0.0,
             pidsum_pitch: 0.5,
@@ -654,7 +695,7 @@ mod mixer_tests {
         let expected_motors = [1.0, 0.0, 1.0, 0.0];
 
         // then
-        let motors = mixer.mix_motors(&pitch_control, 0.0, 1.0);
+        let (motors, thrust) = mixer.mix_motors(&pitch_control, 0.0, 1.0);
 
 
         // then
@@ -664,7 +705,7 @@ mod mixer_tests {
     #[test]
     fn yaw_test() {
         // given
-        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, DT);
+        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, DT);
         let yaw_control = RateControls {
             pidsum_roll: 0.0,
             pidsum_pitch: 0.0,
@@ -674,7 +715,7 @@ mod mixer_tests {
         let expected_motors = [0.0, 1.0, 1.0, 0.0];
 
         // then
-        let motors = mixer.mix_motors(&yaw_control, 0.0, 1.0);
+        let (motors, thrust) = mixer.mix_motors(&yaw_control, 0.0, 1.0);
 
 
         // then
@@ -684,7 +725,7 @@ mod mixer_tests {
     #[test]
     fn rpy_test() {
         // given
-        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, DT);
+        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, DT);
         let yaw_control = RateControls {
             pidsum_roll: 1.0,
             pidsum_pitch: 1.0,
@@ -694,7 +735,7 @@ mod mixer_tests {
         let expected_motors = [0.0, 0.0, 1.0, 0.0];
 
         // then
-        let motors = mixer.mix_motors(&yaw_control, 0.0, 1.0);
+        let (motors, thrust) = mixer.mix_motors(&yaw_control, 0.0, 1.0);
 
 
         // then
@@ -704,7 +745,7 @@ mod mixer_tests {
     #[test]
     fn rpy_mixed_test() {
         // given
-        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, DT);
+        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, DT);
         let yaw_control = RateControls {
             pidsum_roll: -0.05,
             pidsum_pitch: 0.05,
@@ -714,7 +755,7 @@ mod mixer_tests {
         let expected_motors = [0.65, 0.45, 0.45, 0.45];
 
         // then
-        let motors = mixer.mix_motors(&yaw_control, 0.5, 1.0);
+        let (motors, thrust) = mixer.mix_motors(&yaw_control, 0.5, 1.0);
 
 
         // then
@@ -724,7 +765,7 @@ mod mixer_tests {
     #[test]
     fn rpy_mixed_thrust_linear_test() {
         // given
-        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.6, 0.3, 0.0, 0.0, 0.0, DT);
+        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.6, 0.3, 0.0, 0.0, 0.0, 0.0, DT);
         let yaw_control = RateControls {
             pidsum_roll: -0.05,
             pidsum_pitch: 0.05,
@@ -734,7 +775,7 @@ mod mixer_tests {
         let expected_motors = [0.63874197, 0.4614461, 0.4614461, 0.4614461];
 
         // then
-        let motors = mixer.mix_motors(&yaw_control, 0.5, 1.0);
+        let (motors, thrust) = mixer.mix_motors(&yaw_control, 0.5, 1.0);
 
 
         // then
@@ -744,7 +785,7 @@ mod mixer_tests {
     #[test]
     fn rpy_mixed_thrust_linear_filtered_test() {
         // given
-        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.6, 0.3, 25.0, 500.0, 1000.0, DT);
+        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.6, 0.3, 25.0, 500.0, 1000.0, 0.0, DT);
         let yaw_control = RateControls {
             pidsum_roll: -0.05,
             pidsum_pitch: 0.05,
@@ -754,7 +795,7 @@ mod mixer_tests {
         let expected_motors = [0.29524347, 0.18620808, 0.18620808, 0.18620808];
 
         // then
-        let motors = mixer.mix_motors(&yaw_control, 0.5, 1.0);
+        let (motors, thrust) = mixer.mix_motors(&yaw_control, 0.5, 1.0);
 
 
         // then
