@@ -134,4 +134,5 @@ const char * const debugModeNames[DEBUG_COUNT] = {
     [DEBUG_SPA] = "SPA",
     [DEBUG_TASK] = "TASK",
     [DEBUG_ALTHOLD] = "ALTHOLD",
+    [DEBUG_CG_COMPENSATION] = "CG_COMPENSATION",
 };

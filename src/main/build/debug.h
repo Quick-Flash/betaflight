@@ -127,6 +127,7 @@ typedef enum {
     DEBUG_SPA,
     DEBUG_TASK,
     DEBUG_ALTHOLD,
+    DEBUG_CG_COMPENSATION,
     DEBUG_COUNT
 } debugType_e;
 

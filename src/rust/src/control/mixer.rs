@@ -1,4 +1,6 @@
 use core::ops::Range;
+use crate::c_interop::DebugType::DEBUG_CG_COMPENSATION;
+use crate::c_interop::set_debug_float;
 use crate::control::cg_learner::CGLearner;
 use crate::filter::ptn::Pt1Filter;
 use crate::math::constrain::constrain;
@@ -270,6 +272,13 @@ impl Mixer {
             throttle -= y_cg_offset * gains.pitch.sign();
             gains.throttle = throttle;
         }
+
+        set_debug_float(DEBUG_CG_COMPENSATION, 0, x_cg_offset * 100.0);
+        set_debug_float(DEBUG_CG_COMPENSATION, 1, y_cg_offset * 100.0);
+        set_debug_float(DEBUG_CG_COMPENSATION, 2, self.motor_gains.gains[0].throttle * 100.0);
+        set_debug_float(DEBUG_CG_COMPENSATION, 3, self.motor_gains.gains[1].throttle * 100.0);
+        set_debug_float(DEBUG_CG_COMPENSATION, 4, self.motor_gains.gains[2].throttle * 100.0);
+        set_debug_float(DEBUG_CG_COMPENSATION, 5, self.motor_gains.gains[3].throttle * 100.0);
 
         // if you have poor CG your thrust will begin to clip at the top
         // TODO optionally allow not letting it clip your rc throttle
