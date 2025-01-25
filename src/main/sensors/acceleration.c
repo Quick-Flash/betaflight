@@ -51,7 +51,7 @@ static void applyAccelerationTrims(const flightDynamicsTrims_t *accelerationTrim
 void accUpdate(timeUs_t currentTimeUs)
 {
     UNUSED(currentTimeUs);
-    static float previousAccMagnitude;
+    static float previousAcc[3];
 
     if (!acc.dev.readFn(&acc.dev)) {
         return;
@@ -87,7 +87,10 @@ void accUpdate(timeUs_t currentTimeUs)
     }
     acc.accMagnitude = sqrtf(accAdcSquaredSum) * acc.dev.acc_1G_rec; // normally 1.0; used for disarm on impact detection
     acc.accDelta = (acc.accMagnitude - previousAccMagnitude) * acc.sampleRateHz;
-    previousAccMagnitude = acc.accMagnitude;
+
+    previousAcc[0] = acc.accADC.v[0];
+    previousAcc[1] = acc.accADC.v[1];
+    previousAcc[2] = acc.accADC.v[2];
 }
 
 #endif
