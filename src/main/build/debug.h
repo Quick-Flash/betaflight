@@ -128,6 +128,7 @@ typedef enum {
     DEBUG_TASK,
     DEBUG_ALTHOLD,
     DEBUG_CG_COMPENSATION,
+    DEBUG_COLLISION_DETECTION,
     DEBUG_COUNT
 } debugType_e;
 

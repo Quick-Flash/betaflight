@@ -389,7 +389,8 @@ static uint16_t csmx_motorCutLow;
 static uint16_t csmx_motorCutHigh;
 static uint8_t  cmsx_motorOutputLimit;
 static uint8_t  cmsx_cgLearningTime;
-
+static uint16_t cmsx_collision_jerk_start;
+static uint16_t cmsx_collision_jerk_end;
 
 static const void *cmsx_profileMixerOnEnter(displayPort_t *pDisp)
 {
@@ -404,6 +405,8 @@ static const void *cmsx_profileMixerOnEnter(displayPort_t *pDisp)
     csmx_motorCutHigh = pidProfile->motor_cut_high;
     cmsx_motorOutputLimit = pidProfile->motor_output_limit;
     cmsx_cgLearningTime = pidProfile->cg_learning_time;
+    cmsx_collision_jerk_start = pidProfile->collision_jerk_start;
+    cmsx_collision_jerk_end = pidProfile->collision_jerk_end;
 
     return NULL;
 }
@@ -422,6 +425,8 @@ static const void *cmsx_profileMixerOnExit(displayPort_t *pDisp, const OSD_Entry
     pidProfile->motor_cut_high = csmx_motorCutHigh;
     pidProfile->motor_output_limit = cmsx_motorOutputLimit;
     pidProfile->cg_learning_time = cmsx_cgLearningTime;
+    pidProfile->collision_jerk_start = cmsx_collision_jerk_start;
+    pidProfile->collision_jerk_end = cmsx_collision_jerk_end;
 
     initEscEndpoints();
     return NULL;
@@ -436,6 +441,8 @@ static const OSD_Entry cmsx_menuMixerEntries[] = {
     { "MOTOR CUT LOW",   OME_UINT16, NULL, &(OSD_UINT16_t) { &csmx_motorCutLow,         0,    2000,  1  }    },
     { "MOTOR CUT HGH",   OME_UINT16, NULL, &(OSD_UINT16_t) { &csmx_motorCutHigh,        0,    2000,  1  }    },
     { "CG LEARN TIME",   OME_UINT8,  NULL, &(OSD_UINT8_t)  { &cmsx_cgLearningTime,      0,    200,   1  }    },
+    { "COLL JERK STRT",  OME_UINT16, NULL, &(OSD_UINT16_t) { &cmsx_collision_jerk_start,0,    2000,  1  }    },
+    { "COLL JERK END",  OME_UINT16, NULL, &(OSD_UINT16_t) { &cmsx_collision_jerk_end,  0,    2000,  1  }    },
 
     { "MTR OUT LIM %",   OME_UINT8,  NULL, &(OSD_UINT8_t)  { &cmsx_motorOutputLimit, MOTOR_OUTPUT_LIMIT_PERCENT_MIN,  MOTOR_OUTPUT_LIMIT_PERCENT_MAX,  1} },
 

@@ -481,6 +481,8 @@ void pidInitConfig(const pidProfile_t *pidProfile)
 
     soft_arm_init(&pidRuntime.softArm);
     pidRuntime.softArmThrottleThreshold = pidProfile->soft_arm_throttle_threshold / 100.0f;
+
+    collision_detection_init(&pidRuntime.collisionDetection, pidProfile->collision_jerk_start, pidProfile->collision_jerk_end);
 }
 
 void pidCopyProfile(uint8_t dstPidProfileIndex, uint8_t srcPidProfileIndex)

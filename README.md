@@ -7,6 +7,58 @@ Esperanto was created to be easy to use, easy to learn language made for the pur
 I like that message and feel like this project, in the long term, can play the role of an easy to use firmware that can bring the drone world together.
 
 # Changelog
+### 1/26/2024
+- Refactor entire mixer and replace with my own mixer.
+- Mixer currently only supports 4 motor outputs.
+- Mixer refactoring better support soft arming.
+- Custom motor mixes are now handled slightly differently.
+- New mixer settings:
+  - `thrust_linear_low` with a default of 60
+  - `thrust_linear_high` with a default of 30
+    - thrust linear now works like EmuFlight https://github.com/emuflight/EmuFlight/wiki/Motor-Mixers-and-Thrust-Linearization
+    - set both to 0 to disable.
+  - `thrust_linear_cut` with a default of 75
+    - This is the cutoff to a pt1 filter on the amount that thrust linear changes the throttle. This should help with low throttle noise that thrust linear amplifies on motors.
+    - Set to 0 to disable.
+  - `motor_cut_low` with a default of 350
+  - `motor_cut_high` with a default of 750
+    - Motor cut is a cutoff to a pt1 filter on the motor output themselves.
+    - The cutoff shifts as the demanded motor output changes, with low occurring at 0 throttle and high at full throttle.
+- RPM filter accuracy is increased.
+- CG compensation is added, it uses Iterm and thrust to estimate CG.
+- The CG is fed into the mixer and should better compensate for thrust imbalance.
+- `anti_gravity_gain` is reduced from 80 to 20 by default (CG compensation handles this now).
+- New CG Compensation settings:
+  - `cg_learning_time` with a default of 20
+    - Learning time is the time in tenths of a second that it takes the mixer to learn 70% of the CG.
+    - As CG is learning Iterm is attenuated as CG Compensation largely replaces its role.
+    - If your drone is tuned well without any Iterm related issues, lower values may make it respond better to outside stimulus.
+- New CG Compensation debug:
+  - `CG_COMPENSATION` is the new debug mode
+  - Element 0 is the estimated relative x CG
+  - Element 1 is the estimated relative y CG
+  - Element 2 is motor 0 thrust gain (CG Compensation changes this)
+  - Element 3 is motor 1 thrust gain (CG Compensation changes this)
+  - Element 4 is motor 2 thrust gain (CG Compensation changes this)
+  - Element 5 is motor 3 thrust gain (CG Compensation changes this)
+- Collision Detection is added and uses the accelerometer to determine if you have collided with anything.
+- When a collision is detected the mixer will begin to only allow for thrust, and no pitch, roll or yaw.
+- New Collision Detection settings:
+  - `collision_jerk_start` with a default of 350
+  - `collision_jerk_end` with a default of 550
+    - The derivative of the accelerometer (jerk) is used to determine when we have collided.
+    - The amount that the mixer allows for pitch, roll, and yaw is determined by how much jerk is measured.
+    - When the jerk becomes higher than `collision_jerk_start` it will start to limit them, and at `collision_jerk_end` it will completely limit them.
+    - If the jerk is greater than the `collision_jerk_end` and throttle is low (less than 1%) soft arming is re-enabled.
+- New Collision Detection debug:
+  - `COLLISION_DETECTION` is the new debug mode
+  - Element 0 is the measured jerk, or derivative of the accelerometer
+  - Element 1 is the allowed mixer range for roll, pitch and yaw, multiplied by 1000.
+    - A value of 1000 is full roll, pitch and yaw control.
+    - A value of 0 is no roll, pitch and yaw control, only throttle control.
+- All the new settings are available in the CLI or OSD under the new mixer tab of pid tuning.
+- BF version bump to 4.6.4
+
 ### 10/24/2024
 - Major lowpas filtering overhaul!
 - Removal of Predictive filter variants, now all lowpass filters can be optionally made predictive.

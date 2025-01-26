@@ -57,7 +57,6 @@ typedef struct acc_s {
     vector3_t accADC;
     bool isAccelUpdatedAtLeastOnce;
     float accMagnitude;
-    float accDelta;
 } acc_t;
 
 extern acc_t acc;

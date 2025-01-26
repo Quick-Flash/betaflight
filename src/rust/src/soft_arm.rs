@@ -24,7 +24,6 @@ impl SoftArm {
         self.soft_arm_percent_inv
     }
 
-    // TODO look at using this to attenuate the mixer range, requires updating the mixer, but that's needed and will be a mess...
     pub fn attenuate(&mut self, throttle_threshold: f32, throttle: f32) -> f32 {
         if throttle < throttle_threshold {
             let percent = throttle / throttle_threshold;

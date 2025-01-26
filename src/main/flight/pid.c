@@ -141,7 +141,7 @@ void resetPidProfile(pidProfile_t *pidProfile)
         .feedforward_transition = 0,
         .yawRateAccelLimit = 0,
         .rateAccelLimit = 0,
-        .anti_gravity_gain = 80,
+        .anti_gravity_gain = 20,
         .crash_time = 500,          // ms
         .crash_delay = 0,           // ms
         .crash_recovery_angle = 10, // degrees
@@ -191,6 +191,8 @@ void resetPidProfile(pidProfile_t *pidProfile)
         .motor_cut_low = 350,
         .motor_cut_high = 750,
         .cg_learning_time = 20,
+        .collision_jerk_start = 350,
+        .collision_jerk_end = 550,
         .d_max = D_MAX_DEFAULT,
         .d_max_gain = 37,
         .d_max_advance = 20,
@@ -1254,6 +1256,18 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
     } else {
         soft_arm_reset(&pidRuntime.softArm);
     }
+
+    if (mixerGetRcThrottle() < 0.01f && getCollisionMotorDelta() < 0.01f) {
+        soft_arm_reset(&pidRuntime.softArm);
+    }
+}
+
+void runCollisionDetection(float (*accel)[3], float looprate) {
+    run_collision_detection(&pidRuntime.collisionDetection, accel, looprate);
+}
+
+float getCollisionMotorDelta(void) {
+    return pidRuntime.collisionDetection.crash_motor_delta;
 }
 
 float getSoftArmPercentInv(void)

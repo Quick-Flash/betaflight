@@ -446,7 +446,8 @@ static void applyRpmLimiter(mixerRuntime_t *mixer)
 static void applyMixToMotors(RateControls rate_controls, float throttle_final)
 {
     float motor_values [4];
-    float mixer_thrust = mix_motors(&mixerRuntime.motor_mixer, &motor_values, &rate_controls, throttle_final, getSoftArmPercentInv());
+    float collision_motor_delta = getCollisionMotorDelta();
+    float mixer_thrust = mix_motors(&mixerRuntime.motor_mixer, &motor_values, &rate_controls, throttle_final, getSoftArmPercentInv() * collision_motor_delta);
     float cg_learning_k = update_cg_compensation(&mixerRuntime.motor_mixer, pidData[FD_ROLL].I, pidData[FD_PITCH].I, mixer_thrust);
 
     // remove iterm as we learn it in cg compensation this will desaturate iterm

@@ -228,6 +228,8 @@ typedef struct pidProfile_s {
     uint16_t motor_cut_low;                 // Filter cutoff for low motor values
     uint16_t motor_cut_high;                // Filter cutoff for high motor values
     uint8_t cg_learning_time;               // How long it takes for the drone to learn 70.7% of the cg
+    uint16_t collision_jerk_start;          // If the acc hits this jerk then we start collision detection
+    uint16_t collision_jerk_end;            // If the acc hits this jerk then we have full collision detection
     uint8_t d_max[XYZ_AXIS_COUNT];          // Maximum D value on each axis
     uint8_t d_max_gain;                     // Gain factor for amount of gyro / setpoint activity required to boost D
     uint8_t d_max_advance;                  // Percentage multiplier for setpoint input to boost algorithm
@@ -477,6 +479,7 @@ typedef struct pidRuntime_s {
 
     SoftArm softArm;
     float softArmThrottleThreshold;
+    CollisionDetection collisionDetection;
 } pidRuntime_t;
 
 extern pidRuntime_t pidRuntime;
@@ -495,6 +498,8 @@ void resetPidProfile(pidProfile_t *profile);
 void pidResetIterm(void);
 void pidStabilisationState(pidStabilisationState_e pidControllerState);
 void pidSetItermAccelerator(float newItermAccelerator);
+void runCollisionDetection(float (*accel)[3], float looprate);
+float getCollisionMotorDelta(void);
 float getSoftArmPercentInv(void);
 bool crashRecoveryModeActive(void);
 void pidAcroTrainerInit(void);

@@ -47,16 +47,20 @@ impl CGLearner {
     }
 
     pub fn learn_cg_offset(&mut self, steady_state_roll: f32, steady_state_pitch: f32, mixer_thrust: f32) -> f32 {
-        let x = self.x.state - steady_state_roll / mixer_thrust;
-        let y = self.y.state + steady_state_pitch / mixer_thrust;
+        if mixer_thrust > 0.01 { // prevent divide by 0, can't learn at very low thrust anyhow
+            let x = self.x.state - steady_state_roll / mixer_thrust;
+            let y = self.y.state + steady_state_pitch / mixer_thrust;
 
-        let learning_k = self.learning_time.apply(constrain(mixer_thrust, 0.05, 0.5));
-        self.x.k = learning_k;
-        self.y.k = learning_k;
+            let learning_k = self.learning_time.apply(constrain(mixer_thrust, 0.05, 0.5));
+            self.x.k = learning_k;
+            self.y.k = learning_k;
 
-        self.x.apply_constrained(x, 0.25);
-        self.y.apply_constrained(y, 0.25);
+            self.x.apply_constrained(x, 0.25);
+            self.y.apply_constrained(y, 0.25);
 
-        learning_k
+            learning_k
+        } else {
+            0.0
+        }
     }
 }

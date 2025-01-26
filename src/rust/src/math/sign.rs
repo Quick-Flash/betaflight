@@ -9,10 +9,12 @@ impl Sign<f32> for f32 {
     /// Negative zero (-0.0) returns 1.0
     #[inline(always)]
     fn sign(&self) -> f32 {
-        if *self >= 0.0 {
+        if *self > 0.0 {
             1.0
-        } else {
+        } else if *self < 0.0 {
             -1.0
+        } else {
+            0.0
         }
     }
 }
@@ -36,12 +38,12 @@ mod sign_tests {
     #[test]
     fn sign_positive_zero() {
         // expect
-        assert_eq!((0.0).sign(), 1.0);
+        assert_eq!(0.0.sign(), 0.0);
     }
 
     #[test]
     fn sign_negative_zero() {
         // expect
-        assert_eq!((-0.0).sign(), 1.0);
+        assert_eq!((-0.0).sign(), 0.0);
     }
 }
