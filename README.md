@@ -6,6 +6,9 @@ But why an Esperanto word?
 Esperanto was created to be easy to use, easy to learn language made for the purpose of bringing others together through easy to understand communication.
 I like that message and feel like this project, in the long term, can play the role of an easy to use firmware that can bring the drone world together.
 
+# Helpful Starting Video
+https://youtu.be/8qr64LfN-po
+
 # Changelog
 ### 1/26/2024
 - Refactor entire mixer and replace with my own mixer.
