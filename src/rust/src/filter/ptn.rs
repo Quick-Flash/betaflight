@@ -90,7 +90,6 @@ impl Pt1Filter {
 }
 
 // C stuff
-#[link_section = ".tcm_code"]
 #[no_mangle] pub extern "C" fn pt1FilterGain(f_cut: f32, dt: f32) -> f32
 {
     Pt1Filter::pt1_k(f_cut, dt)
@@ -202,7 +201,6 @@ impl Pt2Filter {
 }
 
 // C stuff
-#[link_section = ".tcm_code"]
 #[no_mangle] pub extern "C" fn pt2FilterGain(f_cut: f32, dt: f32) -> f32
 {
     Pt1Filter::pt1_k(f_cut * 1.553_774, dt)
@@ -319,7 +317,6 @@ impl Pt3Filter {
 }
 
 // C stuff
-#[link_section = ".tcm_code"]
 #[no_mangle] pub extern "C" fn pt3FilterGain(f_cut: f32, dt: f32) -> f32
 {
     Pt1Filter::pt1_k(f_cut * 1.961_459_2, dt)
