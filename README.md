@@ -30,31 +30,34 @@ https://youtu.be/8qr64LfN-po
 | anti_gravity_gain | 80       | 20        | Anti-gravity gain  |
 
 ## New Settings
-| Setting Name           | Default Value | Description                                                                                                              |
-|------------------------|---------------|--------------------------------------------------------------------------------------------------------------------------|
-| gyro_lpf1_cutoff       | 125           | First gyro lowpass filter cutoff                                                                                         |
-| gyro_lpf1_variant      | PT1           | Filter type for the first gyro lowpass filter, more info below, search gyro_lpf1_variant                                 |
-| gyro_lpf1_q            | 707           | Q value for the gyro lowpass filter, more info below, search gyro_lpf1_q                                                 |
-| gyro_lpf1_pred_cutoff  | 15            | First gyro lowpass filter cutoff for the predictive portion of the filter, more info below, search gyro_lpf1_pred_cutoff |
-| gyro_lpf1_pred_variant | OFF           | Filter type for the first gyro lowpass filter, more info below, search gyro_lpf1_pred_variant                            |
-| gyro_lpf1_pred_weight  | 100           | A weight from 0 to 100 for how much of the predictive portion of the filter is used                                      |
-| gyro_lpf1_pred_q       | 707           | Q value for the predictive portion of the gyro lowpass filter, more info below, search gyro_lpf1_pred_q                  |
-| gyro_lpf2_cutoff       | 160           | Second gyro lowpass filter cutoff                                                                                        |
-| gyro_lpf2_variant      | PT1           | Filter type for the second gyro lowpass filter, more info below, search gyro_lpf1_variant                                |
-| gyro_lpf2_q            | 707           | Q value for the gyro lowpass filter, more info below, search gyro_lpf1_q                                                 |
-| gyro_lpf2_pred_cutoff  | 15            | First gyro lowpass filter cutoff for the predictive portion of the filter, more info below, search gyro_lpf1_pred_cutoff |
-| gyro_lpf2_pred_variant | OFF           | Filter type for the first gyro lowpass filter, more info below, search gyro_lpf1_pred_variant                            |
-| gyro_lpf2_pred_weight  | 100           | A weight from 0 to 100 for how much of the predictive portion of the filter is used                                      |
-| gyro_lpf2_pred_q       | 707           | Q value for the predictive portion of the gyro lowpass filter, more info below, search gyro_lpf1_pred_q                  |
-| gyro_noise_est_cut     | 15            | How quickly the gyro fusion will shift its prediction from one gyro to another                                           |
-| cg_learning_time       | 20            | Time in tenths of a second that the CG will be learned from the iterm, lower values is faster learning                   |
-| thrust_linear_low      | 60            | Thrust linear low like EmuFlight                                                                                         |
-| thrust_linear_high     | 30            | Thrust linear high like EmuFlight                                                                                        |
-| thrust_linear_cut      | 75            | Pt1 filter cutoff on the change that thrust linear makes, should help reduce low throttle thrust linear noise            |
-| motor_cut_low          | 350           | Pt1 filter cutoff on the motor values at low throttle, think of this as a smarter throttle moving filter                 |
-| motor_cut_high         | 750           | Pt1 filter cutoff on the motor values at high throttle, think of this as a smarter throttle moving filter                |
-| collision_jerk_start   | 350           | Amount of jerk (change in acceleration read from accelerometer) is needed to start detecting collisions                  |
-| collision_jerk_end     | 550           | Amount of jerk (change in acceleration read from accelerometer) is needed to fully detect collisions                     |
+| Setting Name                | Default Value | Description                                                                                                                                                |
+|-----------------------------|---------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| gyro_lpf1_cutoff            | 125           | First gyro lowpass filter cutoff                                                                                                                           |
+| gyro_lpf1_variant           | PT1           | Filter type for the first gyro lowpass filter, more info below, search gyro_lpf1_variant                                                                   |
+| gyro_lpf1_q                 | 707           | Q value for the gyro lowpass filter, more info below, search gyro_lpf1_q                                                                                   |
+| gyro_lpf1_pred_cutoff       | 15            | First gyro lowpass filter cutoff for the predictive portion of the filter, more info below, search gyro_lpf1_pred_cutoff                                   |
+| gyro_lpf1_pred_variant      | OFF           | Filter type for the first gyro lowpass filter, more info below, search gyro_lpf1_pred_variant                                                              |
+| gyro_lpf1_pred_weight       | 100           | A weight from 0 to 100 for how much of the predictive portion of the filter is used                                                                        |
+| gyro_lpf1_pred_q            | 707           | Q value for the predictive portion of the gyro lowpass filter, more info below, search gyro_lpf1_pred_q                                                    |
+| gyro_lpf2_cutoff            | 160           | Second gyro lowpass filter cutoff                                                                                                                          |
+| gyro_lpf2_variant           | PT1           | Filter type for the second gyro lowpass filter, more info below, search gyro_lpf1_variant                                                                  |
+| gyro_lpf2_q                 | 707           | Q value for the gyro lowpass filter, more info below, search gyro_lpf1_q                                                                                   |
+| gyro_lpf2_pred_cutoff       | 15            | First gyro lowpass filter cutoff for the predictive portion of the filter, more info below, search gyro_lpf1_pred_cutoff                                   |
+| gyro_lpf2_pred_variant      | OFF           | Filter type for the first gyro lowpass filter, more info below, search gyro_lpf1_pred_variant                                                              |
+| gyro_lpf2_pred_weight       | 100           | A weight from 0 to 100 for how much of the predictive portion of the filter is used                                                                        |
+| gyro_lpf2_pred_q            | 707           | Q value for the predictive portion of the gyro lowpass filter, more info below, search gyro_lpf1_pred_q                                                    |
+| gyro_noise_est_cut          | 15            | How quickly the gyro fusion will shift its prediction from one gyro to another                                                                             |
+| cg_learning_time            | 20            | Time in tenths of a second that the CG will be learned from the iterm, lower values is faster learning                                                     |
+| thrust_linear_low           | 60            | Thrust linear low like EmuFlight                                                                                                                           |
+| thrust_linear_high          | 30            | Thrust linear high like EmuFlight                                                                                                                          |
+| thrust_linear_cut           | 75            | Pt1 filter cutoff on the change that thrust linear makes, should help reduce low throttle thrust linear noise                                              |
+| motor_cut_low               | 350           | Pt1 filter cutoff on the motor values at low throttle, think of this as a smarter throttle moving filter                                                   |
+| motor_cut_high              | 750           | Pt1 filter cutoff on the motor values at high throttle, think of this as a smarter throttle moving filter                                                  |
+| collision_jerk_start        | 350           | Amount of jerk (change in acceleration read from accelerometer) is needed to start detecting collisions                                                    |
+| collision_jerk_end          | 550           | Amount of jerk (change in acceleration read from accelerometer) is needed to fully detect collisions                                                       |
+| two_tap_arming              | 1             | If set to 1 flipping the arm switch twice in one second is required to arm, 0 disables this                                                                |
+| soft_arm_throttle_threshold | 25            | Soft arming is enabled until above this throttle. As you raise throttle to this point you gain more authority. After this throttle soft arming is disabled |
+| motor_soft_idle             | 300           | This is the motor idle value while in soft arming. Typically set to as low as the motor will reliable start to spin                                        |
 
 ## Blackbox Changes
 ### `DEBUG_DUAL_GYRO` Gyro fusion debug
