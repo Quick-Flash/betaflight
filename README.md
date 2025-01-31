@@ -9,6 +9,76 @@ I like that message and feel like this project, in the long term, can play the r
 # Helpful Starting Video
 https://youtu.be/8qr64LfN-po
 
+# Functional Differences From BF
+- Anti-gravity only effects the pterm instead of the pterm and iterm.
+- Improved sensor fusion method for dual gyro FC.
+- AHRS (attitude estimation) uses raw instead of filtered gyro.
+- Gyro lowpass filters replaced with predictive lowpass filters.
+- Two tap arming by default.
+- Soft arming by default, with a lower motor idle while in soft arming.
+- Mixer learns the CG location and adds a direct compensation for it.
+- Detection of collisions reducing the "freakout" the happens. Requires ACC to be enabled to work.
+- If a full collision is detected at near 0 throttle, re-enable soft arming, makes landing simple.
+- Custom mixer setups are now done differently (more information to come)
+
+
+## Setting Changes
+| Setting Name      | BF Value | New Value | Description        |
+|-------------------|----------|-----------|--------------------|
+| min_check         | 1050     | 1000      | Min rc range value |
+| max_check         | 1900     | 2000      | Max rc range value |
+| anti_gravity_gain | 80       | 20        | Anti-gravity gain  |
+
+## New Settings
+| Setting Name           | Default Value | Description                                                                                                              |
+|------------------------|---------------|--------------------------------------------------------------------------------------------------------------------------|
+| gyro_lpf1_cutoff       | 125           | First gyro lowpass filter cutoff                                                                                         |
+| gyro_lpf1_variant      | PT1           | Filter type for the first gyro lowpass filter, more info below, search gyro_lpf1_variant                                 |
+| gyro_lpf1_q            | 707           | Q value for the gyro lowpass filter, more info below, search gyro_lpf1_q                                                 |
+| gyro_lpf1_pred_cutoff  | 15            | First gyro lowpass filter cutoff for the predictive portion of the filter, more info below, search gyro_lpf1_pred_cutoff |
+| gyro_lpf1_pred_variant | OFF           | Filter type for the first gyro lowpass filter, more info below, search gyro_lpf1_pred_variant                            |
+| gyro_lpf1_pred_weight  | 100           | A weight from 0 to 100 for how much of the predictive portion of the filter is used                                      |
+| gyro_lpf1_pred_q       | 707           | Q value for the predictive portion of the gyro lowpass filter, more info below, search gyro_lpf1_pred_q                  |
+| gyro_lpf2_cutoff       | 160           | Second gyro lowpass filter cutoff                                                                                        |
+| gyro_lpf2_variant      | PT1           | Filter type for the second gyro lowpass filter, more info below, search gyro_lpf1_variant                                |
+| gyro_lpf2_q            | 707           | Q value for the gyro lowpass filter, more info below, search gyro_lpf1_q                                                 |
+| gyro_lpf2_pred_cutoff  | 15            | First gyro lowpass filter cutoff for the predictive portion of the filter, more info below, search gyro_lpf1_pred_cutoff |
+| gyro_lpf2_pred_variant | OFF           | Filter type for the first gyro lowpass filter, more info below, search gyro_lpf1_pred_variant                            |
+| gyro_lpf2_pred_weight  | 100           | A weight from 0 to 100 for how much of the predictive portion of the filter is used                                      |
+| gyro_lpf2_pred_q       | 707           | Q value for the predictive portion of the gyro lowpass filter, more info below, search gyro_lpf1_pred_q                  |
+| gyro_noise_est_cut     | 15            | How quickly the gyro fusion will shift its prediction from one gyro to another                                           |
+| cg_learning_time       | 20            | Time in tenths of a second that the CG will be learned from the iterm, lower values is faster learning                   |
+| thrust_linear_low      | 60            | Thrust linear low like EmuFlight                                                                                         |
+| thrust_linear_high     | 30            | Thrust linear high like EmuFlight                                                                                        |
+| thrust_linear_cut      | 75            | Pt1 filter cutoff on the change that thrust linear makes, should help reduce low throttle thrust linear noise            |
+| motor_cut_low          | 350           | Pt1 filter cutoff on the motor values at low throttle, think of this as a smarter throttle moving filter                 |
+| motor_cut_high         | 750           | Pt1 filter cutoff on the motor values at high throttle, think of this as a smarter throttle moving filter                |
+| collision_jerk_start   | 350           | Amount of jerk (change in acceleration read from accelerometer) is needed to start detecting collisions                  |
+| collision_jerk_end     | 550           | Amount of jerk (change in acceleration read from accelerometer) is needed to fully detect collisions                     |
+
+## Blackbox Changes
+### `DEBUG_DUAL_GYRO` Gyro fusion debug
+- Debug 0: first gyro roll  
+- Debug 1: first gyro roll noise  
+- Debug 2: second gyro roll  
+- Debug 3: second gyro roll noise  
+- Debug 4: first gyro pitch  
+- Debug 5: first gyro pitch noise  
+- Debug 6: second gyro pitch  
+- Debug 7: second gyro pitch noise
+### `CG_COMPENSATION` CG compensation debug
+- Debug 0: estimated relative x CG
+- Debug 1: estimated relative y CG
+- Debug 2: motor 0 thrust gain (CG Compensation changes this)
+- Debug 3: motor 1 thrust gain (CG Compensation changes this)
+- Debug 4: motor 2 thrust gain (CG Compensation changes this)
+- Debug 5: motor 3 thrust gain (CG Compensation changes this)
+### `COLLISION_DETECTION` Collision detection debug
+- Debug 0: measured jerk, or derivative/change of the accelerometer
+- Debug 1: allowed mixer range for roll, pitch and yaw, multiplied by 1000.
+  - A value of 1000 is full roll, pitch and yaw control.
+  - A value of 0 is no roll, pitch and yaw control, only throttle control.
+
 # Changelog
 ### 1/26/2024
 - Refactor entire mixer and replace with my own mixer.
@@ -89,7 +159,7 @@ https://youtu.be/8qr64LfN-po
   - `gyro_lpf1_cutoff` -> Filter cutoff for the first lowpass filter
   - `gyro_lpf1_pred_cutoff` -> The cutoff for the predictive part of the filter. Higher values will remove latency faster, but may also lead to more noise.
   - `gyro_lpf1_q` -> Q value for the lowpass filter. Only applies to second order filters (both predictive and non predictive). A value of 707 will mimic a BF "biquad" filter. Higher values is less latent with a bit less filtering around cutoff, and lower values are more latent with more filtering around cutoff. Values greater than 707 will start to increase noise just below the cutoff.
-  - `gyro_lpf1_pre_q` -> Q value for the predictive part of the lowpass filter. Only applies to the predictive second order filter
+  - `gyro_lpf1_pred_q` -> Q value for the predictive part of the lowpass filter. Only applies to the predictive second order filter
   - `gyro_lpf1_variant` -> Sets which filter variant you will be using. pt1, pt2, pt3 are what you expect them to be. first order is a lowpass filter that filters slightly more than a pt1, mainly at very high frequencies. second order is the BF biquad filter.
 - Options are the same for the `gyro_lpf2`
 
