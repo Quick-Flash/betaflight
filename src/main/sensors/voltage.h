@@ -53,9 +53,7 @@ typedef struct voltageMeter_s {
     timeMs_t voltageStableLastUpdate;
     uint16_t voltageStableBits;              // rolling bitmask, bit 1 if battery difference is within threshold, shifted left
     uint16_t unfiltered;                     // voltage in 0.01V steps
-#if defined(USE_BATTERY_VOLTAGE_SAG_COMPENSATION)
     uint16_t sagFiltered;                   // voltage in 0.01V steps
-#endif
     bool lowVoltageCutoff;
 } voltageMeter_t;
 

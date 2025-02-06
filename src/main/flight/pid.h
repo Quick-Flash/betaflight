@@ -230,6 +230,7 @@ typedef struct pidProfile_s {
     uint8_t cg_learning_time;               // How long it takes for the drone to learn 70.7% of the cg
     uint16_t collision_jerk_start;          // If the acc hits this jerk then we start collision detection
     uint16_t collision_jerk_end;            // If the acc hits this jerk then we have full collision detection
+    uint8_t voltage_throttle_compensation;  // Enables compensating the thrust over voltage changes
     uint8_t d_max[XYZ_AXIS_COUNT];          // Maximum D value on each axis
     uint8_t d_max_gain;                     // Gain factor for amount of gyro / setpoint activity required to boost D
     uint8_t d_max_advance;                  // Percentage multiplier for setpoint input to boost algorithm
@@ -255,7 +256,6 @@ typedef struct pidProfile_s {
     
     uint8_t dterm_lpf1_dyn_expo;            // set the curve for dynamic dterm lowpass filter
     uint8_t level_race_mode;                // NFE race mode - when true pitch setpoint calculation is gyro based in level mode
-    uint8_t vbat_sag_compensation;          // Reduce motor output by this percentage of the maximum compensation amount
 
     uint8_t simplified_pids_mode;
     uint8_t simplified_master_multiplier;

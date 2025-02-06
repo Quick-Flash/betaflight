@@ -1,5 +1,5 @@
 use core::ops::Range;
-use crate::c_interop::DebugType::DEBUG_CG_COMPENSATION;
+use crate::c_interop::DebugType::{DEBUG_BATTERY, DEBUG_CG_COMPENSATION};
 use crate::c_interop::set_debug_float;
 use crate::control::cg_learner::CGLearner;
 use crate::filter::ptn::Pt1Filter;
@@ -15,6 +15,9 @@ pub struct Mixer {
     /// settings
     pub thrust_linear_scalar: RangeScalar,
     pub filter_k_scaler: RangeScalar,
+    pub min_voltage: f32,
+    pub max_voltage: f32,
+    pub voltage_throttle_compensation: bool,
 
     /// runtime
     pub motor_gains: MotorGains,
@@ -33,6 +36,9 @@ impl Mixer {
         motor_cut_low: f32,
         motor_cut_high: f32,
         cg_learning_time: f32,
+        min_voltage: f32,
+        max_voltage: f32,
+        voltage_linearize: bool,
         dt: f32
     ) -> Self {
         let unit_range = Range {start: 0.0, end: 1.0};
@@ -57,9 +63,12 @@ impl Mixer {
         let y_offset = (1.0 - motor_gains.gains[0].throttle) / motor_gains.gains[0].pitch.sign();
 
         Self {
-            motor_gains,
             thrust_linear_scalar: RangeScalar::new(&unit_range, &Range {start: thrust_linear_low, end: thrust_linear_high}),
             filter_k_scaler: RangeScalar::new(&unit_range, &Range {start: k_low, end: k_high}),
+            max_voltage,
+            min_voltage,
+            voltage_throttle_compensation: voltage_linearize,
+            motor_gains,
             throttle_linearization_filter: linearization_pt1,
             linearization_filter: [linearization_pt1; NUM_MOTORS],
             motor_filter: [Pt1Filter::new(motor_cut_low, dt); NUM_MOTORS],
@@ -75,6 +84,9 @@ impl Mixer {
         motor_cut_low: f32,
         motor_cut_high: f32,
         cg_learning_time: f32,
+        min_voltage: f32,
+        max_voltage: f32,
+        voltage_linearize: bool,
         dt: f32
     ) {
         let unit_range = Range {start: 0.0, end: 1.0};
@@ -100,6 +112,9 @@ impl Mixer {
         self.linearization_filter = [linearization_pt1; NUM_MOTORS];
         self.motor_filter = [Pt1Filter::new(motor_cut_low, dt); NUM_MOTORS];
         self.cg_learner.update_learning_time(cg_learning_time, dt);
+        self.min_voltage = min_voltage;
+        self.max_voltage = max_voltage;
+        self.voltage_throttle_compensation = voltage_linearize;
     }
 
     /// converts normalized thrust values to a normalized motor output
@@ -246,9 +261,10 @@ impl Mixer {
         (motors, constrained_throttle)
     }
 
-    pub fn mix_motors(&mut self, rate_controls: &RateControls, throttle: f32, motor_delta_max: f32) -> ([f32; NUM_MOTORS], f32) {
+    pub fn mix_motors(&mut self, rate_controls: &RateControls, throttle: f32, motor_delta_max: f32, voltage: f32) -> ([f32; NUM_MOTORS], f32) {
+        let (voltage_motor_delta, voltage_throttle) = self.voltage_compensation(voltage, throttle);
         let rpy_mixed = self.motor_rpy_mix(rate_controls);
-        let (mut motors, thrust) = self.mix_and_constrain(rpy_mixed, throttle, motor_delta_max);
+        let (mut motors, thrust) = self.mix_and_constrain(rpy_mixed, voltage_throttle, motor_delta_max * voltage_motor_delta);
 
         for (motor, motor_filter) in motors.iter_mut().zip(self.motor_filter.iter_mut()) {
             motor_filter.k = self.filter_k_scaler.apply(*motor);
@@ -285,6 +301,23 @@ impl Mixer {
 
         learning_k
     }
+
+    fn voltage_compensation(&self, voltage: f32, throttle: f32) -> (f32, f32) {
+        let voltage_range = self.max_voltage - self.min_voltage;
+        let voltage_normalized = constrain((voltage - self.min_voltage) / voltage_range, 0.0, 1.0);
+        let voltage_scale = voltage_range / self.max_voltage;
+        let motor_range = 1.0 - voltage_normalized * voltage_scale;
+
+        set_debug_float(DEBUG_BATTERY, 2, voltage_normalized * 100.0);
+        set_debug_float(DEBUG_BATTERY, 3, motor_range * 1000.0);
+
+        if self.voltage_throttle_compensation {
+            let voltage_throttle = throttle * motor_range;
+            (motor_range, voltage_throttle)
+        } else {
+            (motor_range, throttle)
+        }
+    }
 }
 
 #[no_mangle] pub extern "C" fn mixer_init(
@@ -296,10 +329,13 @@ impl Mixer {
     motor_cut_low: f32,
     motor_cut_high: f32,
     cg_learning_time: f32,
+    min_voltage: f32,
+    max_voltage: f32,
+    voltage_throttle_compensation: bool,
     dt: f32
 ) {
     unsafe {
-        *mixer = Mixer::new(gains, thrust_linear_low, thrust_linear_high, linearization_cut, motor_cut_low, motor_cut_high, cg_learning_time, dt);
+        *mixer = Mixer::new(gains, thrust_linear_low, thrust_linear_high, linearization_cut, motor_cut_low, motor_cut_high, cg_learning_time, min_voltage, max_voltage, voltage_throttle_compensation, dt);
     }
 }
 
@@ -311,19 +347,22 @@ impl Mixer {
     motor_cut_low: f32,
     motor_cut_high: f32,
     cg_learning_time: f32,
+    min_voltage: f32,
+    max_voltage: f32,
+    voltage_throttle_compensation: bool,
     dt: f32
 ) {
     unsafe {
-        (*mixer).update_non_motor_gains(thrust_linear_low, thrust_linear_high, linearization_cut, motor_cut_low, motor_cut_high, cg_learning_time, dt);
+        (*mixer).update_non_motor_gains(thrust_linear_low, thrust_linear_high, linearization_cut, motor_cut_low, motor_cut_high, cg_learning_time, min_voltage, max_voltage, voltage_throttle_compensation, dt);
     }
 }
 
 #[link_section = ".tcm_code"]
 #[inline]
-#[no_mangle] pub extern "C" fn mix_motors(mixer: *mut Mixer, motors: *mut [f32; NUM_MOTORS], rate_controls: &RateControls, throttle: f32, motor_delta_max: f32) -> f32 {
+#[no_mangle] pub extern "C" fn mix_motors(mixer: *mut Mixer, motors: *mut [f32; NUM_MOTORS], rate_controls: &RateControls, throttle: f32, motor_delta_max: f32, voltage: f32) -> f32 {
     unsafe {
         let thrust;
-        (*motors, thrust) = (*mixer).mix_motors(rate_controls, throttle, motor_delta_max);
+        (*motors, thrust) = (*mixer).mix_motors(rate_controls, throttle, motor_delta_max, voltage);
         thrust
     }
 }

@@ -542,12 +542,10 @@ uint16_t getBatteryAverageCellVoltage(void)
     return (batteryCellCount ? voltageMeter.displayFiltered / batteryCellCount : 0);
 }
 
-#if defined(USE_BATTERY_VOLTAGE_SAG_COMPENSATION)
 uint16_t getBatterySagCellVoltage(void)
 {
     return (batteryCellCount ? voltageMeter.sagFiltered / batteryCellCount : 0);
 }
-#endif
 
 bool isAmperageConfigured(void)
 {

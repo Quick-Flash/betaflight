@@ -276,12 +276,6 @@ static void validateAndFixConfig(void)
                 pidProfilesMutable(i)->d_max[axis] = 0;
             }
         }
-
-#if defined(USE_BATTERY_VOLTAGE_SAG_COMPENSATION)
-        if (batteryConfig()->voltageMeterSource != VOLTAGE_METER_ADC) {
-            pidProfilesMutable(i)->vbat_sag_compensation = 0;
-        }
-#endif
     }
 
     if (motorConfig()->dev.motorPwmProtocol == PWM_TYPE_BRUSHED) {

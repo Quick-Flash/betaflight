@@ -257,21 +257,7 @@ static void calculateThrottleAndCurrentMotorEndpoints(timeUs_t currentTimeUs)
         float soft_arm_percent_inv = getSoftArmPercentInv();
         float motor_output_low = soft_arm_percent_inv * mixerRuntime.motorOutputLow + (1.0f - soft_arm_percent_inv) * mixerRuntime.motorOutputSoftLow; // go between soft arm output low and normal idle
 
-#if defined(USE_BATTERY_VOLTAGE_SAG_COMPENSATION)
-        float motorRangeAttenuationFactor = 0;
-        // reduce motorRangeMax when battery is full
-        if (mixerRuntime.vbatSagCompensationFactor > 0.0f) {
-            const uint16_t currentCellVoltage = getBatterySagCellVoltage();
-            // batteryGoodness = 1 when voltage is above vbatFull, and 0 when voltage is below vbatLow
-            float batteryGoodness = 1.0f - constrainf((mixerRuntime.vbatFull - currentCellVoltage) / mixerRuntime.vbatRangeToCompensate, 0.0f, 1.0f);
-            motorRangeAttenuationFactor = (mixerRuntime.vbatRangeToCompensate / mixerRuntime.vbatFull) * batteryGoodness * mixerRuntime.vbatSagCompensationFactor;
-            DEBUG_SET(DEBUG_BATTERY, 2, lrintf(batteryGoodness * 100));
-            DEBUG_SET(DEBUG_BATTERY, 3, lrintf(motorRangeAttenuationFactor * 1000));
-        }
-        motorRangeMax = isCrashFlipModeActive() ? mixerRuntime.motorOutputHigh : mixerRuntime.motorOutputHigh - motorRangeAttenuationFactor * (mixerRuntime.motorOutputHigh - mixerRuntime.motorOutputLow);
-#else
         motorRangeMax = mixerRuntime.motorOutputHigh;
-#endif
         motorRangeMin = motor_output_low + motorRangeMinIncrease * (mixerRuntime.motorOutputHigh - motor_output_low);
         motorOutputMin = motorRangeMin;
         motorOutputRange = motorRangeMax - motorRangeMin;
@@ -447,7 +433,7 @@ static void applyMixToMotors(RateControls rate_controls, float throttle_final)
 {
     float motor_values [4];
     float collision_motor_delta = getCollisionMotorDelta();
-    float mixer_thrust = mix_motors(&mixerRuntime.motor_mixer, &motor_values, &rate_controls, throttle_final, getSoftArmPercentInv() * collision_motor_delta);
+    float mixer_thrust = mix_motors(&mixerRuntime.motor_mixer, &motor_values, &rate_controls, throttle_final, getSoftArmPercentInv() * collision_motor_delta, getBatterySagCellVoltage());
     float cg_learning_k = update_cg_compensation(&mixerRuntime.motor_mixer, pidData[FD_ROLL].I, pidData[FD_PITCH].I, mixer_thrust);
 
     // remove iterm as we learn it in cg compensation this will desaturate iterm

@@ -343,6 +343,9 @@ void mixerInitProfile(void)
         currentPidProfile->motor_cut_low,
         currentPidProfile->motor_cut_high,
         currentPidProfile->cg_learning_time / 10.0f,
+        batteryConfig()->vbatmincellvoltage / 100.0f,
+        batteryConfig()->vbatmaxcellvoltage / 100.0f,
+        currentPidProfile->voltage_throttle_compensation,
         pidGetDT()
     );
 
@@ -362,18 +365,6 @@ void mixerInitProfile(void)
     mixerRuntime.minRpsDelayK = 800 * pidGetDT() / 20.0f; //approx 20ms D delay, arbitrarily suits many motors
     if (!mixerRuntime.feature3dEnabled && mixerRuntime.dynIdleMinRps) {
         mixerRuntime.motorOutputLow = DSHOT_MIN_THROTTLE; // Override value set by initEscEndpoints to allow zero motor drive
-    }
-#endif
-
-#if defined(USE_BATTERY_VOLTAGE_SAG_COMPENSATION)
-    mixerRuntime.vbatSagCompensationFactor = 0.0f;
-    if (currentPidProfile->vbat_sag_compensation > 0 && !RPM_LIMIT_ACTIVE) {
-        //TODO: Make this voltage user configurable
-        mixerRuntime.vbatFull = CELL_VOLTAGE_FULL_CV;
-        mixerRuntime.vbatRangeToCompensate = mixerRuntime.vbatFull - batteryConfig()->vbatwarningcellvoltage;
-        if (mixerRuntime.vbatRangeToCompensate > 0) {
-            mixerRuntime.vbatSagCompensationFactor = ((float)currentPidProfile->vbat_sag_compensation) / 100.0f;
-        }
     }
 #endif
 
@@ -517,6 +508,9 @@ void mixerInit(mixerMode_e mixerMode)
         currentPidProfile->motor_cut_low,
         currentPidProfile->motor_cut_high,
         currentPidProfile->cg_learning_time / 10.0f,
+        batteryConfig()->vbatmincellvoltage / 100.0f,
+        batteryConfig()->vbatmaxcellvoltage / 100.0f,
+        currentPidProfile->voltage_throttle_compensation,
         pidGetDT()
     );
 }

@@ -391,6 +391,7 @@ static uint8_t  cmsx_motorOutputLimit;
 static uint8_t  cmsx_cgLearningTime;
 static uint16_t cmsx_collision_jerk_start;
 static uint16_t cmsx_collision_jerk_end;
+static uint8_t  cmsx_voltage_throttle_compensation;
 
 static const void *cmsx_profileMixerOnEnter(displayPort_t *pDisp)
 {
@@ -407,6 +408,7 @@ static const void *cmsx_profileMixerOnEnter(displayPort_t *pDisp)
     cmsx_cgLearningTime = pidProfile->cg_learning_time;
     cmsx_collision_jerk_start = pidProfile->collision_jerk_start;
     cmsx_collision_jerk_end = pidProfile->collision_jerk_end;
+    cmsx_voltage_throttle_compensation = pidProfile->voltage_throttle_compensation;
 
     return NULL;
 }
@@ -427,6 +429,7 @@ static const void *cmsx_profileMixerOnExit(displayPort_t *pDisp, const OSD_Entry
     pidProfile->cg_learning_time = cmsx_cgLearningTime;
     pidProfile->collision_jerk_start = cmsx_collision_jerk_start;
     pidProfile->collision_jerk_end = cmsx_collision_jerk_end;
+    pidProfile->voltage_throttle_compensation = cmsx_voltage_throttle_compensation;
 
     initEscEndpoints();
     return NULL;
@@ -442,9 +445,10 @@ static const OSD_Entry cmsx_menuMixerEntries[] = {
     { "MOTOR CUT HGH",   OME_UINT16, NULL, &(OSD_UINT16_t) { &csmx_motorCutHigh,        0,    2000,  1  }    },
     { "CG LEARN TIME",   OME_UINT8,  NULL, &(OSD_UINT8_t)  { &cmsx_cgLearningTime,      0,    200,   1  }    },
     { "COLL JERK STRT",  OME_UINT16, NULL, &(OSD_UINT16_t) { &cmsx_collision_jerk_start,0,    2000,  1  }    },
-    { "COLL JERK END",  OME_UINT16, NULL, &(OSD_UINT16_t) { &cmsx_collision_jerk_end,  0,    2000,  1  }    },
+    { "COLL JERK END",   OME_UINT16, NULL, &(OSD_UINT16_t) { &cmsx_collision_jerk_end,  0,    2000,  1  }    },
 
     { "MTR OUT LIM %",   OME_UINT8,  NULL, &(OSD_UINT8_t)  { &cmsx_motorOutputLimit, MOTOR_OUTPUT_LIMIT_PERCENT_MIN,  MOTOR_OUTPUT_LIMIT_PERCENT_MAX,  1} },
+    { "VOLT_THR_COMP", OME_Bool,   NULL, &cmsx_voltage_throttle_compensation },
 
     { "BACK", OME_Back, NULL, NULL },
     { NULL, OME_END, NULL, NULL}
@@ -610,10 +614,6 @@ static uint8_t  cmsx_d_max_gain;
 static uint8_t  cmsx_d_max_advance;
 #endif
 
-#ifdef USE_BATTERY_VOLTAGE_SAG_COMPENSATION
-static uint8_t  cmsx_vbat_sag_compensation;
-#endif
-
 #ifdef USE_ITERM_RELAX
 static uint8_t cmsx_iterm_relax;
 static uint8_t cmsx_iterm_relax_type;
@@ -681,9 +681,6 @@ static const void *cmsx_profileOtherOnEnter(displayPort_t *pDisp)
     cmsx_feedforward_jitter_factor = pidProfile->feedforward_jitter_factor;
 #endif
 
-#ifdef USE_BATTERY_VOLTAGE_SAG_COMPENSATION
-    cmsx_vbat_sag_compensation = pidProfile->vbat_sag_compensation;
-#endif
     cmsx_tpa_rate = pidProfile->tpa_rate;
     cmsx_tpa_breakpoint = pidProfile->tpa_breakpoint;
     cmsx_tpa_low_rate = pidProfile->tpa_low_rate;
@@ -739,9 +736,6 @@ static const void *cmsx_profileOtherOnExit(displayPort_t *pDisp, const OSD_Entry
     pidProfile->feedforward_jitter_factor = cmsx_feedforward_jitter_factor;
 #endif
 
-#ifdef USE_BATTERY_VOLTAGE_SAG_COMPENSATION
-    pidProfile->vbat_sag_compensation = cmsx_vbat_sag_compensation;
-#endif
     pidProfile->tpa_rate = cmsx_tpa_rate;
     pidProfile->tpa_breakpoint = cmsx_tpa_breakpoint;
     pidProfile->tpa_low_rate = cmsx_tpa_low_rate;
@@ -792,14 +786,9 @@ static const OSD_Entry cmsx_menuProfileOtherEntries[] = {
     { "D_MAX GAIN",  OME_UINT8,  NULL, &(OSD_UINT8_t) { &cmsx_d_max_gain,          0, 100, 1 } },
     { "D_MAX ADV",   OME_UINT8,  NULL, &(OSD_UINT8_t) { &cmsx_d_max_advance,       0, 200, 1 } },
 #endif
-
-#ifdef USE_BATTERY_VOLTAGE_SAG_COMPENSATION
-    { "VBAT_SAG_COMP", OME_UINT8,  NULL, &(OSD_UINT8_t) { &cmsx_vbat_sag_compensation, 0, 150, 1 } },
-#endif
-
     { "TPA RATE",      OME_FLOAT,  NULL, &(OSD_FLOAT_t) { &cmsx_tpa_rate, 0, 100, 1, 10} },
     { "TPA BRKPT",     OME_UINT16, NULL, &(OSD_UINT16_t){ &cmsx_tpa_breakpoint, 1000, 2000, 10} },
-    { "TPA LOW RATE",  OME_INT8,   NULL, &(OSD_INT8_t) { &cmsx_tpa_low_rate, TPA_LOW_RATE_MIN, TPA_MAX , 1} },
+    { "TPA LOW RATE",  OME_INT8,   NULL, &(OSD_INT8_t)  { &cmsx_tpa_low_rate, TPA_LOW_RATE_MIN, TPA_MAX , 1} },
     { "TPA LOW BRKPT", OME_UINT16, NULL, &(OSD_UINT16_t){ &cmsx_tpa_low_breakpoint, 1000, 2000, 10} },
     { "TPA LOW ALWYS", OME_Bool,   NULL, &cmsx_tpa_low_always },
 
