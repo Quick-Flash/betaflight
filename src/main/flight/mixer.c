@@ -262,6 +262,12 @@ static void calculateThrottleAndCurrentMotorEndpoints(timeUs_t currentTimeUs)
         motorOutputMin = motorRangeMin;
         motorOutputRange = motorRangeMax - motorRangeMin;
         motorOutputMixSign = 1;
+
+        DEBUG_SET(DEBUG_SOFT_ARM, 0, lrintf(100 - soft_arm_percent_inv * 100));
+        DEBUG_SET(DEBUG_SOFT_ARM, 1, lrintf(soft_arm_percent_inv * 100));
+        DEBUG_SET(DEBUG_SOFT_ARM, 2, lrintf(motor_output_low * 100));
+        DEBUG_SET(DEBUG_SOFT_ARM, 3, lrintf(motorRangeMin * 100));
+        DEBUG_SET(DEBUG_SOFT_ARM, 4, lrintf(rcThrottle * 100));
     }
 }
 

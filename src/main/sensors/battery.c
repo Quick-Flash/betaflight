@@ -125,7 +125,7 @@ PG_RESET_TEMPLATE(batteryConfig_t, batteryConfig,
     .consumptionWarningPercentage = 10,
     .vbathysteresis = 1, // 0.01V
 
-    .vbatfullcellvoltage = 410,
+    .vbatfullcellvoltage = 420,
 
     .vbatDisplayLpfPeriod = 30,
     .vbatSagLpfPeriod = 2,
