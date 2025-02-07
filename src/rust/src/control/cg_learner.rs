@@ -14,7 +14,7 @@ pub struct CGLearner {
 impl CGLearner {
     pub fn new(starting_x: f32, starting_y: f32, learning_time: f32, dt: f32) -> Self {
         let mut k = 0.0;
-        if learning_time == 0.0 {
+        if learning_time != 0.0 {
             k = Pt1Filter::time_constant_k(learning_time, dt);
         }
 
