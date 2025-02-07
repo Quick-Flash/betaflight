@@ -20,14 +20,18 @@ https://youtu.be/8qr64LfN-po
 - Detection of collisions reducing the "freakout" the happens. Requires ACC to be enabled to work.
 - If a full collision is detected at near 0 throttle, re-enable soft arming, makes landing simple.
 - Custom mixer setups are now done differently (more information to come)
-
+- Voltage compensation is always applied to the mixer (may make that optional later)
+- Voltage compensation uses the `vbat_full_cell_voltage` and `vbat_min_cell_voltage` as the range it compensates for.
+- Voltage compensation in the mixer can be configured to make throttle feel consistent over the flight `voltage_throttle_comp` (defaults to not have this behavior)
+- Voltage compensation should make the drone respond more consistently over the whole battery voltage range.
 
 ## Setting Changes
-| Setting Name      | BF Value | New Value | Description        |
-|-------------------|----------|-----------|--------------------|
-| min_check         | 1050     | 1000      | Min rc range value |
-| max_check         | 1900     | 2000      | Max rc range value |
-| anti_gravity_gain | 80       | 20        | Anti-gravity gain  |
+| Setting Name           | BF Value | New Value | Description                                                                           |
+|------------------------|----------|-----------|---------------------------------------------------------------------------------------|
+| min_check              | 1050     | 1000      | Min rc range value                                                                    |
+| max_check              | 1900     | 2000      | Max rc range value                                                                    |
+| anti_gravity_gain      | 80       | 20        | Anti-gravity gain                                                                     |
+| vbat_full_cell_voltage | 410      | 420       | Max voltage used for voltage mixer compensation, and for OSD warning of over voltage. |
 
 ## New Settings
 | Setting Name                | Default Value | Description                                                                                                                                                |
@@ -53,11 +57,12 @@ https://youtu.be/8qr64LfN-po
 | thrust_linear_cut           | 75            | Pt1 filter cutoff on the change that thrust linear makes, should help reduce low throttle thrust linear noise                                              |
 | motor_cut_low               | 350           | Pt1 filter cutoff on the motor values at low throttle, think of this as a smarter throttle moving filter                                                   |
 | motor_cut_high              | 750           | Pt1 filter cutoff on the motor values at high throttle, think of this as a smarter throttle moving filter                                                  |
-| collision_jerk_start        | 350           | Amount of jerk (change in acceleration read from accelerometer) is needed to start detecting collisions                                                    |
-| collision_jerk_end          | 550           | Amount of jerk (change in acceleration read from accelerometer) is needed to fully detect collisions                                                       |
+| collision_jerk_start        | 550           | Amount of jerk (change in acceleration read from accelerometer) is needed to start detecting collisions                                                    |
+| collision_jerk_end          | 750           | Amount of jerk (change in acceleration read from accelerometer) is needed to fully detect collisions                                                       |
 | two_tap_arming              | 1             | If set to 1 flipping the arm switch twice in one second is required to arm, 0 disables this                                                                |
 | soft_arm_throttle_threshold | 25            | Soft arming is enabled until above this throttle. As you raise throttle to this point you gain more authority. After this throttle soft arming is disabled |
 | motor_soft_idle             | 300           | This is the motor idle value while in soft arming. Typically set to as low as the motor will reliable start to spin                                        |
+| voltage_throttle_comp       | 0             | When set to 1 or on this setting will try to keep the throttle feeling the same as the battery voltage is drained.                                         |
 
 ## Blackbox Changes
 ### `DEBUG_DUAL_GYRO` Gyro fusion debug
@@ -81,9 +86,26 @@ https://youtu.be/8qr64LfN-po
 - Debug 1: allowed mixer range for roll, pitch and yaw, multiplied by 1000.
   - A value of 1000 is full roll, pitch and yaw control.
   - A value of 0 is no roll, pitch and yaw control, only throttle control.
+### `SOFT_ARM` Soft arming debug
+- Debug 0: percentage of soft arming you are in.
+- Debug 1: allowed mixer range for roll, pitch and yaw, multiplied by 100 due to soft arming.
+  - A value of 1000 is full roll, pitch and yaw control.
+  - A value of 0 is no roll, pitch and yaw control, only throttle control.
+- Debug 2: motor output low * 100.
+- Debug 3: motor range min (motor output low after dynamic idle).
+- Debug 4: throttle * 100 (0 is 0 throttle and 100 is full throttle).
 
 # Changelog
-### 1/26/2024
+### 2/7/2025
+- Add voltage compensation to the mixer.
+- Voltage compensation is always applied to the mixer (may make that optional later)
+- Voltage compensation uses the `vbat_full_cell_voltage` and `vbat_min_cell_voltage` as the range it compensates for.
+- Voltage compensation in the mixer can be configured to make throttle feel consistent over the flight `voltage_throttle_comp` (defaults to not have this behavior)
+- Voltage compensation should make the drone respond more consistently over the whole battery voltage range.
+- CG compensation should be fixed!
+- New `SOFT_ARM` debug mode.
+
+### 1/26/2025
 - Refactor entire mixer and replace with my own mixer.
 - Mixer currently only supports 4 motor outputs.
 - Mixer refactoring better support soft arming.
