@@ -1,12 +1,12 @@
 use core::cmp;
 use core::f32::consts::PI;
-use microfft::real::rfft_64;
+use microfft::real::rfft_128;
 use crate::math::circular_buffer::CircularBuffer;
 use crate::math::trig::Trig;
 use crate::filter::biquad::SecondOrderHighpassFilter;
 
 /// NUM_SAMPLES must match the size you have set up with microfft
-pub const NUM_SAMPLES: usize = 64;
+pub const NUM_SAMPLES: usize = 128;
 pub const NUM_BINS: usize = NUM_SAMPLES / 2;
 pub const AXIS_COUNT: usize = 3;
 
@@ -90,7 +90,7 @@ impl Sdft {
 
         let mut hanned_samples = unsafe { self.samples.get_unchecked(axis).multiply_by_array(&self.hanning) };
 
-        let fft = rfft_64(&mut hanned_samples);
+        let fft = rfft_128(&mut hanned_samples);
         let mut amplitude = [0.0; NUM_BINS];
         for i in 0..NUM_BINS {
             amplitude[i] = fft[i].norm_sqr(); // TODO see if we do need to take the square root of this, I'm guessing no :)

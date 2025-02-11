@@ -24,7 +24,7 @@ approx = { version = "0.5.1", optional = true }
 [dependencies.microfft]
 version = "0.6.0"
 default-features = false
-features = ["size-64", "bitrev-tables"]
+features = ["size-128", "bitrev-tables"]
 
 # makes num complex no_std
 [dependencies.num-complex]

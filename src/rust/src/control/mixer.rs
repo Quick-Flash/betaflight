@@ -39,7 +39,7 @@ impl Mixer {
         cg_learning_time: f32,
         min_voltage: f32,
         max_voltage: f32,
-        voltage_linearize: bool,
+        voltage_throttle_linearize: bool,
         dt: f32
     ) -> Self {
         let unit_range = Range {start: 0.0, end: 1.0};
@@ -70,7 +70,7 @@ impl Mixer {
             min_voltage,
             voltage_scale: voltage_range / max_voltage,
             voltage_range_recip: 1.0 / voltage_range,
-            voltage_throttle_compensation: voltage_linearize,
+            voltage_throttle_compensation: voltage_throttle_linearize,
             motor_gains,
             throttle_linearization_filter: linearization_pt1,
             linearization_filter: [linearization_pt1; NUM_MOTORS],
@@ -717,7 +717,7 @@ mod mixer_tests {
     #[test]
     fn roll_test() {
         // given
-        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, DT);
+        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.5, 4.2, false, DT);
         let roll_control = RateControls {
             pidsum_roll: 0.5,
             pidsum_pitch: 0.0,
@@ -727,7 +727,7 @@ mod mixer_tests {
         let expected_motors = [0.0, 0.0, 1.0, 1.0];
 
         // then
-        let (motors, thrust) = mixer.mix_motors(&roll_control, 0.0, 1.0);
+        let (motors, thrust) = mixer.mix_motors(&roll_control, 0.0, 1.0, 3.5);
 
 
         // then
@@ -737,7 +737,7 @@ mod mixer_tests {
     #[test]
     fn pitch_test() {
         // given
-        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, DT);
+        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.5, 4.2, false, DT);
         let pitch_control = RateControls {
             pidsum_roll: 0.0,
             pidsum_pitch: 0.5,
@@ -747,7 +747,7 @@ mod mixer_tests {
         let expected_motors = [1.0, 0.0, 1.0, 0.0];
 
         // then
-        let (motors, thrust) = mixer.mix_motors(&pitch_control, 0.0, 1.0);
+        let (motors, thrust) = mixer.mix_motors(&pitch_control, 0.0, 1.0, 3.5);
 
 
         // then
@@ -757,7 +757,7 @@ mod mixer_tests {
     #[test]
     fn yaw_test() {
         // given
-        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, DT);
+        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.5, 4.2, false, DT);
         let yaw_control = RateControls {
             pidsum_roll: 0.0,
             pidsum_pitch: 0.0,
@@ -767,7 +767,7 @@ mod mixer_tests {
         let expected_motors = [0.0, 1.0, 1.0, 0.0];
 
         // then
-        let (motors, thrust) = mixer.mix_motors(&yaw_control, 0.0, 1.0);
+        let (motors, thrust) = mixer.mix_motors(&yaw_control, 0.0, 1.0, 3.5);
 
 
         // then
@@ -777,7 +777,7 @@ mod mixer_tests {
     #[test]
     fn rpy_test() {
         // given
-        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, DT);
+        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.5, 4.2, false, DT);
         let yaw_control = RateControls {
             pidsum_roll: 1.0,
             pidsum_pitch: 1.0,
@@ -787,7 +787,7 @@ mod mixer_tests {
         let expected_motors = [0.0, 0.0, 1.0, 0.0];
 
         // then
-        let (motors, thrust) = mixer.mix_motors(&yaw_control, 0.0, 1.0);
+        let (motors, thrust) = mixer.mix_motors(&yaw_control, 0.0, 1.0, 3.5);
 
 
         // then
@@ -797,7 +797,7 @@ mod mixer_tests {
     #[test]
     fn rpy_mixed_test() {
         // given
-        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, DT);
+        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.5, 4.2, false, DT);
         let yaw_control = RateControls {
             pidsum_roll: -0.05,
             pidsum_pitch: 0.05,
@@ -807,7 +807,7 @@ mod mixer_tests {
         let expected_motors = [0.65, 0.45, 0.45, 0.45];
 
         // then
-        let (motors, thrust) = mixer.mix_motors(&yaw_control, 0.5, 1.0);
+        let (motors, thrust) = mixer.mix_motors(&yaw_control, 0.5, 1.0, 3.5);
 
 
         // then
@@ -817,7 +817,7 @@ mod mixer_tests {
     #[test]
     fn rpy_mixed_thrust_linear_test() {
         // given
-        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.6, 0.3, 0.0, 0.0, 0.0, 0.0, DT);
+        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.6, 0.3, 0.0, 0.0, 0.0, 0.0, 3.5, 4.2, false, DT);
         let yaw_control = RateControls {
             pidsum_roll: -0.05,
             pidsum_pitch: 0.05,
@@ -827,7 +827,7 @@ mod mixer_tests {
         let expected_motors = [0.63874197, 0.4614461, 0.4614461, 0.4614461];
 
         // then
-        let (motors, thrust) = mixer.mix_motors(&yaw_control, 0.5, 1.0);
+        let (motors, thrust) = mixer.mix_motors(&yaw_control, 0.5, 1.0, 3.5);
 
 
         // then
@@ -837,7 +837,7 @@ mod mixer_tests {
     #[test]
     fn rpy_mixed_thrust_linear_filtered_test() {
         // given
-        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.6, 0.3, 25.0, 500.0, 1000.0, 0.0, DT);
+        let mut mixer = Mixer::new(X_QUAD_GAINS, 0.6, 0.3, 25.0, 500.0, 1000.0, 0.0, 3.5, 4.2, false, DT);
         let yaw_control = RateControls {
             pidsum_roll: -0.05,
             pidsum_pitch: 0.05,
@@ -847,7 +847,7 @@ mod mixer_tests {
         let expected_motors = [0.29524347, 0.18620808, 0.18620808, 0.18620808];
 
         // then
-        let (motors, thrust) = mixer.mix_motors(&yaw_control, 0.5, 1.0);
+        let (motors, thrust) = mixer.mix_motors(&yaw_control, 0.5, 1.0, 3.5);
 
 
         // then

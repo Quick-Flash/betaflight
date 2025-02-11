@@ -62,7 +62,7 @@ impl AutoNotch {
             }
         }
 
-        return filtered_gyro
+        filtered_gyro
     }
 
     fn update_notches(&mut self, axis: usize, frequencies: [f32; NUM_PEAKS], magnitude: [f32; NUM_PEAKS], dt: f32) {
@@ -87,6 +87,7 @@ mod test {
     use alloc::vec::Vec;
     use std::println;
     use core::f32::consts::PI;
+    use std::any::Any;
     use approx::assert_abs_diff_eq;
     use crate::math::trig::Trig;
     use crate::filter::auto_notch::NUM_BINS;
@@ -102,6 +103,8 @@ mod test {
         let max_hz: u16 = 600;
 
         let mut auto_notch = AutoNotch::new(frequency, min_hz, max_hz, notch_width, notch_doubling_freq);
+
+        println!("min_bin {}, max_bin {}", auto_notch.peak_tracking.sdft.starting_bin, auto_notch.peak_tracking.sdft.ending_bin);
 
         // and
         let amplitude1: f32 = 3.0;
@@ -165,9 +168,9 @@ mod test {
         // see how accurate the filters have been after 0.15 seconds
         for result in results[3800..].iter() {
             // then
-            assert_abs_diff_eq!(result[0], signal_floor, epsilon = 0.13);
-            assert_abs_diff_eq!(result[1], signal_floor, epsilon = 0.13);
-            assert_abs_diff_eq!(result[2], signal_floor, epsilon = 0.13);
+            assert_abs_diff_eq!(result[0], signal_floor, epsilon = 0.06);
+            assert_abs_diff_eq!(result[1], signal_floor, epsilon = 0.06);
+            assert_abs_diff_eq!(result[2], signal_floor, epsilon = 0.06);
         }
     }
 }

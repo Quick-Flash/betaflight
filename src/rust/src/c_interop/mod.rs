@@ -1,8 +1,19 @@
+#[cfg(not(test))]
 extern "C" {
     // Import the external C function
     pub fn debug_set(mode: u8, index: usize, value: i16);
 
     pub fn debug_set_float(mode: u8, index: usize, value: f32);
+}
+
+#[cfg(test)]
+pub fn debug_set(_mode: u8, _index: usize, _value: i16) {
+    // No-op during tests
+}
+
+#[cfg(test)]
+pub fn debug_set_float(_mode: u8, _index: usize, _value: f32) {
+    // No-op during tests
 }
 
 #[repr(C)]

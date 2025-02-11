@@ -71,15 +71,15 @@ impl SdftPeakTracking {
             peak_magnitude[i] = peak.mag;
         }
 
-        return (peak_frequency, peak_magnitude)
+        (peak_frequency, peak_magnitude)
     }
 
     fn peak_estimate(y0: f32, y1: f32, y2: f32, max_bin: usize) -> f32 {
         let denominator: f32 = y0 + y1 + y2;
         if denominator != 0.0 {
-            return max_bin as f32 + (y2 - y0) / denominator;
+            max_bin as f32 + (y2 - y0) / denominator
         } else {
-            return max_bin as f32;
+            max_bin as f32
         }
     }
 
