@@ -295,12 +295,12 @@ impl Mixer {
             gains.throttle = throttle;
         }
 
-        set_debug_float(DEBUG_CG_COMPENSATION, 0, x_cg_offset * 100.0);
-        set_debug_float(DEBUG_CG_COMPENSATION, 1, y_cg_offset * 100.0);
-        set_debug_float(DEBUG_CG_COMPENSATION, 2, self.motor_gains.gains[0].throttle * 100.0);
-        set_debug_float(DEBUG_CG_COMPENSATION, 3, self.motor_gains.gains[1].throttle * 100.0);
-        set_debug_float(DEBUG_CG_COMPENSATION, 4, self.motor_gains.gains[2].throttle * 100.0);
-        set_debug_float(DEBUG_CG_COMPENSATION, 5, self.motor_gains.gains[3].throttle * 100.0);
+        set_debug_float(DEBUG_CG_COMPENSATION, 0, x_cg_offset * 1000.0);
+        set_debug_float(DEBUG_CG_COMPENSATION, 1, y_cg_offset * 1000.0);
+        set_debug_float(DEBUG_CG_COMPENSATION, 2, self.motor_gains.gains[0].throttle * 1000.0);
+        set_debug_float(DEBUG_CG_COMPENSATION, 3, self.motor_gains.gains[1].throttle * 1000.0);
+        set_debug_float(DEBUG_CG_COMPENSATION, 4, self.motor_gains.gains[2].throttle * 1000.0);
+        set_debug_float(DEBUG_CG_COMPENSATION, 5, self.motor_gains.gains[3].throttle * 1000.0);
 
         // if you have poor CG your thrust will begin to clip at the top
         // TODO optionally allow not letting it clip your rc throttle
@@ -371,7 +371,7 @@ impl Mixer {
     }
 }
 
-#[link_section = ".tcm_code"]
+// #[link_section = ".tcm_code"] // TODO reintroduce once we have more memory
 #[inline]
 #[no_mangle] pub extern "C" fn update_cg_compensation(mixer: *mut Mixer, steady_state_roll: f32, steady_state_pitch: f32, thrust: f32) -> f32 {
     unsafe {
@@ -732,6 +732,7 @@ mod mixer_tests {
 
         // then
         assert_eq!(motors, expected_motors);
+        assert_eq!(thrust, 0.5);
     }
 
     #[test]
@@ -752,6 +753,7 @@ mod mixer_tests {
 
         // then
         assert_eq!(motors, expected_motors);
+        assert_eq!(thrust, 0.5);
     }
 
     #[test]
@@ -772,6 +774,7 @@ mod mixer_tests {
 
         // then
         assert_eq!(motors, expected_motors);
+        assert_eq!(thrust, 0.5);
     }
 
     #[test]
@@ -792,6 +795,7 @@ mod mixer_tests {
 
         // then
         assert_eq!(motors, expected_motors);
+        assert_eq!(thrust, 0.25);
     }
 
     #[test]
@@ -812,6 +816,7 @@ mod mixer_tests {
 
         // then
         assert_eq!(motors, expected_motors);
+        assert_eq!(thrust, 0.5);
     }
 
     #[test]
@@ -832,6 +837,7 @@ mod mixer_tests {
 
         // then
         assert_eq!(motors, expected_motors);
+        assert_eq!(thrust, 0.3875);
     }
 
     #[test]
@@ -852,6 +858,7 @@ mod mixer_tests {
 
         // then
         assert_eq!(motors, expected_motors);
+        assert_eq!(thrust, 0.49781233);
     }
 
     #[test]

@@ -75,12 +75,12 @@ https://youtu.be/8qr64LfN-po
 - Debug 6: second gyro pitch  
 - Debug 7: second gyro pitch noise
 ### `CG_COMPENSATION` CG compensation debug
-- Debug 0: estimated relative x CG
-- Debug 1: estimated relative y CG
-- Debug 2: motor 0 thrust gain (CG Compensation changes this)
-- Debug 3: motor 1 thrust gain (CG Compensation changes this)
-- Debug 4: motor 2 thrust gain (CG Compensation changes this)
-- Debug 5: motor 3 thrust gain (CG Compensation changes this)
+- Debug 0: estimated relative x CG * 1000
+- Debug 1: estimated relative y CG * 1000
+- Debug 2: motor 0 thrust gain * 1000 (CG Compensation changes this)
+- Debug 3: motor 1 thrust gain * 1000 (CG Compensation changes this)
+- Debug 4: motor 2 thrust gain * 1000 (CG Compensation changes this)
+- Debug 5: motor 3 thrust gain * 1000 (CG Compensation changes this)
 ### `COLLISION_DETECTION` Collision detection debug
 - Debug 0: measured jerk, or derivative/change of the accelerometer
 - Debug 1: allowed mixer range for roll, pitch and yaw, multiplied by 1000.
@@ -88,12 +88,15 @@ https://youtu.be/8qr64LfN-po
   - A value of 0 is no roll, pitch and yaw control, only throttle control.
 ### `SOFT_ARM` Soft arming debug
 - Debug 0: percentage of soft arming you are in.
-- Debug 1: allowed mixer range for roll, pitch and yaw, multiplied by 100 due to soft arming.
+- Debug 1: allowed mixer range for roll, pitch and yaw, multiplied by 1000 due to soft arming.
   - A value of 1000 is full roll, pitch and yaw control.
   - A value of 0 is no roll, pitch and yaw control, only throttle control.
-- Debug 2: motor output low * 100.
-- Debug 3: motor range min (motor output low after dynamic idle).
-- Debug 4: throttle * 100 (0 is 0 throttle and 100 is full throttle).
+- Debug 2: motor range min (motor output low after dynamic idle).
+- Debug 3: throttle * 1000 (0 is 0 throttle and 100 is full throttle).
+- Debug 4: motor 0 * 1000
+- Debug 5: motor 1 * 1000
+- Debug 6: motor 2 * 1000
+- Debug 7: motor 3 * 1000
 
 # Changelog
 ### 2/7/2025

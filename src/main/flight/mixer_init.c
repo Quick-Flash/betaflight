@@ -549,7 +549,7 @@ bool isFixedWing(void)
 
 float getMotorOutputLow(void)
 {
-    return mixerRuntime.motorOutputLow;
+    return mixerRuntime.motorOutputSoftLow;
 }
 
 float getMotorOutputHigh(void)

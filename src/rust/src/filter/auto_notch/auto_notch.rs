@@ -87,7 +87,6 @@ mod test {
     use alloc::vec::Vec;
     use std::println;
     use core::f32::consts::PI;
-    use std::any::Any;
     use approx::assert_abs_diff_eq;
     use crate::math::trig::Trig;
     use crate::filter::auto_notch::NUM_BINS;
