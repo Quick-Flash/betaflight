@@ -99,6 +99,10 @@ https://youtu.be/8qr64LfN-po
 - Debug 7: motor 3 * 1000
 
 # Changelog
+### 2/15/2025
+- Update CG Compensation to use rotation rate as well.
+- High rotation rates will lead to no learning occurring.
+
 ### 2/7/2025
 - Add voltage compensation to the mixer.
 - Voltage compensation is always applied to the mixer (may make that optional later)

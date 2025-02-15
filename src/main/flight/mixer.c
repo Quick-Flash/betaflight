@@ -439,7 +439,12 @@ static void applyMixToMotors(RateControls rate_controls, float throttle_final)
     float motor_values [4];
     float collision_motor_delta = getCollisionMotorDelta();
     float mixer_thrust = mix_motors(&mixerRuntime.motor_mixer, &motor_values, &rate_controls, throttle_final, getSoftArmPercentInv() * collision_motor_delta, getBatterySagCellVoltage());
-    float cg_learning_k = update_cg_compensation(&mixerRuntime.motor_mixer, pidData[FD_ROLL].I / PID_MIXER_SCALING, pidData[FD_PITCH].I / PID_MIXER_SCALING, mixer_thrust);
+
+    // use setpoint and gyro rotation mag to better learn cg
+    float setpoint_rot_mag = sqrtf(getSetpointRate(FD_ROLL) * getSetpointRate(FD_ROLL) + getSetpointRate(FD_PITCH) * getSetpointRate(FD_PITCH) + getSetpointRate(FD_YAW) * getSetpointRate(FD_YAW));
+    float gyro_rot_mag = sqrtf(gyro.gyroADCf[FD_ROLL] * gyro.gyroADCf[FD_ROLL] + gyro.gyroADCf[FD_PITCH] * gyro.gyroADCf[FD_PITCH] + gyro.gyroADCf[FD_YAW] * gyro.gyroADCf[FD_YAW]);
+    float rotation_mag = MAX(setpoint_rot_mag, gyro_rot_mag);
+    float cg_learning_k = update_cg_compensation(&mixerRuntime.motor_mixer, pidData[FD_ROLL].I / PID_MIXER_SCALING, pidData[FD_PITCH].I / PID_MIXER_SCALING, mixer_thrust, rotation_mag);
 
     // remove iterm as we learn it in cg compensation this will desaturate iterm
     pidData[FD_ROLL].I -= pidData[FD_ROLL].I * cg_learning_k;

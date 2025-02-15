@@ -284,8 +284,8 @@ impl Mixer {
     }
 
     // only works under the assumption that all motors produce the same thrust total
-    pub fn update_cg_compensation(&mut self, steady_state_roll: f32, steady_state_pitch: f32, thrust: f32) -> f32 {
-        let learning_k = self.cg_learner.learn_cg_offset(steady_state_roll, steady_state_pitch, thrust);
+    pub fn update_cg_compensation(&mut self, steady_state_roll: f32, steady_state_pitch: f32, thrust: f32, rotation_mag: f32) -> f32 {
+        let learning_k = self.cg_learner.learn_cg_offset(steady_state_roll, steady_state_pitch, thrust, rotation_mag);
         let x_cg_offset = self.cg_learner.x.state;
         let y_cg_offset = self.cg_learner.y.state;
 
@@ -373,9 +373,9 @@ impl Mixer {
 
 // #[link_section = ".tcm_code"] // TODO reintroduce once we have more memory
 #[inline]
-#[no_mangle] pub extern "C" fn update_cg_compensation(mixer: *mut Mixer, steady_state_roll: f32, steady_state_pitch: f32, thrust: f32) -> f32 {
+#[no_mangle] pub extern "C" fn update_cg_compensation(mixer: *mut Mixer, steady_state_roll: f32, steady_state_pitch: f32, thrust: f32, rotation_mag: f32) -> f32 {
     unsafe {
-        (*mixer).update_cg_compensation(steady_state_roll, steady_state_pitch, thrust)
+        (*mixer).update_cg_compensation(steady_state_roll, steady_state_pitch, thrust, rotation_mag)
     }
 }
 
