@@ -1,6 +1,6 @@
 # Provizora
-The word Provizora comes from the Esperanto word for temporary.
-The name was picked because this project is meant to be temporary until a fully Rust project can take hold.
+The word Provizora comes from the Esperanto word for temporary/provisionary.
+The name was picked because this project is meant to be provisional as we trasition to a fully Rust project.
 This will lay the groundwork for the Rust project and will help launch its success.
 But why an Esperanto word? 
 Esperanto was created to be easy to use, easy to learn language made for the purpose of bringing others together through easy to understand communication.
