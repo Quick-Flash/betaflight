@@ -51,6 +51,14 @@ impl Biquad {
             y2: 0.0,
         }
     }
+
+    pub fn copy_gains(&mut self, gains: &Biquad) {
+        self.a1 = gains.a1;
+        self.a2 = gains.a2;
+        self.b0 = gains.b0;
+        self.b1 = gains.b1;
+        self.b2 = gains.b2;
+    }
 }
 
 struct BiquadHelper {
@@ -113,6 +121,10 @@ impl NotchFilter {
 
     pub fn reset(&mut self) {
         self.biquad.reset();
+    }
+
+    pub fn copy_gains(&mut self, gains: &NotchFilter) {
+        self.biquad.copy_gains(&gains.biquad);
     }
 
     pub fn q_from_center_and_end_freq(center_freq: f32, end_freq: f32) -> f32 {

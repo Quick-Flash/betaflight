@@ -263,9 +263,9 @@ static void calculateThrottleAndCurrentMotorEndpoints(timeUs_t currentTimeUs)
         motorOutputRange = motorRangeMax - motorRangeMin;
         motorOutputMixSign = 1;
 
-        DEBUG_SET(DEBUG_SOFT_ARM, 0, lrintf(100 - soft_arm_percent_inv * 1000));
+        DEBUG_SET(DEBUG_SOFT_ARM, 0, lrintf(100 - soft_arm_percent_inv * 100));
         DEBUG_SET(DEBUG_SOFT_ARM, 1, lrintf(soft_arm_percent_inv * 1000));
-        DEBUG_SET(DEBUG_SOFT_ARM, 2, lrintf(motorRangeMin * 1000));
+        DEBUG_SET(DEBUG_SOFT_ARM, 2, lrintf(motorRangeMin));
         DEBUG_SET(DEBUG_SOFT_ARM, 3, lrintf(rcThrottle * 1000));
     }
 }
@@ -463,7 +463,7 @@ static void applyMixToMotors(RateControls rate_controls, float throttle_final)
         }
 
         motorOutput = motorOutputMin + motorOutputRange * motorOutput;
-        DEBUG_SET(DEBUG_SOFT_ARM, 4 + i, lrintf(motorOutput * 1000));
+        DEBUG_SET(DEBUG_SOFT_ARM, 4 + i, lrintf(motorOutput));
 
 #ifdef USE_SERVOS
         if (mixerIsTricopter()) {

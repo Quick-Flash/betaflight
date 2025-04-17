@@ -371,7 +371,7 @@ impl Mixer {
     }
 }
 
-// #[link_section = ".tcm_code"] // TODO reintroduce once we have more memory
+#[link_section = ".tcm_code"] // TODO reintroduce once we have more memory, Needed for G4 to work...
 #[inline]
 #[no_mangle] pub extern "C" fn update_cg_compensation(mixer: *mut Mixer, steady_state_roll: f32, steady_state_pitch: f32, thrust: f32, rotation_mag: f32) -> f32 {
     unsafe {
