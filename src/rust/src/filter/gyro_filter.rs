@@ -171,9 +171,9 @@ pub union LowpassFilter {
     pub pt2: Pt2Filter,
     pub pt3: Pt3Filter,
     pub first_order: FirstOrderLowpassFilter,
-    pub second_order: SecondOrderLowpassFilter,
-    pub sliding_order: SlidingOrderLowpassFilter,
-    pub pt_second_order: PtSecondOrderLowpassFilter,
+    pub second_order: Biquad,
+    pub sliding_order: Biquad,
+    pub pt_second_order: Biquad,
 }
 
 #[derive(Copy, Clone)]
@@ -188,9 +188,9 @@ impl LowpassFilter {
             LowpassVariant::Pt2 => LowpassFilter { pt2: Pt2Filter::new(cutoff, dt) },
             LowpassVariant::Pt3 => LowpassFilter { pt3: Pt3Filter::new(cutoff, dt) },
             LowpassVariant::FirstOrder => LowpassFilter { first_order: FirstOrderLowpassFilter::new(cutoff, dt) },
-            LowpassVariant::SecondOrder => LowpassFilter { second_order: SecondOrderLowpassFilter::new(q, cutoff, dt) },
-            LowpassVariant::SlidingOrder => LowpassFilter { sliding_order: SlidingOrderLowpassFilter::new(q, cutoff, shift, dt) },
-            LowpassVariant::PtSecondOrder => LowpassFilter { pt_second_order: PtSecondOrderLowpassFilter::new(q, cutoff, shift, dt) },
+            LowpassVariant::SecondOrder => LowpassFilter { second_order: Biquad::new_second_order_lowpass(q, cutoff, dt) },
+            LowpassVariant::SlidingOrder => LowpassFilter { sliding_order: Biquad::new_sliding_order(q, cutoff, shift, dt) },
+            LowpassVariant::PtSecondOrder => LowpassFilter { pt_second_order: Biquad::new_pt1_second_order(q, cutoff, shift, dt) },
         }
     }
 

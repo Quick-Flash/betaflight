@@ -3,7 +3,7 @@ use core::f32::consts::PI;
 use microfft::real::rfft_128;
 use crate::math::circular_buffer::CircularBuffer;
 use crate::math::trig::Trig;
-use crate::filter::biquad::SecondOrderHighpassFilter;
+use crate::filter::biquad::Biquad;
 
 /// NUM_SAMPLES must match the size you have set up with microfft
 pub const NUM_SAMPLES: usize = 128;
@@ -21,7 +21,7 @@ pub struct Sdft {
     // mutable members
     samples: [CircularBuffer<NUM_SAMPLES>; AXIS_COUNT],
     loop_counter: usize,         // downsample counter
-    highpass_filter: [SecondOrderHighpassFilter; AXIS_COUNT],
+    highpass_filter: [Biquad; AXIS_COUNT],
 }
 
 /// max_hz must be lower than looprate / 2
@@ -55,7 +55,7 @@ impl Sdft {
             bin_width,
             samples: [CircularBuffer::<NUM_SAMPLES>::new(NUM_SAMPLES); AXIS_COUNT],
             loop_counter: 0,
-            highpass_filter: [SecondOrderHighpassFilter::new(0.7, 20.0, 1.0 / looprate); AXIS_COUNT],
+            highpass_filter: [Biquad::new_second_order_highpass(0.7, 20.0, 1.0 / looprate); AXIS_COUNT],
         }
     }
 

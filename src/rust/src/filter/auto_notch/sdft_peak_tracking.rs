@@ -62,16 +62,14 @@ impl SdftPeakTracking {
         self.step = 0;
     }
 
-    fn peak_frequency_array(&self, axis: usize) -> ([f32; NUM_PEAKS], [f32; NUM_PEAKS]) {
+    fn peak_frequency_array(&self, axis: usize) -> [f32; NUM_PEAKS] {
         let mut peak_frequency = [0.0; NUM_PEAKS];
-        let mut peak_magnitude = [0.0; NUM_PEAKS];
 
         for (i, peak) in self.peaks[axis].iter().enumerate() {
             peak_frequency[i] = peak.frequency;
-            peak_magnitude[i] = peak.mag;
         }
 
-        (peak_frequency, peak_magnitude)
+        peak_frequency
     }
 
     fn peak_estimate(y0: f32, y1: f32, y2: f32, max_bin: usize) -> f32 {
@@ -225,7 +223,7 @@ impl SdftPeakTracking {
         }
     }
 
-    pub fn update(&mut self, input: [f32; AXIS_COUNT]) -> Option<(([f32; NUM_PEAKS], [f32; NUM_PEAKS]), usize)> {
+    pub fn update(&mut self, input: [f32; AXIS_COUNT]) -> Option<([f32; NUM_PEAKS], usize)> {
         self.sdft.update_bins(input);
 
         let mut notch_cutoff = None;

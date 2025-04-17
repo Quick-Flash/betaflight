@@ -185,7 +185,7 @@ mod mixer_tests {
         let mut initial_steady_roll = 0.1;
         let mut initial_steady_pitch = 0.1;
         let learning_k = cg_learner.learn_cg_offset(initial_steady_roll, initial_steady_pitch, 0.5, 100.0);
-        for i in 0..LOOPRATE as usize * 2 {
+        for _ in 0..LOOPRATE as usize * 2 {
             initial_steady_roll -= initial_steady_roll * learning_k;
             initial_steady_pitch -= initial_steady_pitch * learning_k;
             cg_learner.learn_cg_offset(initial_steady_roll, initial_steady_pitch, 0.5, 100.0);

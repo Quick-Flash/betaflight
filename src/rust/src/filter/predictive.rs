@@ -1,40 +1,94 @@
-use crate::filter::biquad::{NotchFilter, SecondOrderLowpassFilter};
+use crate::filter::biquad::{Biquad, Vec3Biquad};
 
 // TODO make this use a notch and second order lowpass that uses a 3d array biquad (just the state is an array, this will reduce CPU load).
 
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct PredictiveNotchFilter {
-    notch: NotchFilter,
-    second_order_lowpass: SecondOrderLowpassFilter,
-    predictive_weight: f32,
-    weight: f32
+    notch: Biquad,
+    second_order_lowpass: Biquad,
+    predictive_strength: f32,
+    crossfade_amount: f32
 }
 
 impl PredictiveNotchFilter {
     pub fn new(notch_cutoff: f32, notch_q: f32, lowpass_cutoff: f32, lowpass_q: f32, predictive_weight: f32, weight: f32, dt: f32) -> Self {
         Self {
-            notch: NotchFilter::new(notch_q, notch_cutoff, dt),
-            second_order_lowpass: SecondOrderLowpassFilter::new(lowpass_q, lowpass_cutoff, dt),
-            predictive_weight,
-            weight,
+            notch: Biquad::new_notch(notch_q, notch_cutoff, dt),
+            second_order_lowpass: Biquad::new_second_order_lowpass(lowpass_q, lowpass_cutoff, dt),
+            predictive_strength: predictive_weight,
+            crossfade_amount: weight,
         }
     }
 
     pub fn apply(&mut self, input: f32) -> f32 {
         let notched = self.notch.apply(input);
-        let prediction = self.second_order_lowpass.apply(input - notched) * self.predictive_weight;
-        (notched + prediction) * self.weight
+        let prediction = self.second_order_lowpass.apply(input - notched) * self.predictive_strength;
+
+        // Crossfade between the raw input and the predicted+notched signal
+        input * (1.0 - self.crossfade_amount) + (notched + prediction) * self.crossfade_amount
     }
 
     pub fn update_cutoff(&mut self, q: f32, cutoff: f32, weight: f32, dt: f32) {
-        self.notch.update_cutoff(q, cutoff, dt);
-        self.weight = weight;
+        self.notch.update_notch(q, cutoff, dt);
+        self.crossfade_amount = weight;
     }
 
-    pub fn copy_gains(&mut self, gains: &PredictiveNotchFilter) {
-        self.notch.copy_gains(&gains.notch);
-        self.weight = gains.weight;
+    pub fn reset(&mut self) {
+        self.notch.reset();
+        self.second_order_lowpass.reset();
+    }
+}
+
+#[derive(Copy, Clone)]
+#[repr(C)]
+pub struct Vec3PredictiveNotchFilter {
+    notch: Vec3Biquad,
+    second_order_lowpass: Vec3Biquad,
+    predictive_strength: f32,
+    crossfade_amount: [f32; 3],
+}
+
+impl Vec3PredictiveNotchFilter {
+    pub fn new(
+        notch_cutoff: f32,
+        notch_q: f32,
+        lowpass_cutoff: f32,
+        lowpass_q: f32,
+        predictive_weight: f32,
+        crossfade_amount: f32,
+        dt: f32,
+    ) -> Self {
+        Self {
+            notch: Vec3Biquad::new_notch(notch_q, notch_cutoff, dt),
+            second_order_lowpass: Vec3Biquad::new_second_order_lowpass(lowpass_q, lowpass_cutoff, dt),
+            predictive_strength: predictive_weight,
+            crossfade_amount: [crossfade_amount; 3],
+        }
+    }
+
+    pub fn apply(&mut self, input: [f32; 3]) -> [f32; 3] {
+        let notched = self.notch.apply(input);
+        let mut output = [0.0; 3];
+
+        let residual = [
+            input[0] - notched[0],
+            input[1] - notched[1],
+            input[2] - notched[2],
+        ];
+        let predicted = self.second_order_lowpass.apply(residual);
+
+        for i in 0..3 {
+            output[i] = input[i] * (1.0 - self.crossfade_amount[i])
+                + (notched[i] + predicted[i] * self.predictive_strength) * self.crossfade_amount[i];
+        }
+
+        output
+    }
+
+    pub fn update_cutoff(&mut self, q: f32, cutoff: f32, weight: [f32; 3], dt: f32) {
+        self.notch.update_notch(q, cutoff, dt);
+        self.crossfade_amount = weight;
     }
 
     pub fn reset(&mut self) {

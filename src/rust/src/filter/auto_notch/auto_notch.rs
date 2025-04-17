@@ -1,18 +1,14 @@
-use crate::math::constrain::constrain;
 use crate::filter::auto_notch::{NUM_PEAKS, AXIS_COUNT, SdftPeakTracking};
-use crate::filter::biquad::{NotchFilter, PeakFilter};
+use crate::filter::biquad::Biquad;
 use crate::filter::ptn::Pt1Filter;
 
 pub struct AutoNotch {
     peak_tracking: SdftPeakTracking,
-    // TODO add Peak filters
+    // TODO look at crossfading the notch filter
     // TODO reduce peak filters filtering when they are doing very little
-    peak: [[PeakFilter; NUM_PEAKS]; AXIS_COUNT],
-    peak_width: f32,
-    peak_width_doubling_freq: f32,
-    mag_filter: [[Pt1Filter; NUM_PEAKS]; AXIS_COUNT],
-    full_filter_mag: f32,
-    no_filter_mag: f32,
+    notch: [[Biquad; NUM_PEAKS]; AXIS_COUNT],
+    notch_width: f32,
+    notch_width_doubling_freq: f32,
 }
 
 impl AutoNotch {
@@ -27,12 +23,9 @@ impl AutoNotch {
 
         Self {
             peak_tracking: SdftPeakTracking::new(frequency, min_hz, max_hz),
-            peak: [[PeakFilter::new(1.0, 1.0, 300.0, dt); NUM_PEAKS]; AXIS_COUNT],
-            peak_width: notch_width,
-            peak_width_doubling_freq: notch_width_doubling_freq,
-            mag_filter,
-            full_filter_mag: 2500.0,
-            no_filter_mag: 350.0,
+            notch: [[Biquad::new_notch(1.0, 300.0, dt); NUM_PEAKS]; AXIS_COUNT],
+            notch_width,
+            notch_width_doubling_freq,
         }
     }
 
@@ -40,8 +33,7 @@ impl AutoNotch {
         self.peak_tracking.reset();
         for peak in 0..NUM_PEAKS {
             for axis in 0..AXIS_COUNT {
-                self.peak[axis][peak].reset();
-                self.mag_filter[axis][peak].set(0.5);
+                self.notch[axis][peak].reset();
             }
         }
     }
@@ -50,31 +42,28 @@ impl AutoNotch {
         let notch_update = self.peak_tracking.update(input);
 
         if let Some(notch_values) = notch_update {
-            let ((frequencies, magnitude), axis) = notch_values;
-            self.update_notches(axis, frequencies, magnitude, dt);
+            let (frequencies, axis) = notch_values;
+            self.update_notches(axis, frequencies, dt);
         }
 
         let mut filtered_gyro = input;
 
         for axis in 0..AXIS_COUNT {
             for notch in 0..NUM_PEAKS {
-                filtered_gyro[axis] = self.peak[axis][notch].apply(filtered_gyro[axis]);
+                filtered_gyro[axis] = self.notch[axis][notch].apply(filtered_gyro[axis]);
             }
         }
 
         filtered_gyro
     }
 
-    fn update_notches(&mut self, axis: usize, frequencies: [f32; NUM_PEAKS], magnitude: [f32; NUM_PEAKS], dt: f32) {
-        for (notch_num, (cutoff, mag)) in frequencies.iter().zip(magnitude).enumerate() {
-            let notch_width_multiplier = cutoff / self.peak_width_doubling_freq;
-            let end_freq = cutoff + self.peak_width + self.peak_width * notch_width_multiplier;
+    fn update_notches(&mut self, axis: usize, frequencies: [f32; NUM_PEAKS], dt: f32) {
+        for (notch_num, cutoff) in frequencies.iter().enumerate() {
+            let notch_width_multiplier = cutoff / self.notch_width_doubling_freq;
+            let end_freq = cutoff + self.notch_width + self.notch_width * notch_width_multiplier;
 
-            let mut peak_mag = constrain((-mag + self.no_filter_mag) / (self.full_filter_mag - self.no_filter_mag) + 1.0, 0.0, 1.0);
-            peak_mag = self.mag_filter[axis][notch_num].apply(peak_mag);
-
-            let notch_q = NotchFilter::q_from_center_and_end_freq(*cutoff, end_freq);
-            self.peak[axis][notch_num].update_cutoff(peak_mag, notch_q, *cutoff, dt);
+            let notch_q = Biquad::notch_q_from_center_and_end_freq(*cutoff, end_freq);
+            self.notch[axis][notch_num].update_notch(notch_q, *cutoff, dt);
         }
     }
 }
