@@ -49,13 +49,6 @@
 
 #define GYRO_IMU_DOWNSAMPLE_CUTOFF_HZ 200
 
-//typedef union gyroLowpassFilter_u {
-//    Pt1Filter pt1FilterState;
-//    SecondOrderLowpassFilter biquadFilterState;
-//    Pt2Filter pt2FilterState;
-//    Pt3Filter pt3FilterState;
-//} gyroLowpassFilter_t;
-
 typedef enum gyroDetectionFlags_e {
     GYRO_NONE_MASK = 0,
     GYRO_1_MASK = BIT(0),

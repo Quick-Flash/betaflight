@@ -57,6 +57,7 @@ typedef struct rpmFilter_s {
 
     timeUs_t looptimeUs;
     biquadFilter_t notch[XYZ_AXIS_COUNT][MAX_SUPPORTED_MOTORS][RPM_FILTER_HARMONICS_MAX];
+    Biquad notch_vec[MAX_SUPPORTED_MOTORS][RPM_FILTER_HARMONICS_MAX];
 
 } rpmFilter_t;
 
@@ -96,11 +97,18 @@ void rpmFilterInit(const rpmFilterConfig_t *config, const timeUs_t looptimeUs)
         rpmFilter.weights[n] = constrainf(config->rpm_filter_weights[n] / 100.0f, 0.0f, 1.0f);
     }
 
-    for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
-        for (int motor = 0; motor < getMotorCount(); motor++) {
-            for (int i = 0; i < rpmFilter.numHarmonics; i++) {
-                biquadFilterInit(&rpmFilter.notch[axis][motor][i], rpmFilter.minHz * i, rpmFilter.looptimeUs, rpmFilter.q, FILTER_NOTCH, 0.0f);
-            }
+    for (int motor = 0; motor < getMotorCount(); motor++) {
+        for (int harmonic = 0; i < rpmFilter.numHarmonics; i++) {
+            predictive_notch_vec_filter_init(
+                &notch_vec[motor][harmonic], // *mut Vec3PredictiveNotchFilter
+                rpmFilter.minHz * harmonic,  // notch_cutoff
+                rpmFilter.q, // notch_q
+                10.0f, // predictive_q
+                0.6f, // predictive_q
+                rpmFilter.rpm_predictive_weight, // predictive_weight
+                0.0f, // crossfade_amount
+                rpmFilter.looptimeUs * 0.000001f // dt
+            );
         }
     }
 

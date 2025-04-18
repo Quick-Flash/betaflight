@@ -1,7 +1,5 @@
 use crate::filter::biquad::{Biquad, Vec3Biquad};
 
-// TODO make this use a notch and second order lowpass that uses a 3d array biquad (just the state is an array, this will reduce CPU load).
-
 #[derive(Copy, Clone)]
 #[repr(C)]
 pub struct PredictiveNotchFilter {
@@ -86,14 +84,57 @@ impl Vec3PredictiveNotchFilter {
         output
     }
 
-    pub fn update_cutoff(&mut self, q: f32, cutoff: f32, weight: [f32; 3], dt: f32) {
+    pub fn update_cutoff(&mut self, q: f32, cutoff: f32, crossfade: [f32; 3], dt: f32) {
         self.notch.update_notch(q, cutoff, dt);
-        self.crossfade_amount = weight;
+        self.crossfade_amount = crossfade;
     }
 
     pub fn reset(&mut self) {
         self.notch.reset();
         self.second_order_lowpass.reset();
+    }
+}
+
+#[no_mangle] pub extern "C" fn predictive_notch_vec_filter_init(
+    filter: *mut Vec3PredictiveNotchFilter,
+    notch_cutoff: f32,
+    notch_q: f32,
+    predictive_cutoff: f32,
+    predictive_q: f32,
+    predictive_weight: f32,
+    crossfade_amount: f32,
+    dt: f32
+)
+{
+    unsafe {
+        *filter = Vec3PredictiveNotchFilter::new(notch_cutoff, notch_q, predictive_cutoff, predictive_q, predictive_weight, crossfade_amount, dt);
+    }
+}
+
+#[link_section = ".tcm_code"]
+#[inline]
+#[no_mangle] pub extern "C" fn predictive_notch_vec_filter_update(
+    filter: &mut Vec3PredictiveNotchFilter,
+    notch_cutoff: f32,
+    notch_q: f32,
+    crossfade_amount: [f32; 3],
+    dt: f32
+)
+{
+    unsafe {
+        filter.update_cutoff(notch_cutoff, notch_q, crossfade_amount, dt);
+    }
+}
+
+#[link_section = ".tcm_code"]
+#[inline]
+#[no_mangle] pub extern "C" fn predictive_notch_vec_filter_apply(
+    filter: *mut Vec3PredictiveNotchFilter,
+    input: *mut [f32; 3],
+)
+{
+    unsafe {
+        *input = (*filter).apply(*input);
     }
 }
 

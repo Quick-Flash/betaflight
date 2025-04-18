@@ -1,5 +1,5 @@
-use crate::filter::ptn::*;
-use crate::filter::biquad::*;
+use crate::filter::ptn::{Pt1Filter, Pt2Filter, Pt3Filter};
+use crate::filter::biquad::{Biquad, FirstOrderLowpassFilter};
 
 #[repr(C)]
 pub struct GyroFilters {

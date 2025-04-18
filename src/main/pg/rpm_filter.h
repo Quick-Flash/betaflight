@@ -33,6 +33,7 @@ typedef struct rpmFilterConfig_s
     uint8_t  rpm_filter_min_hz;        // minimum frequency of the notches
     uint16_t rpm_filter_fade_range_hz; // range in which to gradually turn off notches down to minHz
     uint16_t rpm_filter_q;             // q of the notches
+    uint16_t rpm_predictive_weight;
 
     uint16_t rpm_filter_lpf_hz;        // the cutoff of the lpf on reported motor rpm
 
