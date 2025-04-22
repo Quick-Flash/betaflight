@@ -12,6 +12,7 @@ pub struct Pt1Filter {
 
 impl Pt1Filter {
     /// Only use if you will be updating filter cutoff on the fly and need reduced cpu load
+    #[inline(never)]
     pub fn new_approx(cutoff: f32, dt: f32) -> Self {
         let mut pt1 = Self { state: 0.0, k: 0.0 };
         pt1.update_approx(cutoff, dt);
@@ -25,6 +26,7 @@ impl Pt1Filter {
     }
 
     /// Use if you are setting the filter time constant
+    #[inline(never)]
     pub fn new_time_constant(time_seconds: f32, dt: f32) -> Self {
         Self {
             state: 0.0,
@@ -38,6 +40,7 @@ impl Pt1Filter {
     }
 
     /// cutoff can never be set higher than nyquist, aka looprate / 2.0
+    #[inline(never)]
     pub fn new(cutoff: f32, dt: f32) -> Self {
         Self {
             state: 0.0,
@@ -109,7 +112,6 @@ impl Pt1Filter {
 }
 
 #[link_section = ".tcm_code"]
-#[inline]
 #[no_mangle] pub extern "C" fn pt1FilterUpdateCutoff(filter: *mut Pt1Filter, k: f32) {
     unsafe {
         (*filter).k = k;
@@ -117,7 +119,6 @@ impl Pt1Filter {
 }
 
 #[link_section = ".tcm_code"]
-#[inline]
 #[no_mangle] pub extern "C" fn pt1FilterApply(filter: *mut Pt1Filter, input: f32) -> f32 {
     unsafe {
         (*filter).apply(input)
@@ -216,7 +217,6 @@ impl Pt2Filter {
 }
 
 #[link_section = ".tcm_code"]
-#[inline]
 #[no_mangle] pub extern "C" fn pt2FilterUpdateCutoff(filter: *mut Pt2Filter, k: f32)
 {
     unsafe {
@@ -225,7 +225,6 @@ impl Pt2Filter {
 }
 
 #[link_section = ".tcm_code"]
-#[inline]
 #[no_mangle] pub extern "C" fn pt2FilterApply(filter: *mut Pt2Filter, input: f32) -> f32
 {
     unsafe {
@@ -333,7 +332,6 @@ impl Pt3Filter {
 }
 
 #[link_section = ".tcm_code"]
-#[inline]
 #[no_mangle] pub extern "C" fn pt3FilterUpdateCutoff(filter: *mut Pt3Filter, k: f32)
 {
     unsafe {
@@ -342,7 +340,6 @@ impl Pt3Filter {
 }
 
 #[link_section = ".tcm_code"]
-#[inline]
 #[no_mangle] pub extern "C" fn pt3FilterApply(filter: *mut Pt3Filter, input: f32) -> f32
 {
     unsafe {

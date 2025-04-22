@@ -46,13 +46,11 @@ pub extern "C" fn soft_arm_init(soft_arm: *mut SoftArm) {
     }
 }
 
-#[inline]
 #[no_mangle]
 pub extern "C" fn in_soft_arm(soft_arm: SoftArm) -> bool {
     soft_arm.in_soft_arm()
 }
 
-#[inline]
 #[no_mangle]
 pub extern "C" fn soft_arm_percent(soft_arm: SoftArm) -> f32 {
     soft_arm.soft_arm_percent()
@@ -66,7 +64,6 @@ pub extern "C" fn soft_arm_reset(soft_arm: *mut SoftArm) {
 }
 
 #[link_section = ".tcm_code"]
-#[inline]
 #[no_mangle] pub extern "C" fn soft_arm_attenuate(
     soft_arm: *mut SoftArm,
     throttle_threshold: f32,

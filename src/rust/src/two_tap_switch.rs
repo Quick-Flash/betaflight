@@ -78,7 +78,6 @@ pub extern "C" fn two_tap_init(two_tap: *mut TwoTapSwitch) {
     }
 }
 
-#[inline]
 #[no_mangle]
 pub extern "C" fn two_tap_apply(
     two_tap: *mut TwoTapSwitch,

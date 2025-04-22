@@ -51,7 +51,6 @@ impl NonLinearMedian {
 }
 
 #[link_section = ".tcm_code"]
-#[inline]
 #[no_mangle] pub extern "C" fn nonlinear_median_apply(filter: *mut NonLinearMedian, input: f32) -> f32 {
     unsafe {
         (*filter).apply(input)

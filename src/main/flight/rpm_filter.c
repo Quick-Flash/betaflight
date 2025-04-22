@@ -56,8 +56,7 @@ typedef struct rpmFilter_s {
     float q;
 
     timeUs_t looptimeUs;
-    biquadFilter_t notch[XYZ_AXIS_COUNT][MAX_SUPPORTED_MOTORS][RPM_FILTER_HARMONICS_MAX];
-    Biquad notch_vec[MAX_SUPPORTED_MOTORS][RPM_FILTER_HARMONICS_MAX];
+    Vec3PredictiveNotchFilter notch[MAX_SUPPORTED_MOTORS][RPM_FILTER_HARMONICS_MAX];
 
 } rpmFilter_t;
 
@@ -98,14 +97,14 @@ void rpmFilterInit(const rpmFilterConfig_t *config, const timeUs_t looptimeUs)
     }
 
     for (int motor = 0; motor < getMotorCount(); motor++) {
-        for (int harmonic = 0; i < rpmFilter.numHarmonics; i++) {
+        for (int harmonic = 0; harmonic < rpmFilter.numHarmonics; harmonic++) {
             predictive_notch_vec_filter_init(
-                &notch_vec[motor][harmonic], // *mut Vec3PredictiveNotchFilter
+                &rpmFilter.notch[motor][harmonic], // *mut Vec3PredictiveNotchFilter
                 rpmFilter.minHz * harmonic,  // notch_cutoff
                 rpmFilter.q, // notch_q
                 10.0f, // predictive_q
                 0.6f, // predictive_q
-                rpmFilter.rpm_predictive_weight, // predictive_weight
+                config->rpm_predictive_weight, // predictive_weight
                 0.0f, // crossfade_amount
                 rpmFilter.looptimeUs * 0.000001f // dt
             );
@@ -140,9 +139,6 @@ FAST_CODE_NOINLINE void rpmFilterUpdate(void)
         // Only bother updating notches which have an effect on filtered output
         if (rpmFilter.weights[harmonicIndex] > 0.0f) {
 
-            // select current notch on ROLL
-            biquadFilter_t *template = &rpmFilter.notch[0][motorIndex][harmonicIndex];
-
             const float frequencyHz = constrainf((harmonicIndex + 1) * getMotorFrequencyHz(motorIndex), rpmFilter.minHz, rpmFilter.maxHz);
             const float marginHz = frequencyHz - rpmFilter.minHz;
             float weight = 1.0f;
@@ -155,19 +151,13 @@ FAST_CODE_NOINLINE void rpmFilterUpdate(void)
             // attenuate notches per harmonics group
             weight *= rpmFilter.weights[harmonicIndex];
 
-            // update notch
-            biquadFilterUpdate(template, frequencyHz, correctedLooptime, rpmFilter.q, FILTER_NOTCH, weight);
-
-            // copy notch properties to corresponding notches on PITCH and YAW
-            for (int axis = 1; axis < XYZ_AXIS_COUNT; axis++) {
-                biquadFilter_t *dest = &rpmFilter.notch[axis][motorIndex][harmonicIndex];
-                dest->b0 = template->b0;
-                dest->b1 = template->b1;
-                dest->b2 = template->b2;
-                dest->a1 = template->a1;
-                dest->a2 = template->a2;
-                dest->weight = template->weight;
-            }
+            predictive_notch_vec_filter_update(
+                &rpmFilter.notch[motorIndex][harmonicIndex], // filter
+                frequencyHz, // notch_cutoff
+                rpmFilter.q, // notch_q
+                weight, // crossfade_amount
+                correctedLooptime * 0.000001f // dt
+            );
         }
 
         // cycle through all notches on ROLL (takes RPM_FILTER_DURATION_S at max.)
@@ -178,22 +168,19 @@ FAST_CODE_NOINLINE void rpmFilterUpdate(void)
     }
 }
 
-FAST_CODE float rpmFilterApply(const int axis, float value)
+FAST_CODE void rpmFilterApply(float (*value)[3])
 {
     // Iterate over all notches on axis and apply each one to value.
     // Order of application doesn't matter because biquads are linear time-invariant filters.
-    for (int i = 0; i < rpmFilter.numHarmonics; i++) {
-
-        if (rpmFilter.weights[i] <= 0.0f) {
+    for (int harmonic = 0; harmonic < rpmFilter.numHarmonics; harmonic++) {
+        if (rpmFilter.weights[harmonic] <= 0.0f) {
             continue;  // skip harmonics which have no effect on filtered output
         }
 
         for (int motor = 0; motor < getMotorCount(); motor++) {
-            value = biquadFilterApplyDF1Weighted(&rpmFilter.notch[axis][motor][i], value);
+            predictive_notch_vec_filter_apply(&rpmFilter.notch[motor][harmonic], value);
         }
     }
-
-    return value;
 }
 
 bool isRpmFilterEnabled(void)

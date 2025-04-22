@@ -124,6 +124,7 @@ impl Mixer {
     }
 
     /// converts normalized thrust values to a normalized motor output
+    #[inline(never)]
     fn thrust_to_motor(thrust: f32, scalar: &RangeScalar) -> f32 {
         let compensation = scalar.apply(thrust);
         if compensation != 0.0 && thrust > 0.0 {
@@ -134,6 +135,7 @@ impl Mixer {
     }
 
     /// converts normalized motor numbers to a normalized thrust
+    #[inline(never)]
     fn motor_to_thrust(motor: f32, scalar: &RangeScalar) -> f32 {
         let compensation = scalar.apply(motor);
         if compensation != 0.0 && motor > 0.0 {
@@ -295,17 +297,46 @@ impl Mixer {
             gains.throttle = throttle;
         }
 
-        set_debug_float(DEBUG_CG_COMPENSATION, 0, x_cg_offset * 1000.0);
-        set_debug_float(DEBUG_CG_COMPENSATION, 1, y_cg_offset * 1000.0);
-        set_debug_float(DEBUG_CG_COMPENSATION, 2, self.motor_gains.gains[0].throttle * 1000.0);
-        set_debug_float(DEBUG_CG_COMPENSATION, 3, self.motor_gains.gains[1].throttle * 1000.0);
-        set_debug_float(DEBUG_CG_COMPENSATION, 4, self.motor_gains.gains[2].throttle * 1000.0);
-        set_debug_float(DEBUG_CG_COMPENSATION, 5, self.motor_gains.gains[3].throttle * 1000.0);
+        // I think that this is bloating things memory wise
+        // set_debug_float(DEBUG_CG_COMPENSATION, 0, x_cg_offset * 1000.0);
+        // set_debug_float(DEBUG_CG_COMPENSATION, 1, y_cg_offset * 1000.0);
+        // set_debug_float(DEBUG_CG_COMPENSATION, 2, self.motor_gains.gains[0].throttle * 1000.0);
+        // set_debug_float(DEBUG_CG_COMPENSATION, 3, self.motor_gains.gains[1].throttle * 1000.0);
+        // set_debug_float(DEBUG_CG_COMPENSATION, 4, self.motor_gains.gains[2].throttle * 1000.0);
+        // set_debug_float(DEBUG_CG_COMPENSATION, 5, self.motor_gains.gains[3].throttle * 1000.0);
+
+        let throttles = [
+            self.motor_gains.gains[0].throttle,
+            self.motor_gains.gains[1].throttle,
+            self.motor_gains.gains[2].throttle,
+            self.motor_gains.gains[3].throttle,
+        ];
+
+        Self::log_cg_debug(x_cg_offset, y_cg_offset, &throttles);
 
         // if you have poor CG your thrust will begin to clip at the top
         // TODO optionally allow not letting it clip your rc throttle
 
         learning_k
+    }
+
+    #[link_section = ".flash_code"]
+    #[inline(never)]
+    fn log_cg_debug(x_cg_offset: f32, y_cg_offset: f32, throttles: &[f32; 4]) {
+        // Pre-multiply to keep math out of TCM
+        let x_debug = x_cg_offset * 1000.0;
+        let y_debug = y_cg_offset * 1000.0;
+        let t0 = throttles[0] * 1000.0;
+        let t1 = throttles[1] * 1000.0;
+        let t2 = throttles[2] * 1000.0;
+        let t3 = throttles[3] * 1000.0;
+
+        set_debug_float(DEBUG_CG_COMPENSATION, 0, x_debug);
+        set_debug_float(DEBUG_CG_COMPENSATION, 1, y_debug);
+        set_debug_float(DEBUG_CG_COMPENSATION, 2, t0);
+        set_debug_float(DEBUG_CG_COMPENSATION, 3, t1);
+        set_debug_float(DEBUG_CG_COMPENSATION, 4, t2);
+        set_debug_float(DEBUG_CG_COMPENSATION, 5, t3);
     }
 
     fn voltage_compensation(&self, voltage: f32, throttle: f32) -> (f32, f32) {
@@ -362,7 +393,6 @@ impl Mixer {
 }
 
 #[link_section = ".tcm_code"]
-#[inline]
 #[no_mangle] pub extern "C" fn mix_motors(mixer: *mut Mixer, motors: *mut [f32; NUM_MOTORS], rate_controls: &RateControls, throttle: f32, motor_delta_max: f32, voltage: f32) -> f32 {
     unsafe {
         let thrust;
@@ -372,7 +402,6 @@ impl Mixer {
 }
 
 #[link_section = ".tcm_code"] // TODO reintroduce once we have more memory, Needed for G4 to work...
-#[inline]
 #[no_mangle] pub extern "C" fn update_cg_compensation(mixer: *mut Mixer, steady_state_roll: f32, steady_state_pitch: f32, thrust: f32, rotation_mag: f32) -> f32 {
     unsafe {
         (*mixer).update_cg_compensation(steady_state_roll, steady_state_pitch, thrust, rotation_mag)

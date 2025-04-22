@@ -28,6 +28,7 @@ impl SensorNoiseEstimation {
         }
     }
 
+    #[inline(never)]
     fn estimate_noise(&mut self, sensor_input: [f32; 3]) -> [f32; 3] {
         let mut noise = [0.0; 3];
 
@@ -76,14 +77,7 @@ impl SensorFusion {
         let noise1 = self.noise_estimate_1.estimate_noise(sensor1);
         let noise2 = self.noise_estimate_2.estimate_noise(sensor2);
 
-        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 0, sensor1[0]);
-        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 1, noise1[0] * 100.0);
-        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 2, sensor2[0]);
-        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 3, noise2[0] * 100.0);
-        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 4, sensor1[1]);
-        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 5, noise1[1] * 100.0);
-        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 6, sensor2[1]);
-        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 7, noise2[1] * 100.0);
+        Self::sensor_fusion_debug(sensor1, sensor2, noise1, noise2);
 
         let mut fused_output = [0.0; 3];
         for axis in 0..3 {
@@ -102,6 +96,18 @@ impl SensorFusion {
 
         fused_output
     }
+
+    #[inline(never)]
+    pub fn sensor_fusion_debug(sensor1: [f32; 3], sensor2: [f32; 3], noise1: [f32; 3], noise2: [f32; 3]) {
+        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 0, sensor1[0]);
+        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 1, noise1[0] * 100.0);
+        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 2, sensor2[0]);
+        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 3, noise2[0] * 100.0);
+        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 4, sensor1[1]);
+        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 5, noise1[1] * 100.0);
+        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 6, sensor2[1]);
+        set_debug_float(DEBUG_DUAL_GYRO_DIFF, 7, noise2[1] * 100.0);
+    }
 }
 
 // C stuff
@@ -112,7 +118,6 @@ impl SensorFusion {
 }
 
 #[link_section = ".tcm_code"]
-#[inline]
 #[no_mangle] pub extern "C" fn fuse_sensors_debug(fusion: *mut SensorFusion, gyro_output: *mut [f32; 3], sensor1: *const [f32; 3], sensor2: *const [f32; 3]) {
     unsafe {
         *gyro_output = (*fusion).fuse_sensors_debug(*sensor1, *sensor2);

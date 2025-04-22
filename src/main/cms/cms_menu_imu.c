@@ -53,6 +53,7 @@
 #include "flight/mixer.h"
 #include "flight/pid.h"
 #include "flight/pid_init.h"
+#include "flight/rpm_filter.h"
 
 #include "pg/pg.h"
 
@@ -946,6 +947,11 @@ static uint8_t  dynFiltNotchCount;
 static uint16_t dynFiltNotchQ;
 static uint16_t dynFiltNotchMinHz;
 #endif
+#ifdef USE_RPM_FILTER
+static uint8_t rpmHarmonics;
+static uint16_t rpmQ;
+static uint8_t rpmPredWeight;
+#endif
 #ifdef USE_DYN_LPF
 static uint16_t dtermLpfDynMin;
 static uint16_t dtermLpfDynMax;
@@ -961,6 +967,11 @@ static const void *cmsx_menuDynFilt_onEnter(displayPort_t *pDisp)
     dynFiltNotchCount   = dynNotchConfig()->dyn_notch_count;
     dynFiltNotchQ       = dynNotchConfig()->dyn_notch_q;
     dynFiltNotchMinHz   = dynNotchConfig()->dyn_notch_min_hz;
+#endif
+#ifdef USE_RPM_FILTER
+    rpmHarmonics  = rpmFilterConfig()->rpm_filter_harmonics;
+    rpmQ          = rpmFilterConfig()->rpm_filter_q;
+    rpmPredWeight = rpmFilterConfig()->rpm_predictive_weight;
 #endif
 #ifdef USE_DYN_LPF
     const pidProfile_t *pidProfile = pidProfiles(pidProfileIndex);
@@ -983,6 +994,11 @@ static const void *cmsx_menuDynFilt_onExit(displayPort_t *pDisp, const OSD_Entry
     dynNotchConfigMutable()->dyn_notch_q             = dynFiltNotchQ;
     dynNotchConfigMutable()->dyn_notch_min_hz        = dynFiltNotchMinHz;
 #endif
+#ifdef USE_RPM_FILTER
+    rpmFilterConfigMutable()->rpm_filter_harmonics = rpmHarmonics;
+    rpmFilterConfigMutable()->rpm_filter_q = rpmQ;
+    rpmFilterConfigMutable()->rpm_predictive_weight = rpmPredWeight;
+#endif
 #ifdef USE_DYN_LPF
     pidProfile_t *pidProfile = currentPidProfile;
     pidProfile->dterm_lpf1_dyn_min_hz         = dtermLpfDynMin;
@@ -1003,7 +1019,11 @@ static const OSD_Entry cmsx_menuDynFiltEntries[] =
     { "NOTCH MIN HZ",   OME_UINT16, NULL, &(OSD_UINT16_t) { &dynFiltNotchMinHz,   20, 250, 1 } },
     { "NOTCH MAX HZ",   OME_UINT16, NULL, &(OSD_UINT16_t) { &dynFiltNotchMaxHz,   200, 1000, 1 } },
 #endif
-
+#ifdef USE_RPM_FILTER
+    { "RPM HARMONICS",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &rpmHarmonics,  0, 3, 1 } },
+    { "RPM Q",          OME_UINT16, NULL, &(OSD_UINT16_t) { &rpmQ,          1, 1000, 1 } },
+    { "RPM PRED WGHT",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &rpmPredWeight, 0, 100, 1 } },
+#endif
 #ifdef USE_DYN_LPF
     { "DTERM DLPF MIN",  OME_UINT16 | SLIDER_DTERM, NULL, &(OSD_UINT16_t) { &dtermLpfDynMin, 0, 1000, 1 } },
     { "DTERM DLPF MAX",  OME_UINT16 | SLIDER_DTERM, NULL, &(OSD_UINT16_t) { &dtermLpfDynMax, 0, 1000, 1 } },

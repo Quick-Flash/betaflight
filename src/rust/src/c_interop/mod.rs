@@ -128,7 +128,8 @@ pub enum DebugType {
     DEBUG_COUNT
 }
 
-#[inline(always)]
+#[link_section = ".flash_code"]
+#[inline(never)]
 pub fn set_debug_float(mode: DebugType, index: usize, value: f32) {
     unsafe {
         debug_set_float(mode as u8, index, value);

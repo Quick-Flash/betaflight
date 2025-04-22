@@ -1617,6 +1617,7 @@ static bool blackboxWriteSysinfo(void)
                                                                               rpmFilterConfig()->rpm_filter_weights[1],
                                                                               rpmFilterConfig()->rpm_filter_weights[2]);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_RPM_FILTER_Q, "%d",             rpmFilterConfig()->rpm_filter_q);
+        BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_RPM_FILTER_PRED_WEIGHT, "%d",   rpmFilterConfig()->rpm_predictive_weight);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_RPM_FILTER_MIN_HZ, "%d",        rpmFilterConfig()->rpm_filter_min_hz);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_RPM_FILTER_FADE_RANGE_HZ, "%d", rpmFilterConfig()->rpm_filter_fade_range_hz);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_RPM_FILTER_LPF_HZ, "%d",        rpmFilterConfig()->rpm_filter_lpf_hz);

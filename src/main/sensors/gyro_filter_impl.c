@@ -30,18 +30,21 @@ static FAST_CODE void GYRO_FILTER_FUNCTION_NAME(void)
         GYRO_FILTER_AXIS_DEBUG_SET(axis, DEBUG_GYRO_SAMPLE, 0, lrintf(gyro.gyroADC[axis]));
 
         // downsample the individual gyro samples
-        float gyroADCf = gyro.gyroADC[axis];
+        gyro.gyroADCf[axis] = gyro.gyroADC[axis];
 
         // DEBUG_GYRO_SAMPLE(1) Record the post-downsample value for the selected debug axis
-        GYRO_FILTER_AXIS_DEBUG_SET(axis, DEBUG_GYRO_SAMPLE, 1, lrintf(gyroADCf));
+        GYRO_FILTER_AXIS_DEBUG_SET(axis, DEBUG_GYRO_SAMPLE, 1, lrintf(gyro.gyroADCf[axis]));
 
 #ifdef USE_RPM_FILTER
-        gyroADCf = rpmFilterApply(axis, gyroADCf);
+    }
+
+    rpmFilterApply(&gyro.gyroADCf);
+
+    for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
 #endif
 
         // DEBUG_GYRO_SAMPLE(2) Record the post-RPM Filter value for the selected debug axis
-        GYRO_FILTER_AXIS_DEBUG_SET(axis, DEBUG_GYRO_SAMPLE, 2, lrintf(gyroADCf));
-        gyro.gyroADCf[axis] = gyroADCf;
+        GYRO_FILTER_AXIS_DEBUG_SET(axis, DEBUG_GYRO_SAMPLE, 2, lrintf(gyro.gyroADCf[axis]));
      }
 
      // lowpass filters

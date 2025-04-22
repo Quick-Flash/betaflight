@@ -44,7 +44,7 @@ pub struct Vec3PredictiveNotchFilter {
     notch: Vec3Biquad,
     second_order_lowpass: Vec3Biquad,
     predictive_strength: f32,
-    crossfade_amount: [f32; 3],
+    crossfade_amount: f32,
 }
 
 impl Vec3PredictiveNotchFilter {
@@ -61,7 +61,7 @@ impl Vec3PredictiveNotchFilter {
             notch: Vec3Biquad::new_notch(notch_q, notch_cutoff, dt),
             second_order_lowpass: Vec3Biquad::new_second_order_lowpass(lowpass_q, lowpass_cutoff, dt),
             predictive_strength: predictive_weight,
-            crossfade_amount: [crossfade_amount; 3],
+            crossfade_amount,
         }
     }
 
@@ -77,14 +77,14 @@ impl Vec3PredictiveNotchFilter {
         let predicted = self.second_order_lowpass.apply(residual);
 
         for i in 0..3 {
-            output[i] = input[i] * (1.0 - self.crossfade_amount[i])
-                + (notched[i] + predicted[i] * self.predictive_strength) * self.crossfade_amount[i];
+            output[i] = input[i] * (1.0 - self.crossfade_amount)
+                + (notched[i] + predicted[i] * self.predictive_strength) * self.crossfade_amount;
         }
 
         output
     }
 
-    pub fn update_cutoff(&mut self, q: f32, cutoff: f32, crossfade: [f32; 3], dt: f32) {
+    pub fn update_cutoff(&mut self, q: f32, cutoff: f32, crossfade: f32, dt: f32) {
         self.notch.update_notch(q, cutoff, dt);
         self.crossfade_amount = crossfade;
     }
@@ -112,25 +112,23 @@ impl Vec3PredictiveNotchFilter {
 }
 
 #[link_section = ".tcm_code"]
-#[inline]
 #[no_mangle] pub extern "C" fn predictive_notch_vec_filter_update(
-    filter: &mut Vec3PredictiveNotchFilter,
+    filter: *mut Vec3PredictiveNotchFilter,
     notch_cutoff: f32,
     notch_q: f32,
-    crossfade_amount: [f32; 3],
+    crossfade_amount: f32,
     dt: f32
 )
 {
     unsafe {
-        filter.update_cutoff(notch_cutoff, notch_q, crossfade_amount, dt);
+        (*filter).update_cutoff(notch_cutoff, notch_q, crossfade_amount, dt);
     }
 }
 
 #[link_section = ".tcm_code"]
-#[inline]
 #[no_mangle] pub extern "C" fn predictive_notch_vec_filter_apply(
     filter: *mut Vec3PredictiveNotchFilter,
-    input: *mut [f32; 3],
+    input: &mut [f32; 3],
 )
 {
     unsafe {

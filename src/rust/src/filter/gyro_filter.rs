@@ -8,6 +8,7 @@ pub struct GyroFilters {
 }
 
 impl GyroFilters {
+    #[inline(never)]
     pub fn new(
         cutoff1: f32,
         predictive_cutoff1: f32,
@@ -84,7 +85,6 @@ impl GyroFilters {
 }
 
 #[link_section = ".tcm_code"]
-#[inline]
 #[no_mangle] pub extern "C" fn gyro_filter_apply(
     filter: *mut GyroFilters,
     lowpass_variants: &GyroLowpassVariants,

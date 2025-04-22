@@ -165,6 +165,7 @@
 #define PARAM_NAME_RPM_FILTER_HARMONICS "rpm_filter_harmonics"
 #define PARAM_NAME_RPM_FILTER_WEIGHTS "rpm_filter_weights"
 #define PARAM_NAME_RPM_FILTER_Q "rpm_filter_q"
+#define PARAM_NAME_RPM_FILTER_PRED_WEIGHT "rpm_filter_pred_weight"
 #define PARAM_NAME_RPM_FILTER_MIN_HZ "rpm_filter_min_hz"
 #define PARAM_NAME_RPM_FILTER_FADE_RANGE_HZ "rpm_filter_fade_range_hz"
 #define PARAM_NAME_RPM_FILTER_LPF_HZ "rpm_filter_lpf_hz"
