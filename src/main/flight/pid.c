@@ -132,7 +132,7 @@ void resetPidProfile(pidProfile_t *pidProfile)
         },
         .pidSumLimit = PIDSUM_LIMIT,
         .pidSumLimitYaw = PIDSUM_LIMIT_YAW,
-        .yaw_lowpass_hz = 100,
+        .yaw_lowpass_hz = 0,
         .dterm_notch_hz = 0,
         .dterm_notch_cutoff = 0,
         .itermWindup = 80,         // sets iTerm limit to this percentage below pidSumLimit
@@ -156,7 +156,7 @@ void resetPidProfile(pidProfile_t *pidProfile)
         .itermLimit = 400,
         .throttle_boost = 5,
         .throttle_boost_cutoff = 15,
-        .iterm_rotation = false,
+        .iterm_rotation = true,
         .iterm_relax = ITERM_RELAX_RP,
         .iterm_relax_cutoff = ITERM_RELAX_CUTOFF_DEFAULT,
         .iterm_relax_type = ITERM_RELAX_SETPOINT,
@@ -248,6 +248,7 @@ void resetPidProfile(pidProfile_t *pidProfile)
         .tpa_curve_pid_thr100 = 70,
         .tpa_curve_expo = 20,
         .soft_arm_throttle_threshold = 25,
+        .voltage_throttle_compensation = false,
     );
 }
 
