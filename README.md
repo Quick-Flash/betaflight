@@ -32,6 +32,8 @@ https://youtu.be/8qr64LfN-po
 | max_check              | 1900     | 2000      | Max rc range value                                                                    |
 | anti_gravity_gain      | 80       | 20        | Anti-gravity gain                                                                     |
 | vbat_full_cell_voltage | 410      | 420       | Max voltage used for voltage mixer compensation, and for OSD warning of over voltage. |
+| yaw_lowpass_hz         | 100      | 0         | Lowpass filter on yaw pterm (not generally needed)                                    |
+| iterm_rotation         | Off      | On        | Better handling of iterm during rotations                                             |
 
 ## New Settings
 | Setting Name                | Default Value | Description                                                                                                                                                |
@@ -63,6 +65,7 @@ https://youtu.be/8qr64LfN-po
 | soft_arm_throttle_threshold | 25            | Soft arming is enabled until above this throttle. As you raise throttle to this point you gain more authority. After this throttle soft arming is disabled |
 | motor_soft_idle             | 300           | This is the motor idle value while in soft arming. Typically set to as low as the motor will reliable start to spin                                        |
 | voltage_throttle_comp       | 0             | When set to 1 or on this setting will try to keep the throttle feeling the same as the battery voltage is drained.                                         |
+| rpm_filter_pred_weight      | 100           | A weight from 0 to 100 for how much of the predictive portion of the RPM notch filter is used                                                              |
 
 ## Blackbox Changes
 ### `DEBUG_DUAL_GYRO` Gyro fusion debug
@@ -99,6 +102,12 @@ https://youtu.be/8qr64LfN-po
 - Debug 7: motor 3 * 1000
 
 # Changelog
+
+### 4/22/2025
+- Use predictive notch filtering on the RPM filter.
+- Should reduce latency, perhaps look at using a lower Q on the RPM filter.
+- Uses the rpm_filter_pred_weight for how strong the predictive part is.
+
 ### 2/15/2025
 - Update CG Compensation to use rotation rate as well.
 - High rotation rates will lead to no learning occurring.
