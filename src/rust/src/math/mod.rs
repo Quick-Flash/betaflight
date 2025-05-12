@@ -7,3 +7,4 @@ pub mod powi;
 pub mod constrain;
 pub mod range_scaler;
 pub mod sign;
+mod fractional_integral;

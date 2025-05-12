@@ -20,6 +20,8 @@ panic-abort = "0.3.2"
 panic-halt = "1.0.0"
 # used in tests for the approx_eq method
 approx = { version = "0.5.1", optional = true }
+# used in calculating fractional integrals
+libm = "0.2.11"
 
 [dependencies.microfft]
 version = "0.6.0"
