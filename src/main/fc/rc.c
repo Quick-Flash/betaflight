@@ -363,7 +363,6 @@ static FAST_CODE_NOINLINE void rcSmoothingSetFilterCutoffs(rcSmoothingFilter_t *
 
     const float dT = targetPidLooptime * 1e-6f;
 
-
     // Update the RC Setpoint/Deflection filter and FeedForward Filter
     // all cutoffs will be the same, we can optimize :)
     const float pt3K = pt3FilterGain(setpointCutoffFrequency, dT);
