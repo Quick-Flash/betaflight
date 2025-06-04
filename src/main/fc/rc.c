@@ -339,6 +339,26 @@ bool getRxRateValid(void)
 
 #ifdef USE_RC_SMOOTHING_FILTER
 
+static FAST_CODE_NOINLINE void rcSmoothingSetFilterTau(rcSmoothingFilter_t *smoothingData)
+{
+    const float cen_tau = smoothingData->setpointTauCenter;
+    const float end_tau = smoothingData->setpointTauEnd;
+    const float throttle_tau = smoothingData->throttleTau;
+
+    const float dT = targetPidLooptime * 1e-6f;
+
+    for (int i = FD_ROLL; i <= FD_YAW; i++) {
+        const float tau = (1.0f - rcDeflectionAbs[i]) * cen_tau + rcDeflectionAbs[i] * end_tau;
+        const float pt3K = pt3FilterGainFromDelay(tau, dT);
+
+        pt3FilterUpdateCutoff(&smoothingData->filterSetpoint[i], pt3K);
+        pt3FilterUpdateCutoff(&smoothingData->filterFeedforward[i], pt3K);
+        if (i < FD_YAW) {
+            pt3FilterUpdateCutoff(&smoothingData->filterRcDeflection[i], pt3K);
+        }
+    }
+}
+
 // Initialize or update the filters base on either the manually selected cutoff, or
 // the auto-calculated cutoff frequency based on detected rx frame rate.
 static FAST_CODE_NOINLINE void rcSmoothingSetFilterCutoffs(rcSmoothingFilter_t *smoothingData)
@@ -399,7 +419,7 @@ static FAST_CODE_NOINLINE void updateFeedforwardFilters(const pidRuntime_t *pid)
 FAST_CODE_NOINLINE bool rcSmoothingAutoCalculate(void)
 {
     // if any rc smoothing cutoff is 0 (auto) then we need to calculate cutoffs
-    if ((rcSmoothingData.setpointCutoffSetting == 0) || (rcSmoothingData.throttleCutoffSetting == 0)) {
+    if (((rcSmoothingData.setpointCutoffSetting == 0) || (rcSmoothingData.throttleCutoffSetting == 0)) && !rxConfig()->rc_smoothing_use_tau) {
         return true;
     }
     return false;
