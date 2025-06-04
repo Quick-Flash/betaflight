@@ -343,7 +343,6 @@ static FAST_CODE_NOINLINE void rcSmoothingSetFilterTau(rcSmoothingFilter_t *smoo
 {
     const float cen_tau = smoothingData->setpointTauCenter;
     const float end_tau = smoothingData->setpointTauEnd;
-    const float throttle_tau = smoothingData->throttleTau;
 
     const float dT = targetPidLooptime * 1e-6f;
 
