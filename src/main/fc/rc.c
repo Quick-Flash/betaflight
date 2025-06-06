@@ -339,7 +339,7 @@ bool getRxRateValid(void)
 
 #ifdef USE_RC_SMOOTHING_FILTER
 
-static FAST_CODE_NOINLINE void rcSmoothingSetFilterTau(rcSmoothingFilter_t *smoothingData)
+static FAST_CODE_NOINLINE void rcSmoothingUpdateFilterTau(rcSmoothingFilter_t *smoothingData)
 {
     const float cen_tau = smoothingData->setpointTauCenter;
     const float end_tau = smoothingData->setpointTauEnd;
@@ -959,6 +959,22 @@ void initRcProcessing(void)
     const int maxYawRate = (int)maxRcRate[FD_YAW];
     initYawSpinRecovery(maxYawRate);
 #endif
+
+    if (rxConfig()->rc_smoothing_use_tau) {
+        const float cen_tau = currentControlRateProfile->rc_smoothing_setpoint_tau_center;
+        const float end_tau = currentControlRateProfile->rc_smoothing_setpoint_tau_end;
+        const float throttle_tau = currentControlRateProfile->rc_smoothing_throttle_tau;
+        // unit is 10th of a millisecond, sort of
+        rcSmoothingData.setpointTauCenter = cen_tau / 10000.0f + cen_tau * cen_tau / 1250000.0f;
+        rcSmoothingData.setpointTauEnd = end_tau / 10000.0f + end_tau * end_tau / 1250000.0f;
+        const float throttleTau = throttle_tau / 10000.0f + throttle_tau * throttle_tau / 1250000.0f;
+
+        const float dT = targetPidLooptime * 1e-6f;
+
+        rcSmoothingUpdateFilterTau(&rcSmoothingData);
+
+        pt3FilterUpdateCutoff(&rcSmoothingData.filterSetpoint[3], pt3FilterGainFromDelay(throttleTau, dT));
+    }
 }
 
 // send rc smoothing details to blackbox
