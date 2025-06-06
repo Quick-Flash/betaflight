@@ -973,7 +973,7 @@ void initRcProcessing(void)
 
         rcSmoothingUpdateFilterTau(&rcSmoothingData);
 
-        pt3FilterUpdateCutoff(&rcSmoothingData.filterSetpoint[3], pt3FilterGainFromDelay(throttleTau, dT));
+        pt3FilterUpdateCutoff(&rcSmoothingData.filterSetpoint[THROTTLE], pt3FilterGainFromDelay(throttleTau, dT));
     }
 }
 
