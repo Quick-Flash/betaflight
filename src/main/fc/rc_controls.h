@@ -101,8 +101,8 @@ typedef struct rcSmoothingFilter_s {
 
     float autoSmoothnessFactorSetpoint;
     float autoSmoothnessFactorThrottle;
-    float setpointTauCenter;
-    float setpointTauEnd;
+    float setpointTauCenter[3];
+    float setpointTauEnd[3];
 } rcSmoothingFilter_t;
 
 typedef struct rcControlsConfig_s {
