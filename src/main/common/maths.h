@@ -168,3 +168,13 @@ static inline float constrainf(float amt, float low, float high)
 static inline float lerp(float t, float a, float b) {
     return a + t * (b - a);
 }
+
+// returns a 1.0 for positive numbers and a -1.0 for negative numbers
+static inline float signf(float input)
+{
+    if (input > 0.0f) {
+        return 1.0f;
+    } else {
+        return -1.0f;
+    }
+}
