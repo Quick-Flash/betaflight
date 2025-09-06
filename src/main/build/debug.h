@@ -127,6 +127,7 @@ typedef enum {
     DEBUG_WING_SETPOINT,
     DEBUG_AUTOPILOT_POSITION,
     DEBUG_CHIRP,
+    DEBUG_GYRO_FUSION,
     DEBUG_COUNT
 } debugType_e;
 
