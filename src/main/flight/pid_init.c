@@ -137,7 +137,7 @@ void pidInitFilters(const pidProfile_t *pidProfile)
         pidRuntime.applyDtermNotch = false;
         pidRuntime.dtermLpf1Type = FILTER_NONE;
         pidRuntime.dtermLpf2Type = FILTER_NONE;
-        pidRuntime.ptermYawLowpassApplyFn = nullFilterApply;
+        pidRuntime.applyYawLowpass = false;
         return;
     }
 
@@ -241,9 +241,8 @@ void pidInitFilters(const pidProfile_t *pidProfile)
     }
 
     if (pidProfile->yaw_lowpass_hz == 0) {
-        pidRuntime.ptermYawLowpassApplyFn = nullFilterApply;
+        pidRuntime.applyYawLowpass = false;
     } else {
-        pidRuntime.ptermYawLowpassApplyFn = (filterApplyFnPtr)pt1FilterApply;
         pt1FilterInit(&pidRuntime.ptermYawLowpass, pt1FilterGain(pidProfile->yaw_lowpass_hz, pidRuntime.dT));
     }
 

@@ -1106,28 +1106,28 @@ static inline void dtermFilter(float out[3])
     switch (pidRuntime.dtermLpf1Type) {
     case FILTER_PT1:
         for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
-            pt1FilterApply(&pidRuntime.dtermLowpass[axis].pt1Filter, out[axis]);
+            out[axis] = pt1FilterApply(&pidRuntime.dtermLowpass[axis].pt1Filter, out[axis]);
         }
         break;
     case FILTER_BIQUAD:
 #ifdef USE_DYN_LPF
         for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
-            biquadFilterApplyDF1(&pidRuntime.dtermLowpass[axis].biquadFilter, out[axis]);
+            out[axis] = biquadFilterApplyDF1(&pidRuntime.dtermLowpass[axis].biquadFilter, out[axis]);
         }
 #else
         for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
-            biquadFilterApply(&pidRuntime.dtermLowpass[axis].biquadFilter, out[axis]);
+            out[axis] = biquadFilterApply(&pidRuntime.dtermLowpass[axis].biquadFilter, out[axis]);
         }
 #endif
         break;
     case FILTER_PT2:
         for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
-            pt2FilterApply(&pidRuntime.dtermLowpass[axis].pt2Filter, out[axis]);
+            out[axis] = pt2FilterApply(&pidRuntime.dtermLowpass[axis].pt2Filter, out[axis]);
         }
         break;
     case FILTER_PT3:
         for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
-            pt3FilterApply(&pidRuntime.dtermLowpass[axis].pt3Filter, out[axis]);
+            out[axis] = pt3FilterApply(&pidRuntime.dtermLowpass[axis].pt3Filter, out[axis]);
         }
         break;
     case FILTER_NONE:
@@ -1139,22 +1139,22 @@ static inline void dtermFilter(float out[3])
     switch (pidRuntime.dtermLpf2Type) {
     case FILTER_PT1:
         for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
-            pt1FilterApply(&pidRuntime.dtermLowpass2[axis].pt1Filter, out[axis]);
+            out[axis] = pt1FilterApply(&pidRuntime.dtermLowpass2[axis].pt1Filter, out[axis]);
         }
         break;
     case FILTER_BIQUAD:
         for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
-            biquadFilterApply(&pidRuntime.dtermLowpass2[axis].biquadFilter, out[axis]);
+            out[axis] = biquadFilterApply(&pidRuntime.dtermLowpass2[axis].biquadFilter, out[axis]);
         }
         break;
     case FILTER_PT2:
         for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
-            pt2FilterApply(&pidRuntime.dtermLowpass2[axis].pt2Filter, out[axis]);
+            out[axis] = pt2FilterApply(&pidRuntime.dtermLowpass2[axis].pt2Filter, out[axis]);
         }
         break;
     case FILTER_PT3:
         for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
-            pt3FilterApply(&pidRuntime.dtermLowpass2[axis].pt3Filter, out[axis]);
+            out[axis] = pt3FilterApply(&pidRuntime.dtermLowpass2[axis].pt3Filter, out[axis]);
         }
         break;
     case FILTER_NONE:
@@ -1383,8 +1383,8 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
 
         // -----calculate P component
         pidData[axis].P = pidRuntime.pidCoefficient[axis].Kp * errorRate * getTpaFactor(pidProfile, axis, TERM_P);
-        if (axis == FD_YAW) {
-            pidData[axis].P = pidRuntime.ptermYawLowpassApplyFn((filter_t *) &pidRuntime.ptermYawLowpass, pidData[axis].P);
+        if (axis == FD_YAW && pidRuntime.applyYawLowpass) {
+            pidData[axis].P = pt1FilterApply(&pidRuntime.ptermYawLowpass, pidData[axis].P);
         }
 
         // -----calculate I component

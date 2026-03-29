@@ -392,7 +392,7 @@ typedef struct pidRuntime_s {
     dtermLowpass_t dtermLowpass[XYZ_AXIS_COUNT];
     uint8_t dtermLpf2Type;
     dtermLowpass_t dtermLowpass2[XYZ_AXIS_COUNT];
-    filterApplyFnPtr ptermYawLowpassApplyFn;
+    bool applyYawLowpass;
     pt1Filter_t ptermYawLowpass;
     bool antiGravityEnabled;
     pt2Filter_t antiGravityLpf;

@@ -96,12 +96,12 @@ static uint16_t calculateNyquistAdjustedNotchHz(uint16_t notchHz, uint16_t notch
 
 static void gyroInitFilterNotch1(uint16_t notchHz, uint16_t notchCutoffHz)
 {
-    gyro.notchFilter1ApplyFn = nullFilterApply;
+    gyro.applyNotchFilter1 = false;
 
     notchHz = calculateNyquistAdjustedNotchHz(notchHz, notchCutoffHz);
 
     if (notchHz != 0 && notchCutoffHz != 0) {
-        gyro.notchFilter1ApplyFn = (filterApplyFnPtr)biquadFilterApply;
+        gyro.applyNotchFilter1 = true;
         const float notchQ = filterGetNotchQ(notchHz, notchCutoffHz);
         for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
             biquadFilterInit(&gyro.notchFilter1[axis], notchHz, gyro.targetLooptime, notchQ, FILTER_NOTCH, 1.0f);
@@ -111,12 +111,12 @@ static void gyroInitFilterNotch1(uint16_t notchHz, uint16_t notchCutoffHz)
 
 static void gyroInitFilterNotch2(uint16_t notchHz, uint16_t notchCutoffHz)
 {
-    gyro.notchFilter2ApplyFn = nullFilterApply;
+    gyro.applyNotchFilter2 = false;
 
     notchHz = calculateNyquistAdjustedNotchHz(notchHz, notchCutoffHz);
 
     if (notchHz != 0 && notchCutoffHz != 0) {
-        gyro.notchFilter2ApplyFn = (filterApplyFnPtr)biquadFilterApply;
+        gyro.applyNotchFilter2 = true;
         const float notchQ = filterGetNotchQ(notchHz, notchCutoffHz);
         for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
             biquadFilterInit(&gyro.notchFilter2[axis], notchHz, gyro.targetLooptime, notchQ, FILTER_NOTCH, 1.0f);
@@ -126,17 +126,17 @@ static void gyroInitFilterNotch2(uint16_t notchHz, uint16_t notchCutoffHz)
 
 static bool gyroInitLowpassFilterLpf(int slot, int type, uint16_t lpfHz, uint32_t looptime)
 {
-    filterApplyFnPtr *lowpassFilterApplyFn;
+    uint8_t *lowpassFilterType;
     gyroLowpassFilter_t *lowpassFilter = NULL;
 
     switch (slot) {
     case FILTER_LPF1:
-        lowpassFilterApplyFn = &gyro.lowpassFilterApplyFn;
+        lowpassFilterType = &gyro.lowpassFilterType;
         lowpassFilter = gyro.lowpassFilter;
         break;
 
     case FILTER_LPF2:
-        lowpassFilterApplyFn = &gyro.lowpass2FilterApplyFn;
+        lowpassFilterType = &gyro.lowpass2FilterType;
         lowpassFilter = gyro.lowpass2Filter;
         break;
 
@@ -150,48 +150,40 @@ static bool gyroInitLowpassFilterLpf(int slot, int type, uint16_t lpfHz, uint32_
     const uint32_t gyroFrequencyNyquist = 1000000 / 2 / looptime;
     const float gyroDt = looptime * 1e-6f;
 
-    // Dereference the pointer to null before checking valid cutoff and filter
-    // type. It will be overridden for positive cases.
-    *lowpassFilterApplyFn = nullFilterApply;
+    *lowpassFilterType = type;
 
     // If lowpass cutoff has been specified
     if (lpfHz) {
         switch (type) {
         case FILTER_PT1:
-            *lowpassFilterApplyFn = (filterApplyFnPtr) pt1FilterApply;
             for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
                 pt1FilterInit(&lowpassFilter[axis].pt1FilterState, pt1FilterGain(lpfHz, gyroDt));
             }
             ret = true;
             break;
         case FILTER_BIQUAD:
-            if (lpfHz <= gyroFrequencyNyquist) {
-#ifdef USE_DYN_LPF
-                *lowpassFilterApplyFn = (filterApplyFnPtr) biquadFilterApplyDF1;
-#else
-                *lowpassFilterApplyFn = (filterApplyFnPtr) biquadFilterApply;
-#endif
-                for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
-                    biquadFilterInitLPF(&lowpassFilter[axis].biquadFilterState, lpfHz, looptime);
-                }
-                ret = true;
+            float cutoff = MIN(lpfHz, 0.95f * gyroFrequencyNyquist);
+            for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
+                biquadFilterInitLPF(&lowpassFilter[axis].biquadFilterState, cutoff, looptime);
             }
+            ret = true;
             break;
         case FILTER_PT2:
-            *lowpassFilterApplyFn = (filterApplyFnPtr) pt2FilterApply;
             for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
                 pt2FilterInit(&lowpassFilter[axis].pt2FilterState, pt2FilterGain(lpfHz, gyroDt));
             }
             ret = true;
             break;
         case FILTER_PT3:
-            *lowpassFilterApplyFn = (filterApplyFnPtr) pt3FilterApply;
             for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
                 pt3FilterInit(&lowpassFilter[axis].pt3FilterState, pt3FilterGain(lpfHz, gyroDt));
             }
             ret = true;
             break;
         }
+    } else {
+        // Set to none if the cutoff is 0
+        *lowpassFilterType = FILTER_NONE;
     }
     return ret;
 }

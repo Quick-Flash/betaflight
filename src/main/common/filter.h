@@ -23,10 +23,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-struct filter_s;
-typedef struct filter_s filter_t;
-typedef float (*filterApplyFnPtr)(filter_t *filter, float input);
-
 typedef enum {
     FILTER_PT1 = 0,
     FILTER_BIQUAD,
@@ -95,8 +91,6 @@ typedef struct meanAccumulator_s {
     int32_t accumulator;
     int32_t count;
 } meanAccumulator_t;
-
-float nullFilterApply(filter_t *filter, float input);
 
 float pt1FilterGain(float f_cut, float dT);
 float pt1FilterGainFromDelay(float delay, float dT);

@@ -448,9 +448,34 @@ FAST_CODE void gyroUpdate(void)
 
     if (gyro.downsampleFilterEnabled) {
         // using gyro lowpass 2 filter for downsampling
-        gyro.sampleSum[X] = gyro.lowpass2FilterApplyFn((filter_t *)&gyro.lowpass2Filter[X], gyro.gyroADC[X]);
-        gyro.sampleSum[Y] = gyro.lowpass2FilterApplyFn((filter_t *)&gyro.lowpass2Filter[Y], gyro.gyroADC[Y]);
-        gyro.sampleSum[Z] = gyro.lowpass2FilterApplyFn((filter_t *)&gyro.lowpass2Filter[Z], gyro.gyroADC[Z]);
+        switch (gyro.lowpass2FilterType) {
+        case FILTER_PT1:
+            for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
+                gyro.sampleSum[axis] = pt1FilterApply(&gyro.lowpass2Filter[axis].pt1FilterState, gyro.gyroADC[axis]);
+            }
+            break;
+        case FILTER_BIQUAD:
+            for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
+                gyro.sampleSum[axis] = biquadFilterApply(&gyro.lowpass2Filter[axis].biquadFilterState, gyro.gyroADC[axis]);
+            }
+            break;
+        case FILTER_PT2:
+            for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
+                gyro.sampleSum[axis] = pt2FilterApply(&gyro.lowpass2Filter[axis].pt2FilterState, gyro.gyroADC[axis]);
+            }
+            break;
+        case FILTER_PT3:
+            for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
+                gyro.sampleSum[axis] = pt3FilterApply(&gyro.lowpass2Filter[axis].pt3FilterState, gyro.gyroADC[axis]);
+            }
+            break;
+        case FILTER_NONE:
+        default:
+            for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
+                gyro.sampleSum[axis] = gyro.gyroADC[axis];
+            }
+            break;
+        }
     } else {
         // using simple averaging for downsampling
         gyro.sampleSum[X] += gyro.gyroADC[X];
