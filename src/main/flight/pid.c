@@ -1082,12 +1082,93 @@ NOINLINE static void applySpa(int axis, const pidProfile_t *pidProfile)
 #endif // USE_WING
 }
 
+static inline void dtermFilter(float out[3])
+{
+    // TODO remove static variables as its bad practice
+    static float previousOut[XYZ_AXIS_COUNT] = {0.0f, 0.0f, 0.0f};
+
+    for (int axis = FD_ROLL; axis <= FD_YAW; ++axis) {
+        out[axis] = gyro.gyroADCf[axis];
+
+        // Log the unfiltered D for ROLL and PITCH
+        if (debugMode == DEBUG_D_LPF && axis != FD_YAW) {
+            const float delta = (previousOut[axis] - out[axis]) * pidRuntime.pidFrequency / D_LPF_RAW_SCALE;
+            previousOut[axis] = out[axis];
+            DEBUG_SET(DEBUG_D_LPF, axis, lrintf(delta)); // debug d_lpf 2 and 3 used for pre-TPA D
+        }
+    }
+    if (pidRuntime.applyDtermNotch) {
+        for (int axis = FD_ROLL; axis <= FD_YAW; ++axis) {
+            out[axis] = biquadFilterApply(&pidRuntime.dtermNotch[axis], out[axis]);
+        }
+    }
+
+    switch (pidRuntime.dtermLpf1Type) {
+    case FILTER_PT1:
+        for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
+            pt1FilterApply(&pidRuntime.dtermLowpass[axis].pt1Filter, out[axis]);
+        }
+        break;
+    case FILTER_BIQUAD:
+#ifdef USE_DYN_LPF
+        for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
+            biquadFilterApplyDF1(&pidRuntime.dtermLowpass[axis].biquadFilter, out[axis]);
+        }
+#else
+        for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
+            biquadFilterApply(&pidRuntime.dtermLowpass[axis].biquadFilter, out[axis]);
+        }
+#endif
+        break;
+    case FILTER_PT2:
+        for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
+            pt2FilterApply(&pidRuntime.dtermLowpass[axis].pt2Filter, out[axis]);
+        }
+        break;
+    case FILTER_PT3:
+        for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
+            pt3FilterApply(&pidRuntime.dtermLowpass[axis].pt3Filter, out[axis]);
+        }
+        break;
+    case FILTER_NONE:
+    default:
+            // don't apply any lpf1 filter
+        break;
+    }
+
+    switch (pidRuntime.dtermLpf2Type) {
+    case FILTER_PT1:
+        for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
+            pt1FilterApply(&pidRuntime.dtermLowpass2[axis].pt1Filter, out[axis]);
+        }
+        break;
+    case FILTER_BIQUAD:
+        for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
+            biquadFilterApply(&pidRuntime.dtermLowpass2[axis].biquadFilter, out[axis]);
+        }
+        break;
+    case FILTER_PT2:
+        for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
+            pt2FilterApply(&pidRuntime.dtermLowpass2[axis].pt2Filter, out[axis]);
+        }
+        break;
+    case FILTER_PT3:
+        for (int axis = FD_ROLL; axis <= FD_YAW; axis++) {
+            pt3FilterApply(&pidRuntime.dtermLowpass2[axis].pt3Filter, out[axis]);
+        }
+        break;
+    case FILTER_NONE:
+    default:
+            // don't apply any lpf2 filter
+        break;
+    }
+}
+
 // Betaflight pid controller, which will be maintained in the future with additional features specialised for current (mini) multirotor usage.
 // Based on 2DOF reference design (matlab)
 void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTimeUs)
 {
     static float previousGyroRateDterm[XYZ_AXIS_COUNT];
-    static float previousRawGyroRateDterm[XYZ_AXIS_COUNT];
 
     calculateSpaValues(pidProfile);
 
@@ -1154,22 +1235,9 @@ void FAST_CODE pidController(const pidProfile_t *pidProfile, timeUs_t currentTim
     // amount of antigravity added relative to user's pitch iTerm coefficient
     // used later to increase iTerm
 
-    // Precalculate gyro delta for D-term here, this allows loop unrolling
+    // Precalculate filtered gyro used for D-term here
     float gyroRateDterm[XYZ_AXIS_COUNT];
-    for (int axis = FD_ROLL; axis <= FD_YAW; ++axis) {
-        gyroRateDterm[axis] = gyro.gyroADCf[axis];
-
-        // Log the unfiltered D for ROLL and PITCH
-        if (debugMode == DEBUG_D_LPF && axis != FD_YAW) {
-            const float delta = (previousRawGyroRateDterm[axis] - gyroRateDterm[axis]) * pidRuntime.pidFrequency / D_LPF_RAW_SCALE;
-            previousRawGyroRateDterm[axis] = gyroRateDterm[axis];
-            DEBUG_SET(DEBUG_D_LPF, axis, lrintf(delta)); // debug d_lpf 2 and 3 used for pre-TPA D
-        }
-
-        gyroRateDterm[axis] = pidRuntime.dtermNotchApplyFn((filter_t *) &pidRuntime.dtermNotch[axis], gyroRateDterm[axis]);
-        gyroRateDterm[axis] = pidRuntime.dtermLowpassApplyFn((filter_t *) &pidRuntime.dtermLowpass[axis], gyroRateDterm[axis]);
-        gyroRateDterm[axis] = pidRuntime.dtermLowpass2ApplyFn((filter_t *) &pidRuntime.dtermLowpass2[axis], gyroRateDterm[axis]);
-    }
+    dtermFilter(gyroRateDterm);
 
     rotateItermAndAxisError();
 

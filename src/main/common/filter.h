@@ -32,6 +32,7 @@ typedef enum {
     FILTER_BIQUAD,
     FILTER_PT2,
     FILTER_PT3,
+    FILTER_NONE,
 } lowpassFilterType_e;
 
 typedef enum {
