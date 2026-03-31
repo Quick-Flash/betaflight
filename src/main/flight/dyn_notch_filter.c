@@ -136,10 +136,7 @@ static FAST_DATA_ZERO_INIT dynNotch_t dynNotch;
 static FAST_DATA_ZERO_INIT int   sampleIndex;
 static FAST_DATA_ZERO_INIT int   sampleCount;
 static FAST_DATA_ZERO_INIT float sampleCountRcp;
-static FAST_DATA_ZERO_INIT float sampleAccumulator[XYZ_AXIS_COUNT];
-
-// downsampled data for frequency analysis
-static FAST_DATA_ZERO_INIT float sampleAvg[XYZ_AXIS_COUNT];
+static FAST_DATA_ZERO_INIT float nextSample[XYZ_AXIS_COUNT];
 
 // parameters for peak detection and frequency analysis
 static FAST_DATA_ZERO_INIT state_t state;
@@ -175,7 +172,6 @@ void dynNotchInit(const dynNotchConfig_t *config, const timeUs_t targetLooptimeU
     dynNotch.maxCenterFreq = 0;
 
     sampleCount = MAX(1, nyquistHz / dynNotch.maxHz); // maxHz = 600 & looprateHz = 8000 -> sampleCount = 6
-    sampleCountRcp = 1.0f / sampleCount;
 
     sdftSampleRateHz = looprateHz / sampleCount;
     // eg 8k, user max 600hz, int(4000/600) = 6 (6.666), sdftSampleRateHz = 1333hz, range 666Hz
@@ -206,7 +202,7 @@ void dynNotchInit(const dynNotchConfig_t *config, const timeUs_t targetLooptimeU
 // Collect gyro data, to be downsampled and analysed in dynNotchUpdate() function
 FAST_CODE void dynNotchPush(const int axis, const float sample)
 {
-    sampleAccumulator[axis] += sample;
+    nextSample[axis] = sample;
 }
 
 static void dynNotchProcess(void);
@@ -219,12 +215,10 @@ FAST_CODE void dynNotchUpdate(void)
     if (sampleIndex == sampleCount) {
         sampleIndex = 0;
 
-        // calculate mean value of accumulated samples
-        for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
-            sampleAvg[axis] = sampleAccumulator[axis] * sampleCountRcp;
-            sampleAccumulator[axis] = 0;
-            if (axis == gyro.gyroDebugAxis) {
-                DEBUG_SET(DEBUG_FFT, 2, lrintf(sampleAvg[axis]));
+        // No real advantage has been found using averaged data when the this SDFT has been fed synthetic data
+        if (axis == gyro.gyroDebugAxis) {
+            for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
+                DEBUG_SET(DEBUG_FFT, 2, lrintf(nextSample[axis]));
             }
         }
 
@@ -238,7 +232,7 @@ FAST_CODE void dynNotchUpdate(void)
     // 2us @ F722
     // SDFT processing in batches to synchronize with incoming downsampled data
     for (int axis = 0; axis < XYZ_AXIS_COUNT; axis++) {
-        sdftPushBatch(&sdft[axis], sampleAvg[axis], sampleIndex);
+        sdftPushBatch(&sdft[axis], nextSample[axis], sampleIndex);
     }
     sampleIndex++;
 
@@ -263,6 +257,7 @@ static FAST_CODE_NOINLINE void dynNotchProcess(void)
 
         case STEP_WINDOW: // 4.1us (3-6us) @ F722
         {
+            // TODO optimize this to not use hanning window (won't help with the magnitude of the signal)
             sdftWinSq(&sdft[state.axis], sdftData);
 
             // Get total vibrational power in dyn notch range for noise floor estimate in STEP_CALC_FREQUENCIES
@@ -323,6 +318,7 @@ static FAST_CODE_NOINLINE void dynNotchProcess(void)
         case STEP_CALC_FREQUENCIES: // 4.0us (2-7us) @ F722
         {
             // Approximate noise floor (= average power spectral density in dyn notch range, excluding peaks)
+            // TODO this data should not already be hanned, so I should add a hanning window here
             int peakCount = 0;
             for (int p = 0; p < dynNotch.count; p++) {
                 if (peaks[p].bin != 0) {
@@ -350,6 +346,7 @@ static FAST_CODE_NOINLINE void dynNotchProcess(void)
                     const float y2 = sdftData[peaks[p].bin + 1];
 
                     // Estimate true peak position aka. meanBin (fit parabola y(x) over y0, y1 and y2, solve dy/dx=0 for x)
+                    // TODO switch to the faster more accurate method of calculating meanBin
                     const float denom = 2.0f * (y0 - 2 * y1 + y2);
                     if (denom != 0.0f) {
                         meanBin += (y0 - y2) / denom;

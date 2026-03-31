@@ -124,6 +124,7 @@ FAST_CODE void sdftMagnitude(const sdft_t *sdft, float *output)
 
 // Get squared magnitude of frequency spectrum with Hann window applied
 // Hann window in frequency domain: X[k] = -0.25 * X[k-1] +0.5 * X[k] -0.25 * X[k+1]
+// TODO don't han here, only han the values that we are calculating peaks on
 FAST_CODE void sdftWinSq(const sdft_t *sdft, float *output)
 {
     complex_t val;
