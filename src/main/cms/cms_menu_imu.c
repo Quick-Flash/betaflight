@@ -517,6 +517,7 @@ static uint8_t  cmsx_horizonLimitDegrees;
 
 static uint8_t  cmsx_throttleBoost;
 static uint8_t  cmsx_thrustLinearization;
+static uint8_t  cmsx_thrustLinearizationCutoff;
 static uint8_t  cmsx_softArmThrottleThreshold;
 static uint8_t  cmsx_antiGravityGain;
 static uint8_t  cmsx_motorOutputLimit;
@@ -572,6 +573,7 @@ static const void *cmsx_profileOtherOnEnter(displayPort_t *pDisp)
 
     cmsx_throttleBoost = pidProfile->throttle_boost;
     cmsx_thrustLinearization = pidProfile->thrustLinearization;
+    cmsx_thrustLinearizationCutoff = pidProfile->thrustLinearizationCutoff;
     cmsx_softArmThrottleThreshold = pidProfile->soft_arm_throttle_threshold;
     cmsx_motorOutputLimit = pidProfile->motor_output_limit;
     cmsx_autoProfileCellCount = pidProfile->auto_profile_cell_count;
@@ -631,6 +633,7 @@ static const void *cmsx_profileOtherOnExit(displayPort_t *pDisp, const OSD_Entry
 
     pidProfile->throttle_boost = cmsx_throttleBoost;
     pidProfile->thrustLinearization = cmsx_thrustLinearization;
+    pidProfile->thrustLinearizationCutoff = cmsx_thrustLinearizationCutoff;
     pidProfile->soft_arm_throttle_threshold = cmsx_softArmThrottleThreshold;
     pidProfile->motor_output_limit = cmsx_motorOutputLimit;
     pidProfile->auto_profile_cell_count = cmsx_autoProfileCellCount;
@@ -696,6 +699,7 @@ static const OSD_Entry cmsx_menuProfileOtherEntries[] = {
 #endif
 #ifdef USE_THRUST_LINEARIZATION
     { "THR LINEAR",  OME_UINT8,  NULL, &(OSD_UINT8_t)  { &cmsx_thrustLinearization,    0,    150,   1  }    },
+    { "THR LIN CUT", OME_UINT8,  NULL, &(OSD_UINT8_t)  { &cmsx_thrustLinearizationCutoff, 0, 250, 1 }    },
 #endif
     { "SOFT ARM THR", OME_UINT8, NULL, &(OSD_UINT8_t) { &cmsx_softArmThrottleThreshold, 0, 50, 1 } },
 #ifdef USE_ITERM_RELAX
