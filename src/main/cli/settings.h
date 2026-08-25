@@ -151,6 +151,7 @@ typedef enum {
 #endif
 #endif
     TABLE_MIXER_TYPE,
+    TABLE_QUICK_VBAT_COMPENSATION,
     TABLE_SIMPLIFIED_TUNING_PIDS_MODE,
 #ifdef USE_OSD
     TABLE_CMS_BACKGROUND,
@@ -285,6 +286,8 @@ extern const char * const lookupTableOffOn[];
 extern const char * const lookupTableSimplifiedTuningPidsMode[];
 
 extern const char * const lookupTableMixerType[];
+
+extern const char * const lookupTableQuickVbatCompensation[];
 
 extern const char * const lookupTableCMSMenuBackgroundType[];
 

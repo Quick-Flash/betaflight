@@ -51,7 +51,7 @@
 #define YAW_MOTORS_REVERSED 0
 #endif
 
-PG_REGISTER_WITH_RESET_FN(mixerConfig_t, mixerConfig, PG_MIXER_CONFIG, 2);
+PG_REGISTER_WITH_RESET_FN(mixerConfig_t, mixerConfig, PG_MIXER_CONFIG, 4);
 
 void pgResetFn_mixerConfig(mixerConfig_t *mixerConfig)
 {
@@ -68,6 +68,13 @@ void pgResetFn_mixerConfig(mixerConfig_t *mixerConfig)
     mixerConfig->crashflip_auto_rearm = false;
 #endif
     mixerConfig->mixer_type = MIXER_LEGACY;
+    mixerConfig->quick_vbat_compensation = QUICK_VBAT_COMP_OFF;
+    mixerConfig->quick_impact_attenuation = false;
+    mixerConfig->quick_impact_cutoff = 5;
+    mixerConfig->quick_impact_highpass_start = 100;
+    mixerConfig->quick_impact_highpass_end = 250;
+    mixerConfig->quick_impact_acc_threshold = 200;
+    mixerConfig->quick_impact_setpoint_threshold = 300;
 #ifdef USE_RPM_LIMIT
     mixerConfig->rpm_limit = false;
     mixerConfig->rpm_limit_p = 25;
@@ -369,6 +376,9 @@ void mixerInitProfile(void)
         mixerRuntime.vbatFull = CELL_VOLTAGE_FULL_CV;
         mixerRuntime.vbatRangeToCompensate = currentBatteryProfile
             ? mixerRuntime.vbatFull - currentBatteryProfile->vbatwarningcellvoltage
+            : 0;
+        mixerRuntime.vbatCompensationReference = currentBatteryProfile
+            ? currentBatteryProfile->vbatwarningcellvoltage
             : 0;
         if (mixerRuntime.vbatRangeToCompensate > 0) {
             mixerRuntime.vbatSagCompensationFactor = ((float)currentPidProfile->vbat_sag_compensation) / 100.0f;

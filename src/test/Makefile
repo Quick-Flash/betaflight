@@ -271,6 +271,19 @@ maths_unittest_SRC := \
 		$(USER_DIR)/common/maths.c \
 		$(USER_DIR)/common/vector.c
 
+mixer_quick_unittest_SRC := \
+		$(USER_DIR)/common/maths.c \
+		$(USER_DIR)/flight/mixer_quick.c
+
+mixer_quick_unittest_DEFINES := \
+		USE_BATTERY_VOLTAGE_SAG_COMPENSATION=
+
+impact_attenuation_unittest_SRC := \
+		$(USER_DIR)/build/debug.c \
+		$(USER_DIR)/common/filter.c \
+		$(USER_DIR)/common/maths.c \
+		$(USER_DIR)/flight/impact_attenuation.c
+
 
 motor_output_unittest_SRC := \
 		$(USER_DIR)/build/atomic.c \

@@ -52,6 +52,7 @@ typedef struct mixerRuntime_s {
     float vbatSagCompensationFactor;
     float vbatFull;
     float vbatRangeToCompensate;
+    float vbatCompensationReference;
 #endif
 #if defined(USE_RPM_LIMIT)
     float rpmLimiterRpmLimit;

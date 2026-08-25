@@ -1550,6 +1550,13 @@ static bool blackboxWriteSysinfo(void)
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_TPA_LOW_BREAKPOINT, "%d",     currentPidProfile->tpa_low_breakpoint);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_TPA_LOW_ALWAYS, "%d",         currentPidProfile->tpa_low_always);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_MIXER_TYPE, "%s",             lookupTableMixerType[mixerConfig()->mixer_type]);
+        BLACKBOX_PRINT_HEADER_LINE("quick_vbat_compensation", "%s",         lookupTableQuickVbatCompensation[mixerConfig()->quick_vbat_compensation]);
+        BLACKBOX_PRINT_HEADER_LINE("quick_impact_attenuation", "%d",        mixerConfig()->quick_impact_attenuation);
+        BLACKBOX_PRINT_HEADER_LINE("quick_impact_cutoff", "%d",             mixerConfig()->quick_impact_cutoff);
+        BLACKBOX_PRINT_HEADER_LINE("quick_impact_highpass_start", "%d",      mixerConfig()->quick_impact_highpass_start);
+        BLACKBOX_PRINT_HEADER_LINE("quick_impact_highpass_end", "%d",        mixerConfig()->quick_impact_highpass_end);
+        BLACKBOX_PRINT_HEADER_LINE("quick_impact_acc_threshold", "%d",       mixerConfig()->quick_impact_acc_threshold);
+        BLACKBOX_PRINT_HEADER_LINE("quick_impact_setpoint_threshold", "%d",  mixerConfig()->quick_impact_setpoint_threshold);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_EZ_LANDING_THRESHOLD, "%d",   currentPidProfile->ez_landing_threshold);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_EZ_LANDING_LIMIT, "%d",       currentPidProfile->ez_landing_limit);
         BLACKBOX_PRINT_HEADER_LINE(PARAM_NAME_EZ_LANDING_SPEED, "%d",       currentPidProfile->ez_landing_speed);

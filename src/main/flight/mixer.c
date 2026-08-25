@@ -51,6 +51,7 @@
 #include "flight/gps_rescue.h"
 #include "flight/imu.h"
 #include "flight/mixer_init.h"
+#include "flight/mixer_quick.h"
 #include "flight/mixer_tricopter.h"
 #include "flight/pid.h"
 #include "flight/rpm_filter.h"
@@ -264,7 +265,7 @@ static void calculateThrottleAndCurrentMotorEndpoints(timeUs_t currentTimeUs)
 #if defined(USE_BATTERY_VOLTAGE_SAG_COMPENSATION)
         float motorRangeAttenuationFactor = 0;
         // reduce motorRangeMax when battery is full
-        if (mixerRuntime.vbatSagCompensationFactor > 0.0f) {
+        if (mixerRuntime.vbatSagCompensationFactor > 0.0f && mixerConfig()->mixer_type != MIXER_QUICK) {
             const uint16_t currentCellVoltage = getBatterySagCellVoltage();
             // batteryGoodness = 1 when voltage is above vbatFull, and 0 when voltage is below vbatLow
             float batteryGoodness = 1.0f - constrainf((mixerRuntime.vbatFull - currentCellVoltage) / mixerRuntime.vbatRangeToCompensate, 0.0f, 1.0f);
@@ -844,6 +845,10 @@ FAST_CODE_NOINLINE_CRITICAL void mixTable(timeUs_t currentTimeUs)
         break;
     case MIXER_EZLANDING:
         applyMixerAdjustmentEzLand(motorMix, motorMixMin, motorMixMax, softArmFactor);
+        break;
+    case MIXER_QUICK:
+        throttle = mixerQuickMix(motorMix, activeMixer, mixerRuntime.motorCount,
+            throttle, airmodeEnabled, motorOutputMixSign, softArmFactor);
         break;
     default:
         applyMixerAdjustment(motorMix, motorMixMin, motorMixMax, airmodeEnabled, softArmFactor);

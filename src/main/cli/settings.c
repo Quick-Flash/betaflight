@@ -536,7 +536,11 @@ const char * const lookupTableSimplifiedTuningPidsMode[] = {
 };
 
 const char* const lookupTableMixerType[] = {
-    "LEGACY", "LINEAR", "DYNAMIC", "EZLANDING",
+    "LEGACY", "LINEAR", "DYNAMIC", "EZLANDING", "QUICK",
+};
+
+const char * const lookupTableQuickVbatCompensation[] = {
+    "OFF", "DIFFERENTIAL", "FULL",
 };
 
 #ifdef USE_OSD
@@ -713,6 +717,7 @@ const lookupTableEntry_t lookupTables[] = {
 #endif
 #endif
     LOOKUP_TABLE_ENTRY(lookupTableMixerType),
+    LOOKUP_TABLE_ENTRY(lookupTableQuickVbatCompensation),
     LOOKUP_TABLE_ENTRY(lookupTableSimplifiedTuningPidsMode),
 #ifdef USE_OSD
     LOOKUP_TABLE_ENTRY(lookupTableCMSMenuBackgroundType),
@@ -1062,6 +1067,13 @@ const clivalue_t valueTable[] = {
 // PG_MIXER_CONFIG
     { "yaw_motors_reversed",        VAR_INT8   | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_MIXER_CONFIG, offsetof(mixerConfig_t, yaw_motors_reversed) },
     { PARAM_NAME_MIXER_TYPE,        VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_MIXER_TYPE }, PG_MIXER_CONFIG, offsetof(mixerConfig_t, mixer_type) },
+    { "quick_vbat_compensation",    VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_QUICK_VBAT_COMPENSATION }, PG_MIXER_CONFIG, offsetof(mixerConfig_t, quick_vbat_compensation) },
+    { "quick_impact_attenuation",   VAR_UINT8  | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_MIXER_CONFIG, offsetof(mixerConfig_t, quick_impact_attenuation) },
+    { "quick_impact_cutoff",        VAR_UINT8  | MASTER_VALUE, .config.minmaxUnsigned = { 1, 100 }, PG_MIXER_CONFIG, offsetof(mixerConfig_t, quick_impact_cutoff) },
+    { "quick_impact_highpass_start", VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 2000 }, PG_MIXER_CONFIG, offsetof(mixerConfig_t, quick_impact_highpass_start) },
+    { "quick_impact_highpass_end",  VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 1, 2000 }, PG_MIXER_CONFIG, offsetof(mixerConfig_t, quick_impact_highpass_end) },
+    { "quick_impact_acc_threshold", VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 2000 }, PG_MIXER_CONFIG, offsetof(mixerConfig_t, quick_impact_acc_threshold) },
+    { "quick_impact_setpoint_threshold", VAR_UINT16 | MASTER_VALUE, .config.minmaxUnsigned = { 0, 2000 }, PG_MIXER_CONFIG, offsetof(mixerConfig_t, quick_impact_setpoint_threshold) },
     { "crashflip_motor_percent",    VAR_UINT8 |  MASTER_VALUE,  .config.minmaxUnsigned = { 0, 100 }, PG_MIXER_CONFIG, offsetof(mixerConfig_t, crashflip_motor_percent) },
     { "crashflip_rate",             VAR_UINT8 |  MASTER_VALUE,  .config.minmaxUnsigned = { 0, 250 }, PG_MIXER_CONFIG, offsetof(mixerConfig_t, crashflip_rate) },
     { "crashflip_auto_rearm",       VAR_INT8 | MASTER_VALUE | MODE_LOOKUP, .config.lookup = { TABLE_OFF_ON }, PG_MIXER_CONFIG, offsetof(mixerConfig_t, crashflip_auto_rearm) },

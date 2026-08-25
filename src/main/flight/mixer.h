@@ -72,7 +72,15 @@ typedef enum
     MIXER_LINEAR = 1,
     MIXER_DYNAMIC = 2,
     MIXER_EZLANDING = 3,
+    MIXER_QUICK = 4,
 } mixerType_e;
+
+typedef enum
+{
+    QUICK_VBAT_COMP_OFF = 0,
+    QUICK_VBAT_COMP_DIFFERENTIAL,
+    QUICK_VBAT_COMP_FULL,
+} quickVbatCompensationMode_e;
 
 // Custom mixer data per motor
 typedef struct motorMixer_s {
@@ -98,6 +106,13 @@ typedef struct mixerConfig_s {
     uint8_t crashflip_rate;
     bool crashflip_auto_rearm;
     uint8_t mixer_type;
+    uint8_t quick_vbat_compensation; // Uses vbat_sag_compensation as its strength
+    bool quick_impact_attenuation;
+    uint8_t quick_impact_cutoff;
+    uint16_t quick_impact_highpass_start; // centi-g
+    uint16_t quick_impact_highpass_end;   // centi-g
+    uint16_t quick_impact_acc_threshold;  // centi-g
+    uint16_t quick_impact_setpoint_threshold; // degrees/second
 #ifdef USE_RPM_LIMIT
     bool rpm_limit;
     uint16_t rpm_limit_p;

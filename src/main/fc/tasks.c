@@ -19,6 +19,7 @@
  */
 
 #include <stdbool.h>
+#include <math.h>
 #include <stdlib.h>
 #include <stdint.h>
 
@@ -55,8 +56,10 @@
 
 #include "flight/alt_hold.h"
 #include "flight/gps_rescue.h"
+#include "flight/impact_attenuation.h"
 #include "flight/imu.h"
 #include "flight/mixer.h"
+#include "flight/mixer_quick.h"
 #include "flight/pid.h"
 #include "flight/position.h"
 #include "flight/pos_hold.h"
@@ -172,6 +175,12 @@ static void taskBatteryAlerts(timeUs_t currentTimeUs)
 static void taskUpdateAccelerometer(timeUs_t currentTimeUs)
 {
     accUpdate(currentTimeUs);
+
+    const float maximumSetpoint = MAX(MAX(fabsf(getSetpointRate(FD_ROLL)), fabsf(getSetpointRate(FD_PITCH))), fabsf(getSetpointRate(FD_YAW)));
+    const bool impactAttenuationActive = ARMING_FLAG(ARMED)
+        && mixerConfig()->mixer_type == MIXER_QUICK
+        && mixerConfig()->quick_impact_attenuation;
+    mixerQuickSetImpactAttenuation(impactAttenuationUpdate(acc.accMagnitude, maximumSetpoint, impactAttenuationActive));
 }
 #endif
 
@@ -572,6 +581,7 @@ void tasksInit(void)
 
 #if defined(USE_ACC)
     if (sensors(SENSOR_ACC) && acc.sampleRateHz) {
+        impactAttenuationInit(acc.sampleRateHz);
         setTaskEnabled(TASK_ACCEL, true);
         rescheduleTask(TASK_ACCEL, TASK_PERIOD_HZ(acc.sampleRateHz));
         setTaskEnabled(TASK_ATTITUDE, true);

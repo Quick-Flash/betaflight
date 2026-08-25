@@ -175,8 +175,10 @@ COMMON_SRC = \
             flight/flight_plan_nav.c \
             flight/gps_rescue_multirotor.c \
             flight/gps_rescue_wing.c \
+            flight/impact_attenuation.c \
             flight/imu.c \
             flight/mixer.c \
+            flight/mixer_quick.c \
             flight/mixer_init.c \
             flight/mixer_tricopter.c \
             flight/nav_trail.c \
@@ -479,6 +481,7 @@ SPEED_OPTIMISED_SRC += \
             flight/dyn_notch_filter.c \
             flight/imu.c \
             flight/mixer.c \
+            flight/mixer_quick.c \
             flight/pid.c \
             flight/rpm_filter.c \
             rx/ibus.c \
